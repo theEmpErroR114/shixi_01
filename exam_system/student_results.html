@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>我的成绩 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .nav-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<header class="bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-4 flex items-center h-16">
+<div class="flex items-center mr-12">
+<iconify-icon class="text-2xl text-[#1890FF] mr-2" icon="mdi:book-open-page-variant"></iconify-icon>
+<span class="text-xl font-bold text-gray-800">学习系统</span>
+</div>
+<nav class="flex space-x-8 h-full">
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_dashboard.html">我的首页</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_practice.html">抽题练习</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_exam.html">参加测验</a>
+<a class="flex items-center h-full px-2 nav-active font-medium" href="student_results.html">我的成绩</a>
+</nav>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 py-8 w-full">
+<!-- 统计卡片 -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<p class="text-gray-400 text-sm">总测验次数</p>
+<p class="text-3xl font-bold text-gray-800 mt-2">5 次</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<p class="text-gray-400 text-sm">平均分</p>
+<p class="text-3xl font-bold text-[#1890FF] mt-2">86.2</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<p class="text-gray-400 text-sm">最高分</p>
+<p class="text-3xl font-bold text-green-500 mt-2">94</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+<div>
+<p class="text-gray-400 text-sm">累计错题</p>
+<p class="text-3xl font-bold text-red-500 mt-2">24 题</p>
+</div>
+<button class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100">错题本</button>
+</div>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="p-6 border-b border-gray-50 flex items-center justify-between">
+<h3 class="text-lg font-bold text-gray-800">成绩明细</h3>
+<div class="flex space-x-2">
+<button class="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded font-bold">全部</button>
+<button class="px-3 py-1 text-gray-400 text-xs rounded hover:bg-gray-50">本月</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-wider">
+<th class="px-6 py-4 font-bold">测验名称</th>
+<th class="px-6 py-4 font-bold">测验日期</th>
+<th class="px-6 py-4 font-bold">得分</th>
+<th class="px-6 py-4 font-bold">正确率</th>
+<th class="px-6 py-4 font-bold">用时</th>
+<th class="px-6 py-4 font-bold">排名</th>
+<th class="px-6 py-4 font-bold">操作</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-50 text-sm text-gray-700">
+<tr>
+<td class="px-6 py-4 font-bold">高等数学期中模拟考试</td>
+<td class="px-6 py-4">2026-07-14</td>
+<td class="px-6 py-4"><span class="text-blue-600 font-bold">94</span> / 100</td>
+<td class="px-6 py-4">94%</td>
+<td class="px-6 py-4">85:12</td>
+<td class="px-6 py-4">3 / 150</td>
+<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-bold">线性代数第一单元测试</td>
+<td class="px-6 py-4">2026-07-05</td>
+<td class="px-6 py-4"><span class="text-blue-600 font-bold">85</span> / 100</td>
+<td class="px-6 py-4">85%</td>
+<td class="px-6 py-4">45:00</td>
+<td class="px-6 py-4">12 / 120</td>
+<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-bold">线性代数基础知识测试</td>
+<td class="px-6 py-4">2026-06-28</td>
+<td class="px-6 py-4"><span class="text-blue-600 font-bold">78</span> / 100</td>
+<td class="px-6 py-4">78%</td>
+<td class="px-6 py-4">32:15</td>
+<td class="px-6 py-4">45 / 120</td>
+<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 border-t border-gray-50 text-center">
+<button class="text-gray-400 text-xs hover:text-gray-600">加载更多记录...</button>
+</div>
+</div>
+</main>
+</body>
+</html>

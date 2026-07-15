@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>参加测验 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .nav-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<header class="bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-4 flex items-center h-16">
+<div class="flex items-center mr-12">
+<iconify-icon class="text-2xl text-[#1890FF] mr-2" icon="mdi:book-open-page-variant"></iconify-icon>
+<span class="text-xl font-bold text-gray-800">学习系统</span>
+</div>
+<nav class="flex space-x-8 h-full">
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_dashboard.html">我的首页</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_practice.html">抽题练习</a>
+<a class="flex items-center h-full px-2 nav-active font-medium" href="student_exam.html">参加测验</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_results.html">我的成绩</a>
+</nav>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-4 py-8 w-full" id="examListPage">
+<h2 class="text-2xl font-bold text-gray-800 mb-8">在线测验</h2>
+<div class="space-y-6">
+<!-- 进行中测验 -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center text-red-500 mr-4">
+<iconify-icon class="text-3xl" icon="mdi:clock-fast"></iconify-icon>
+</div>
+<div>
+<h3 class="text-lg font-bold text-gray-800">2026春季学期高等数学期中测验</h3>
+<div class="flex items-center space-x-4 mt-1 text-sm text-gray-400">
+<span>时长: 120 分钟</span>
+<span>题目: 40 题</span>
+<span class="text-red-500 font-medium">进行中 (截止 23:59)</span>
+</div>
+</div>
+</div>
+<button class="px-6 py-2 bg-[#1890FF] text-white rounded-md font-bold hover:bg-blue-600" onclick="enterExam()">进入测验</button>
+</div>
+</div>
+<!-- 已结束/已完成测验 -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden opacity-75">
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 mr-4">
+<iconify-icon class="text-3xl" icon="mdi:checkbox-marked-circle-outline"></iconify-icon>
+</div>
+<div>
+<h3 class="text-lg font-bold text-gray-800">线性代数第一单元随堂测试</h3>
+<div class="flex items-center space-x-4 mt-1 text-sm text-gray-400">
+<span>分数: 85 分</span>
+<span>排名: 5 / 120</span>
+<span class="text-green-600">已完成</span>
+</div>
+</div>
+</div>
+<button class="px-6 py-2 border border-gray-200 text-gray-500 rounded-md font-medium hover:bg-gray-50">查看解析</button>
+</div>
+</div>
+</div>
+</main>
+<!-- 考试界面 -->
+<div class="fixed inset-0 bg-[#F0F2F5] z-[100] hidden flex flex-col" id="examInterface">
+<div class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
+<div class="flex items-center text-gray-800 font-bold">
+<iconify-icon class="text-orange-500 text-xl mr-2" icon="mdi:timer-sand"></iconify-icon>
+<span>高等数学期中测验</span>
+</div>
+<div class="flex items-center space-x-8">
+<div class="text-xl font-mono font-bold text-red-500" id="timer">01:59:45</div>
+<button class="px-6 py-2 bg-[#1890FF] text-white rounded font-bold" onclick="confirmSubmit()">交卷</button>
+</div>
+</div>
+<div class="flex-1 flex overflow-hidden">
+<!-- 答题卡 -->
+<div class="w-80 bg-white border-r p-6 flex flex-col overflow-y-auto">
+<h4 class="font-bold text-sm text-gray-500 uppercase mb-4">答题进度</h4>
+<div class="grid grid-cols-5 gap-3">
+<div class="w-10 h-10 rounded border border-blue-500 bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm cursor-pointer">1</div>
+<div class="w-10 h-10 rounded border border-gray-200 text-gray-400 flex items-center justify-center text-sm cursor-pointer">2</div>
+<div class="w-10 h-10 rounded border border-gray-200 text-gray-400 flex items-center justify-center text-sm cursor-pointer">3</div>
+<!-- ...更多 -->
+</div>
+</div>
+<!-- 答题区 -->
+<div class="flex-1 p-12 overflow-y-auto flex flex-col items-center">
+<div class="w-full max-w-3xl bg-white p-10 rounded-xl shadow-sm">
+<div class="text-sm text-blue-500 font-bold mb-4">第一部分：单选题 (1/20)</div>
+<div class="text-xl text-gray-800 font-bold leading-relaxed mb-8">
+                        当 x → 0 时，sin(x) / x 的极限是？
+                    </div>
+<div class="space-y-4">
+<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
+<span class="font-medium text-gray-700">A. 0</span>
+</label>
+<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
+<span class="font-medium text-gray-700">B. 1</span>
+</label>
+<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
+<span class="font-medium text-gray-700">C. ∞</span>
+</label>
+</div>
+<div class="mt-12 flex justify-between">
+<button class="px-8 py-3 border border-gray-200 rounded text-gray-500">上一题</button>
+<button class="px-12 py-3 bg-[#1890FF] text-white rounded font-bold">下一题</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 确认交卷弹窗 -->
+<div class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center hidden" id="submitModal">
+<div class="bg-white p-8 rounded-xl max-w-sm w-full text-center">
+<iconify-icon class="text-6xl text-orange-400 mb-4" icon="mdi:help-circle-outline"></iconify-icon>
+<h3 class="text-xl font-bold mb-2">确认交卷？</h3>
+<p class="text-gray-500 mb-8">你还有 39 题未答。一旦提交将无法修改。</p>
+<div class="flex space-x-3">
+<button class="flex-1 py-3 bg-gray-100 rounded font-bold" onclick="closeConfirm()">返回检查</button>
+<button class="flex-1 py-3 bg-[#1890FF] text-white rounded font-bold" onclick="submitExam()">确认提交</button>
+</div>
+</div>
+</div>
+<script>
+        function enterExam() {
+            document.getElementById('examInterface').classList.remove('hidden');
+        }
+        function confirmSubmit() {
+            document.getElementById('submitModal').classList.remove('hidden');
+        }
+        function closeConfirm() {
+            document.getElementById('submitModal').classList.add('hidden');
+        }
+        function submitExam() {
+            alert('交卷成功！');
+            window.location.href = 'student_results.html';
+        }
+    </script>
+</body>
+</html>

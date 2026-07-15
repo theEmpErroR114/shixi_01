@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>学生工作台 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .nav-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- 顶部导航 -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 flex items-center h-16">
+<div class="flex items-center mr-12">
+<iconify-icon class="text-2xl text-[#1890FF] mr-2" icon="mdi:book-open-page-variant"></iconify-icon>
+<span class="text-xl font-bold text-gray-800">学习系统</span>
+</div>
+<nav class="flex space-x-8 h-full">
+<a class="flex items-center h-full px-2 nav-active font-medium" href="student_dashboard.html">我的首页</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_practice.html">抽题练习</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_exam.html">参加测验</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_results.html">我的成绩</a>
+</nav>
+<div class="ml-auto flex items-center space-x-6">
+<iconify-icon class="text-xl text-gray-400 cursor-pointer" icon="mdi:bell-outline"></iconify-icon>
+<div class="flex items-center space-x-2 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">赵</div>
+<span class="text-sm text-gray-700 group-hover:text-[#1890FF]">赵敏</span>
+<a class="text-xs text-gray-400 hover:text-red-500" href="login.html">退出</a>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
+<!-- 欢迎语 -->
+<div class="mb-8">
+<h1 class="text-2xl font-bold text-gray-800">下午好，赵敏同学！</h1>
+<p class="text-gray-500 mt-1">今天是你连续学习的第 12 天，加油！</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 space-y-8">
+<!-- 快捷入口 -->
+<div class="grid grid-cols-2 gap-6">
+<a class="bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-2xl shadow-lg shadow-blue-100 group hover:-translate-y-1 transition-transform" href="student_practice.html">
+<div class="flex justify-between items-center text-white">
+<div>
+<h3 class="text-xl font-bold">抽题练习</h3>
+<p class="text-blue-100 text-sm mt-2">基于知识点，查漏补缺</p>
+</div>
+<iconify-icon class="text-5xl opacity-30 group-hover:opacity-60 transition-opacity" icon="mdi:rocket-launch"></iconify-icon>
+</div>
+</a>
+<a class="bg-gradient-to-br from-purple-500 to-purple-600 p-8 rounded-2xl shadow-lg shadow-purple-100 group hover:-translate-y-1 transition-transform" href="student_exam.html">
+<div class="flex justify-between items-center text-white">
+<div>
+<h3 class="text-xl font-bold">参加测验</h3>
+<p class="text-purple-100 text-sm mt-2">正式考试，检验学习成果</p>
+</div>
+<iconify-icon class="text-5xl opacity-30 group-hover:opacity-60 transition-opacity" icon="mdi:timer-outline"></iconify-icon>
+</div>
+</a>
+</div>
+<!-- 学习进度 -->
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<h3 class="text-lg font-bold text-gray-800 mb-6">本学期学习统计</h3>
+<div class="grid grid-cols-4 gap-4">
+<div class="text-center p-4">
+<p class="text-2xl font-bold text-gray-800">128</p>
+<p class="text-xs text-gray-400 mt-1">练习总次数</p>
+</div>
+<div class="text-center p-4 border-l">
+<p class="text-2xl font-bold text-gray-800">4</p>
+<p class="text-xs text-gray-400 mt-1">测验总次数</p>
+</div>
+<div class="text-center p-4 border-l">
+<p class="text-2xl font-bold text-green-500">92.5%</p>
+<p class="text-xs text-gray-400 mt-1">平均正确率</p>
+</div>
+<div class="text-center p-4 border-l">
+<p class="text-2xl font-bold text-blue-500">89.5</p>
+<p class="text-xs text-gray-400 mt-1">平均测验分</p>
+</div>
+</div>
+</div>
+<!-- 最近练习记录 -->
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-gray-800">最近练习记录</h3>
+<a class="text-sm text-blue-500 hover:underline" href="student_results.html">查看全部记录</a>
+</div>
+<div class="space-y-4">
+<div class="flex items-center p-4 bg-gray-50 rounded-lg">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
+<iconify-icon icon="mdi:function-variant"></iconify-icon>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold">第一章 函数与极限</h4>
+<p class="text-xs text-gray-400 mt-0.5">20 题 · 正确率 95%</p>
+</div>
+<span class="text-xs text-gray-400">昨天 18:30</span>
+</div>
+<div class="flex items-center p-4 bg-gray-50 rounded-lg">
+<div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mr-4">
+<iconify-icon icon="mdi:matrix"></iconify-icon>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold">线性代数：矩阵运算</h4>
+<p class="text-xs text-gray-400 mt-0.5">15 题 · 正确率 75%</p>
+</div>
+<span class="text-xs text-gray-400">3天前</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 右侧边栏 -->
+<div class="space-y-8">
+<!-- 待办测验 -->
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+<iconify-icon class="text-orange-500 mr-2" icon="mdi:alert-circle"></iconify-icon>
+                        待办测验
+                    </h3>
+<div class="space-y-4">
+<div class="p-4 bg-orange-50 rounded-lg border border-orange-100">
+<h4 class="text-sm font-bold text-orange-900">高等数学期中模拟考试</h4>
+<div class="flex items-center text-xs text-orange-700 mt-2">
+<iconify-icon class="mr-1" icon="mdi:clock-outline"></iconify-icon>
+                                截止日期：2026-07-16 23:59
+                            </div>
+<button class="w-full mt-4 py-2 bg-orange-500 text-white rounded-md text-sm font-medium hover:bg-orange-600">立即前往</button>
+</div>
+</div>
+</div>
+<!-- 学习排行榜 -->
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<h3 class="text-lg font-bold text-gray-800 mb-6">班级练习榜</h3>
+<div class="space-y-4">
+<div class="flex items-center">
+<span class="w-6 text-sm font-bold text-orange-500">1</span>
+<div class="w-8 h-8 rounded-full bg-gray-200 mx-3"></div>
+<span class="flex-1 text-sm">李沐</span>
+<span class="text-xs text-gray-400">452 题</span>
+</div>
+<div class="flex items-center">
+<span class="w-6 text-sm font-bold text-gray-500">2</span>
+<div class="w-8 h-8 rounded-full bg-gray-200 mx-3"></div>
+<span class="flex-1 text-sm">王小二</span>
+<span class="text-xs text-gray-400">421 题</span>
+</div>
+<div class="flex items-center">
+<span class="w-6 text-sm font-bold text-orange-900/40">3</span>
+<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mx-3 text-[10px] font-bold">赵</div>
+<span class="flex-1 text-sm font-bold">我</span>
+<span class="text-xs text-gray-400">128 题</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>
