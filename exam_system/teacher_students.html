@@ -7,7 +7,6 @@
 <title>学生情况 - 课程习题测验系统</title>
 <script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
 <script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
-<script src="https://modao.cc/agent-py/static/source/js/echarts.min.js"></script>
 <style>
         body { background-color: #F0F2F5; }
         .sidebar { background-color: #001529; }
@@ -17,194 +16,141 @@
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-<!-- 侧边栏 (复用) -->
 <div class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
-<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>
-            教学管理
-        </div>
+<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>教学管理</div>
 <nav class="flex-1 py-4">
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_dashboard.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>
-                首页
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>
-                习题管理
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_exams.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>
-                试卷管理
-            </a>
-<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_students.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>
-                学生情况
-            </a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_dashboard.html"><iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>首页</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html"><iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>习题管理</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_exams.html"><iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>试卷管理</a>
+<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_students.html"><iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>学生情况</a>
 </nav>
-<div class="p-4 border-t border-gray-800">
-<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
-                退出系统
-            </a>
+<div class="p-4 border-t border-gray-800"><a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html"><iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>退出系统</a></div>
 </div>
-</div>
-<!-- 主内容 -->
 <div class="flex-1 flex flex-col overflow-hidden">
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-<div class="flex items-center space-x-2 text-sm text-gray-500">
-<span>教学管理</span>
-<span>/</span>
-<span class="text-gray-900 font-medium">学生情况</span>
-</div>
+<div class="flex items-center space-x-2 text-sm text-gray-500"><span>教学管理</span><span>/</span><span class="text-gray-900 font-medium">学生情况</span></div>
+<div class="relative"><input class="border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm w-64" placeholder="搜索学生姓名..." type="text" id="searchInput" onkeydown="if(event.key==='Enter')searchStudents()"/><iconify-icon class="absolute left-3 top-2 text-gray-400" icon="mdi:magnify"></iconify-icon></div>
 </header>
 <main class="flex-1 overflow-y-auto p-8">
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-<div class="p-6 border-b border-gray-50 flex flex-wrap items-center justify-between gap-4">
-<div class="flex items-center space-x-4">
-<select class="border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none">
-<option>24级数学1班</option>
-<option>24级数学2班</option>
-</select>
-<div class="relative">
-<input class="pl-10 pr-4 py-2 border rounded-md text-sm w-60" placeholder="搜索学生姓名/学号" type="text"/>
-<iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
-</div>
-</div>
-<button class="text-[#1890FF] text-sm font-medium flex items-center border border-blue-200 px-4 py-2 rounded hover:bg-blue-50">
-<iconify-icon class="mr-1" icon="mdi:file-export"></iconify-icon>
-                        导出本班成绩报表
-                    </button>
-</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="p-6 border-b border-gray-50"><h3 class="text-lg font-bold text-gray-800">学生成绩统计</h3></div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
-<thead>
-<tr class="bg-gray-50 text-gray-400 text-sm">
-<th class="px-6 py-4 font-medium">学号</th>
-<th class="px-6 py-4 font-medium">姓名</th>
-<th class="px-6 py-4 font-medium">练习次数</th>
-<th class="px-6 py-4 font-medium">练习正确率</th>
-<th class="px-6 py-4 font-medium">测验次数</th>
-<th class="px-6 py-4 font-medium">测验平均分</th>
-<th class="px-6 py-4 font-medium">操作</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-gray-50 text-sm text-gray-700">
-<tr class="hover:bg-gray-50/50">
-<td class="px-6 py-4">20240001</td>
-<td class="px-6 py-4 font-bold">赵敏</td>
-<td class="px-6 py-4">128</td>
-<td class="px-6 py-4 text-green-600 font-medium">92.5%</td>
-<td class="px-6 py-4">4</td>
-<td class="px-6 py-4 text-blue-600 font-bold">89.5</td>
-<td class="px-6 py-4">
-<button class="text-[#1890FF] hover:underline" onclick="showDetailModal()">查看详情</button>
-</td>
-</tr>
-<tr class="hover:bg-gray-50/50">
-<td class="px-6 py-4">20240002</td>
-<td class="px-6 py-4 font-bold">钱程</td>
-<td class="px-6 py-4">85</td>
-<td class="px-6 py-4 text-orange-500 font-medium">76.2%</td>
-<td class="px-6 py-4">4</td>
-<td class="px-6 py-4 text-blue-600 font-bold">72.0</td>
-<td class="px-6 py-4">
-<button class="text-[#1890FF] hover:underline">查看详情</button>
-</td>
-</tr>
-</tbody>
+<thead><tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-wider">
+<th class="px-6 py-4 font-bold">姓名</th><th class="px-6 py-4 font-bold">班级</th><th class="px-6 py-4 font-bold">练习次数</th><th class="px-6 py-4 font-bold">练习正确率</th><th class="px-6 py-4 font-bold">测验次数</th><th class="px-6 py-4 font-bold">测验均分</th><th class="px-6 py-4 font-bold">操作</th>
+</tr></thead>
+<tbody class="divide-y divide-gray-50 text-sm text-gray-700" id="studentTableBody"></tbody>
 </table>
+</div>
+<div class="p-6 border-t border-gray-50 flex items-center justify-between" id="paginationBar">
+<span class="text-sm text-gray-500" id="pageInfo">共 0 条</span>
+<div class="flex space-x-2" id="pageBtns"></div>
 </div>
 </div>
 </main>
 </div>
-<!-- 学生详情模态框 -->
+
+<!-- 学生详情弹窗 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="detailModal">
-<div class="absolute inset-0 bg-black/50" onclick="closeDetailModal()"></div>
-<div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-<div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
-<div class="flex items-center space-x-4">
-<div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">赵</div>
-<div>
-<h3 class="text-xl font-bold">赵敏 <span class="text-sm font-normal text-gray-400 ml-2">20240001 · 24级数学1班</span></h3>
+<div class="absolute inset-0 bg-black/50" onclick="closeDetail()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8">
+<h3 class="text-lg font-bold mb-4" id="detailName"></h3>
+<div class="grid grid-cols-3 gap-4 mb-6" id="detailStats"></div>
+<div><h4 class="font-bold text-sm text-gray-600 mb-3">测验成绩</h4>
+<table class="w-full text-left text-sm"><thead><tr class="bg-gray-50 text-gray-400 text-xs"><th class="px-4 py-2">试卷</th><th class="px-4 py-2">得分</th><th class="px-4 py-2">提交时间</th></tr></thead><tbody id="detailScores"></tbody></table></div>
+<button class="mt-6 px-6 py-2 border border-gray-200 rounded text-gray-600" onclick="closeDetail()">关闭</button>
 </div>
 </div>
-<button onclick="closeDetailModal()"><iconify-icon class="text-2xl text-gray-300" icon="mdi:close"></iconify-icon></button>
-</div>
-<div class="flex-1 overflow-y-auto p-8">
-<div class="grid grid-cols-3 gap-8 mb-8">
-<!-- 能力雷达图 -->
-<div class="col-span-1 border border-gray-100 rounded-xl p-4">
-<h4 class="text-sm font-bold text-gray-800 mb-4">知识点掌握度</h4>
-<div class="h-64" id="radarChart"></div>
-</div>
-<!-- 学习统计 -->
-<div class="col-span-2 space-y-6">
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-gray-50 p-4 rounded-xl">
-<p class="text-xs text-gray-500 mb-1">近期正确率趋势</p>
-<div class="h-24" id="lineChart"></div>
-</div>
-<div class="bg-gray-50 p-4 rounded-xl flex flex-col justify-center">
-<p class="text-xs text-gray-500 mb-1">本学期击败同学</p>
-<p class="text-3xl font-bold text-green-500">92%</p>
-</div>
-</div>
-<div class="border border-gray-100 rounded-xl p-4">
-<h4 class="text-sm font-bold text-gray-800 mb-4">最近测验记录</h4>
-<div class="space-y-3">
-<div class="flex justify-between items-center text-sm">
-<span class="text-gray-600">高等数学期中测验</span>
-<span class="font-bold text-blue-600">94 分</span>
-</div>
-<div class="flex justify-between items-center text-sm">
-<span class="text-gray-600">线性代数单元测验</span>
-<span class="font-bold text-blue-600">85 分</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
+
 <script>
-        function showDetailModal() {
+    var API_BASE = 'http://localhost:8080/api';
+    var currentPage = 1;
+
+    function apiGet(url, params) {
+        var q = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + q, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    function searchStudents() {
+        currentPage = 1;
+        loadStudents();
+    }
+
+    function loadStudents() {
+        var keyword = document.getElementById('searchInput').value.trim();
+        var params = {page: currentPage, pageSize: 10};
+        if (keyword) params.keyword = keyword;
+        apiGet('/teacher/students/stats', params).then(function(res) {
+            var data = res.data || res;
+            var list = data.list || data.records || [];
+            renderTable(list);
+            renderPagination(data.total || 0, data.page || currentPage);
+        }).catch(function() {});
+    }
+
+    function renderTable(list) {
+        var tbody = document.getElementById('studentTableBody');
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">暂无数据</td></tr>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+            var s = list[i];
+            html += '<tr class="hover:bg-gray-50">';
+            html += '<td class="px-6 py-4 font-bold">' + esc(s.realName || '') + '</td>';
+            html += '<td class="px-6 py-4">' + esc(s.className || '') + '</td>';
+            html += '<td class="px-6 py-4">' + (s.practiceCount || 0) + '</td>';
+            html += '<td class="px-6 py-4"><span class="text-' + ((s.practiceCorrectRate || 0) >= 60 ? 'green' : 'red') + '-600 font-bold">' + (s.practiceCorrectRate || 0) + '%</span></td>';
+            html += '<td class="px-6 py-4">' + (s.examCount || 0) + '</td>';
+            html += '<td class="px-6 py-4 font-bold text-blue-600">' + (s.examAvgScore || 0) + '</td>';
+            html += '<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline" onclick="showDetail(' + s.studentId + ')">查看详情</button></td>';
+            html += '</tr>';
+        }
+        tbody.innerHTML = html;
+    }
+
+    function renderPagination(total, page) {
+        var pages = Math.ceil(total / 10);
+        document.getElementById('pageInfo').textContent = '共 ' + total + ' 条';
+        var html = '';
+        if (page > 1) html += '<button class="px-3 py-1 border rounded text-sm hover:bg-gray-50" onclick="goPage(' + (page-1) + ')">上一页</button>';
+        for (var p = 1; p <= pages && p <= 10; p++) {
+            html += '<button class="px-3 py-1 border rounded text-sm ' + (p === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-50') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+        }
+        if (page < pages) html += '<button class="px-3 py-1 border rounded text-sm hover:bg-gray-50" onclick="goPage(' + (page+1) + ')">下一页</button>';
+        document.getElementById('pageBtns').innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; loadStudents(); }
+
+    function showDetail(studentId) {
+        apiGet('/teacher/students/' + studentId + '/detail').then(function(res) {
+            var d = res.data || res;
+            document.getElementById('detailName').textContent = (d.realName || '') + ' - ' + (d.className || '');
+            document.getElementById('detailStats').innerHTML =
+                '<div class="bg-blue-50 p-4 rounded"><p class="text-xs text-gray-500">练习次数</p><p class="text-xl font-bold">' + (d.practiceCount || 0) + '</p></div>' +
+                '<div class="bg-green-50 p-4 rounded"><p class="text-xs text-gray-500">练习正确率</p><p class="text-xl font-bold">' + (d.practiceCorrectRate || 0) + '%</p></div>' +
+                '<div class="bg-orange-50 p-4 rounded"><p class="text-xs text-gray-500">测验均分</p><p class="text-xl font-bold">' + (d.examAvgScore || 0) + '</p></div>';
+            var scoresHtml = '';
+            var scores = d.examScores || [];
+            for (var i = 0; i < scores.length; i++) {
+                scoresHtml += '<tr><td class="px-4 py-2">' + esc(scores[i].paperName || '') + '</td><td class="px-4 py-2 font-bold">' + (scores[i].score || 0) + ' / ' + (scores[i].totalScore || 100) + '</td><td class="px-4 py-2 text-gray-400">' + (scores[i].submitTime || '') + '</td></tr>';
+            }
+            document.getElementById('detailScores').innerHTML = scoresHtml || '<tr><td colspan="3" class="px-4 py-4 text-center text-gray-400">暂无测验记录</td></tr>';
             document.getElementById('detailModal').classList.remove('hidden');
-            initCharts();
-        }
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
+        });
+    }
 
-        function initCharts() {
-            // 雷达图
-            const radar = echarts.init(document.getElementById('radarChart'));
-            radar.setOption({
-                radar: {
-                    indicator: [
-                        { name: '函数极限', max: 100 },
-                        { name: '一元微分', max: 100 },
-                        { name: '一元积分', max: 100 },
-                        { name: '向量代数', max: 100 },
-                        { name: '多元微分', max: 100 }
-                    ],
-                    radius: '60%'
-                },
-                series: [{
-                    type: 'radar',
-                    data: [{ value: [95, 88, 70, 90, 85], name: '能力值', areaStyle: { color: 'rgba(24, 144, 255, 0.2)' }, itemStyle: { color: '#1890FF' } }]
-                }]
-            });
+    function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); }
 
-            // 趋势图
-            const line = echarts.init(document.getElementById('lineChart'));
-            line.setOption({
-                xAxis: { type: 'category', show: false, data: ['1', '2', '3', '4', '5'] },
-                yAxis: { type: 'value', show: false },
-                grid: { top: 10, bottom: 10, left: 10, right: 10 },
-                series: [{ data: [70, 82, 75, 90, 92], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#10b981', width: 3 } }]
-            });
-        }
-    </script>
+    loadStudents();
+</script>
 </body>
 </html>

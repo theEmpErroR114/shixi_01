@@ -27,58 +27,24 @@
 </nav>
 </div>
 </header>
+
+<!-- 测验列表页 -->
 <main class="max-w-5xl mx-auto px-4 py-8 w-full" id="examListPage">
 <h2 class="text-2xl font-bold text-gray-800 mb-8">在线测验</h2>
-<div class="space-y-6">
-<!-- 进行中测验 -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-<div class="p-6 flex items-center justify-between">
-<div class="flex items-center">
-<div class="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center text-red-500 mr-4">
-<iconify-icon class="text-3xl" icon="mdi:clock-fast"></iconify-icon>
-</div>
-<div>
-<h3 class="text-lg font-bold text-gray-800">2026春季学期高等数学期中测验</h3>
-<div class="flex items-center space-x-4 mt-1 text-sm text-gray-400">
-<span>时长: 120 分钟</span>
-<span>题目: 40 题</span>
-<span class="text-red-500 font-medium">进行中 (截止 23:59)</span>
-</div>
-</div>
-</div>
-<button class="px-6 py-2 bg-[#1890FF] text-white rounded-md font-bold hover:bg-blue-600" onclick="enterExam()">进入测验</button>
-</div>
-</div>
-<!-- 已结束/已完成测验 -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden opacity-75">
-<div class="p-6 flex items-center justify-between">
-<div class="flex items-center">
-<div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 mr-4">
-<iconify-icon class="text-3xl" icon="mdi:checkbox-marked-circle-outline"></iconify-icon>
-</div>
-<div>
-<h3 class="text-lg font-bold text-gray-800">线性代数第一单元随堂测试</h3>
-<div class="flex items-center space-x-4 mt-1 text-sm text-gray-400">
-<span>分数: 85 分</span>
-<span>排名: 5 / 120</span>
-<span class="text-green-600">已完成</span>
-</div>
-</div>
-</div>
-<button class="px-6 py-2 border border-gray-200 text-gray-500 rounded-md font-medium hover:bg-gray-50">查看解析</button>
-</div>
-</div>
+<div class="space-y-6" id="examListContainer">
+<p class="text-gray-400 text-center py-12">加载中...</p>
 </div>
 </main>
+
 <!-- 考试界面 -->
 <div class="fixed inset-0 bg-[#F0F2F5] z-[100] hidden flex flex-col" id="examInterface">
 <div class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
 <div class="flex items-center text-gray-800 font-bold">
 <iconify-icon class="text-orange-500 text-xl mr-2" icon="mdi:timer-sand"></iconify-icon>
-<span>高等数学期中测验</span>
+<span id="examTitle">测验</span>
 </div>
 <div class="flex items-center space-x-8">
-<div class="text-xl font-mono font-bold text-red-500" id="timer">01:59:45</div>
+<div class="text-xl font-mono font-bold text-red-500" id="examTimer">00:00</div>
 <button class="px-6 py-2 bg-[#1890FF] text-white rounded font-bold" onclick="confirmSubmit()">交卷</button>
 </div>
 </div>
@@ -86,68 +52,406 @@
 <!-- 答题卡 -->
 <div class="w-80 bg-white border-r p-6 flex flex-col overflow-y-auto">
 <h4 class="font-bold text-sm text-gray-500 uppercase mb-4">答题进度</h4>
-<div class="grid grid-cols-5 gap-3">
-<div class="w-10 h-10 rounded border border-blue-500 bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm cursor-pointer">1</div>
-<div class="w-10 h-10 rounded border border-gray-200 text-gray-400 flex items-center justify-center text-sm cursor-pointer">2</div>
-<div class="w-10 h-10 rounded border border-gray-200 text-gray-400 flex items-center justify-center text-sm cursor-pointer">3</div>
-<!-- ...更多 -->
+<div class="text-sm text-gray-600 mb-3" id="answeredCount">已答 0/0</div>
+<div class="grid grid-cols-5 gap-3" id="examAnswerCardGrid">
+</div>
+<div class="mt-8 pt-4 border-t">
+<div class="flex items-center text-xs text-gray-400 mb-2">
+<span class="w-3 h-3 bg-blue-50 border border-blue-500 rounded-sm mr-2"></span> 已答
+</div>
+<div class="flex items-center text-xs text-gray-400">
+<span class="w-3 h-3 border border-gray-200 rounded-sm mr-2"></span> 未答
+</div>
 </div>
 </div>
 <!-- 答题区 -->
 <div class="flex-1 p-12 overflow-y-auto flex flex-col items-center">
 <div class="w-full max-w-3xl bg-white p-10 rounded-xl shadow-sm">
-<div class="text-sm text-blue-500 font-bold mb-4">第一部分：单选题 (1/20)</div>
-<div class="text-xl text-gray-800 font-bold leading-relaxed mb-8">
-                        当 x → 0 时，sin(x) / x 的极限是？
+<div class="text-sm text-blue-500 font-bold mb-4" id="examQuestionLabel">单选题 (1/20)</div>
+<div class="text-xl text-gray-800 font-bold leading-relaxed mb-8" id="examQuestionContent">
+                        加载中...
                     </div>
-<div class="space-y-4">
-<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
-<span class="font-medium text-gray-700">A. 0</span>
-</label>
-<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
-<span class="font-medium text-gray-700">B. 1</span>
-</label>
-<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-<input class="w-4 h-4 text-[#1890FF] mr-4" name="q1" type="radio"/>
-<span class="font-medium text-gray-700">C. ∞</span>
-</label>
+<div class="space-y-4" id="examOptionsContainer">
 </div>
 <div class="mt-12 flex justify-between">
-<button class="px-8 py-3 border border-gray-200 rounded text-gray-500">上一题</button>
-<button class="px-12 py-3 bg-[#1890FF] text-white rounded font-bold">下一题</button>
+<button class="px-8 py-3 border border-gray-200 rounded text-gray-500" id="examPrevBtn" onclick="examPrevQuestion()">上一题</button>
+<button class="px-12 py-3 bg-[#1890FF] text-white rounded font-bold" id="examNextBtn" onclick="examNextQuestion()">下一题</button>
 </div>
 </div>
 </div>
 </div>
 </div>
+
 <!-- 确认交卷弹窗 -->
 <div class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center hidden" id="submitModal">
 <div class="bg-white p-8 rounded-xl max-w-sm w-full text-center">
 <iconify-icon class="text-6xl text-orange-400 mb-4" icon="mdi:help-circle-outline"></iconify-icon>
 <h3 class="text-xl font-bold mb-2">确认交卷？</h3>
-<p class="text-gray-500 mb-8">你还有 39 题未答。一旦提交将无法修改。</p>
+<p class="text-gray-500 mb-8" id="submitWarning">你还有题目未答。一旦提交将无法修改。</p>
 <div class="flex space-x-3">
 <button class="flex-1 py-3 bg-gray-100 rounded font-bold" onclick="closeConfirm()">返回检查</button>
-<button class="flex-1 py-3 bg-[#1890FF] text-white rounded font-bold" onclick="submitExam()">确认提交</button>
+<button class="flex-1 py-3 bg-[#1890FF] text-white rounded font-bold" id="confirmSubmitBtn" onclick="submitExam()">确认提交</button>
 </div>
 </div>
 </div>
+
+<!-- 考试结果 -->
+<div class="fixed inset-0 bg-[#F0F2F5] z-[100] hidden flex items-center justify-center" id="examResultPage">
+<div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-xl text-center">
+<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+<iconify-icon class="text-5xl text-green-500" icon="mdi:check-circle"></iconify-icon>
+</div>
+<h2 class="text-3xl font-bold text-gray-800 mb-2">交卷成功！</h2>
+<p class="text-gray-500 mb-8" id="examResultSummary">成绩加载中...</p>
+<div class="flex justify-center space-x-12 mb-10">
+<div><p class="text-xs text-gray-400">得分</p><p class="text-2xl font-bold text-blue-500" id="examResultScore">--</p></div>
+<div><p class="text-xs text-gray-400">正确率</p><p class="text-2xl font-bold text-green-500" id="examResultAccuracy">--</p></div>
+<div><p class="text-xs text-gray-400">用时</p><p class="text-2xl font-bold text-gray-800" id="examResultTime">--</p></div>
+</div>
+<div class="flex space-x-4">
+<button class="flex-1 py-3 border border-[#1890FF] text-[#1890FF] rounded-lg font-bold" onclick="window.location.href='student_results.html'">查看成绩详情</button>
+<button class="flex-1 py-3 bg-[#1890FF] text-white rounded-lg font-bold" onclick="window.location.href='student_exam.html'">返回测验列表</button>
+</div>
+</div>
+</div>
+
 <script>
-        function enterExam() {
-            document.getElementById('examInterface').classList.remove('hidden');
+var API_BASE = 'http://localhost:8080/api';
+
+function apiGet(url, params) {
+    var query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+function apiPost(url, data) {
+    return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+
+// Exam state
+var examQuestions = [];
+var examAnswers = {};        // questionId -> selectedAnswer
+var examRecordId = null;
+var examCurrentIndex = 0;
+var examTimerInterval = null;
+var examTotalSeconds = 0;
+var examRemainingSeconds = 0;
+var examStartTime = null;
+
+function getOptionLabel(index) {
+    return String.fromCharCode(65 + index);
+}
+
+function getTypeName(type) {
+    if (type === 'SINGLE_CHOICE' || type === 'SINGLE') return '单选题';
+    if (type === 'MULTIPLE_CHOICE' || type === 'MULTIPLE') return '多选题';
+    if (type === 'TRUE_FALSE' || type === 'TRUE_FALSE') return '判断题';
+    return '单选题';
+}
+
+function formatTime(seconds) {
+    if (seconds < 0) seconds = 0;
+    var h = Math.floor(seconds / 3600);
+    var m = Math.floor((seconds % 3600) / 60);
+    var s = seconds % 60;
+    if (h > 0) {
+        return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// Load available exams
+function loadAvailableExams() {
+    apiGet('/student/exams/available').then(function(data) {
+        var exams = Array.isArray(data) ? data : (data && data.list ? data.list : []);
+        var container = document.getElementById('examListContainer');
+        if (exams.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center py-12">暂无可用测验</p>';
+            return;
         }
-        function confirmSubmit() {
-            document.getElementById('submitModal').classList.remove('hidden');
+        var html = '';
+        for (var i = 0; i < exams.length; i++) {
+            var exam = exams[i];
+            var isActive = exam.status === 'ACTIVE' || exam.status === 'IN_PROGRESS' || exam.status === 'NOT_STARTED';
+            var opacityClass = isActive ? '' : 'opacity-75';
+            var statusClass = isActive ? 'text-red-500 font-medium' : 'text-green-600';
+            var statusText = isActive ? (exam.statusText || '进行中') : (exam.statusText || '已完成');
+            var btnHtml = '';
+            if (isActive) {
+                btnHtml = '<button class="px-6 py-2 bg-[#1890FF] text-white rounded-md font-bold hover:bg-blue-600" onclick="enterExam(' + exam.id + ')">进入测验</button>';
+            } else if (exam.hasResult || exam.score != null) {
+                btnHtml = '<button class="px-6 py-2 border border-gray-200 text-gray-500 rounded-md font-medium hover:bg-gray-50" onclick="viewExamResult(' + (exam.examRecordId || exam.recordId || exam.id) + ')">查看解析</button>';
+            } else {
+                btnHtml = '<span class="text-gray-400 text-sm">已结束</span>';
+            }
+
+            var iconColor = isActive ? 'red' : 'gray';
+            var iconName = isActive ? 'mdi:clock-fast' : 'mdi:checkbox-marked-circle-outline';
+
+            html += '<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ' + opacityClass + '">';
+            html += '<div class="p-6 flex items-center justify-between">';
+            html += '<div class="flex items-center">';
+            html += '<div class="w-12 h-12 rounded-lg bg-' + iconColor + '-50 flex items-center justify-center text-' + iconColor + '-500 mr-4">';
+            html += '<iconify-icon class="text-3xl" icon="' + iconName + '"></iconify-icon>';
+            html += '</div>';
+            html += '<div>';
+            html += '<h3 class="text-lg font-bold text-gray-800">' + (exam.title || exam.name || '测验') + '</h3>';
+            html += '<div class="flex items-center space-x-4 mt-1 text-sm text-gray-400">';
+            html += '<span>时长: ' + (exam.duration || exam.durationMinutes || '?') + ' 分钟</span>';
+            html += '<span>题目: ' + (exam.questionCount || exam.totalQuestions || '?') + ' 题</span>';
+            if (exam.score != null) {
+                html += '<span>分数: ' + exam.score + ' 分</span>';
+            }
+            html += '<span class="' + statusClass + '">' + statusText + '</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += btnHtml;
+            html += '</div>';
+            html += '</div>';
         }
-        function closeConfirm() {
-            document.getElementById('submitModal').classList.add('hidden');
+        container.innerHTML = html;
+    }).catch(function(err) {
+        console.error('Failed to load exams:', err);
+        document.getElementById('examListContainer').innerHTML = '<p class="text-red-400 text-center py-12">加载失败，请刷新重试</p>';
+    });
+}
+
+function viewExamResult(recordId) {
+    window.location.href = 'student_results.html?recordId=' + recordId;
+}
+
+function enterExam(paperId) {
+    // Start exam
+    apiPost('/student/exams/' + paperId + '/start').then(function(data) {
+        examRecordId = data.examRecordId || data.id || data.recordId;
+        if (!examRecordId) {
+            alert('开始测验失败');
+            return;
         }
-        function submitExam() {
-            alert('交卷成功！');
-            window.location.href = 'student_results.html';
+        // Fetch exam detail
+        loadExamDetail();
+    }).catch(function(err) {
+        console.error('Failed to start exam:', err);
+        alert('开始测验失败，请重试');
+    });
+}
+
+function loadExamDetail() {
+    apiGet('/student/exams/' + examRecordId + '/detail').then(function(data) {
+        examQuestions = data.questions || data.list || [];
+        if (examQuestions.length === 0) {
+            alert('题目加载失败');
+            return;
         }
-    </script>
+
+        // Set duration
+        examTotalSeconds = (data.duration || data.durationMinutes || 60) * 60;
+        examRemainingSeconds = examTotalSeconds;
+        examCurrentIndex = 0;
+        examAnswers = {};
+        examStartTime = new Date();
+
+        // Show exam interface
+        document.getElementById('examListPage').style.display = 'none';
+        document.getElementById('examInterface').classList.remove('hidden');
+        document.getElementById('examTitle').textContent = data.title || data.examName || '测验';
+
+        // Render answer card and first question
+        renderExamAnswerCard();
+        renderExamQuestion();
+        startExamTimer();
+    }).catch(function(err) {
+        console.error('Failed to load exam detail:', err);
+        alert('加载试卷详情失败');
+    });
+}
+
+function renderExamAnswerCard() {
+    var grid = document.getElementById('examAnswerCardGrid');
+    document.getElementById('answeredCount').textContent = '已答 ' + Object.keys(examAnswers).length + '/' + examQuestions.length;
+    var html = '';
+    for (var i = 0; i < examQuestions.length; i++) {
+        var q = examQuestions[i];
+        var qid = q.id || q.questionId;
+        var isAnswered = examAnswers[qid] != null;
+        var isCurrent = i === examCurrentIndex;
+        var cls = 'w-10 h-10 rounded border flex items-center justify-center font-bold text-sm cursor-pointer ';
+        if (isCurrent && isAnswered) {
+            cls += 'border-blue-500 bg-blue-500 text-white';
+        } else if (isCurrent) {
+            cls += 'border-blue-500 bg-blue-50 text-blue-600';
+        } else if (isAnswered) {
+            cls += 'border-blue-500 bg-blue-50 text-blue-600';
+        } else {
+            cls += 'border-gray-200 text-gray-400';
+        }
+        html += '<div class="' + cls + '" onclick="examJumpToQuestion(' + i + ')">' + (i + 1) + '</div>';
+    }
+    grid.innerHTML = html;
+}
+
+function renderExamQuestion() {
+    var q = examQuestions[examCurrentIndex];
+    if (!q) return;
+
+    var qid = q.id || q.questionId;
+    var typeName = getTypeName(q.questionType || q.type);
+    document.getElementById('examQuestionLabel').textContent = typeName + ' (' + (examCurrentIndex + 1) + '/' + examQuestions.length + ')';
+    document.getElementById('examQuestionContent').textContent = (examCurrentIndex + 1) + '. ' + (q.content || q.title || '');
+
+    // Navigation buttons
+    document.getElementById('examPrevBtn').style.visibility = examCurrentIndex === 0 ? 'hidden' : 'visible';
+    document.getElementById('examNextBtn').textContent = examCurrentIndex === examQuestions.length - 1 ? '最后一题' : '下一题';
+
+    // Render options
+    var options = q.options || [];
+    var container = document.getElementById('examOptionsContainer');
+    var html = '';
+    var selectedAnswer = examAnswers[qid];
+
+    for (var i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var label = opt.label || getOptionLabel(i);
+        var content = opt.content || opt.text || opt.label || '';
+        var isSelected = (selectedAnswer === label);
+        var checkedAttr = isSelected ? ' checked' : '';
+
+        html += '<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors' + (isSelected ? ' border-[#1890FF] bg-blue-50' : '') + '">';
+        html += '<input class="w-4 h-4 text-[#1890FF] mr-4" name="examQ" type="radio" value="' + label + '"' + checkedAttr + ' onchange="examSelectAnswer(\'' + label + '\')"/>';
+        html += '<span class="font-medium text-gray-700">' + label + '. ' + content + '</span>';
+        html += '</label>';
+    }
+    container.innerHTML = html;
+
+    renderExamAnswerCard();
+}
+
+function examSelectAnswer(label) {
+    var q = examQuestions[examCurrentIndex];
+    var qid = q.id || q.questionId;
+    examAnswers[qid] = label;
+    renderExamAnswerCard();
+}
+
+function examJumpToQuestion(index) {
+    examCurrentIndex = index;
+    renderExamQuestion();
+}
+
+function examPrevQuestion() {
+    if (examCurrentIndex > 0) {
+        examCurrentIndex--;
+        renderExamQuestion();
+    }
+}
+
+function examNextQuestion() {
+    if (examCurrentIndex < examQuestions.length - 1) {
+        examCurrentIndex++;
+        renderExamQuestion();
+    }
+}
+
+function startExamTimer() {
+    if (examTimerInterval) clearInterval(examTimerInterval);
+    updateExamTimerDisplay();
+    examTimerInterval = setInterval(function() {
+        examRemainingSeconds--;
+        updateExamTimerDisplay();
+        if (examRemainingSeconds <= 0) {
+            // Time's up - auto submit
+            clearInterval(examTimerInterval);
+            examTimerInterval = null;
+            alert('考试时间已到，系统将自动交卷');
+            submitExam();
+        }
+    }, 1000);
+}
+
+function updateExamTimerDisplay() {
+    document.getElementById('examTimer').textContent = formatTime(examRemainingSeconds);
+    if (examRemainingSeconds < 300) {
+        document.getElementById('examTimer').classList.add('text-red-500');
+    }
+}
+
+function confirmSubmit() {
+    var unanswered = examQuestions.length - Object.keys(examAnswers).length;
+    var warningEl = document.getElementById('submitWarning');
+    if (unanswered > 0) {
+        warningEl.textContent = '你还有 ' + unanswered + ' 题未答。一旦提交将无法修改。';
+    } else {
+        warningEl.textContent = '所有题目已作答。确认提交后将无法修改。';
+    }
+    document.getElementById('submitModal').classList.remove('hidden');
+}
+
+function closeConfirm() {
+    document.getElementById('submitModal').classList.add('hidden');
+}
+
+function submitExam() {
+    // Hide modal
+    document.getElementById('submitModal').classList.add('hidden');
+
+    // Stop timer
+    if (examTimerInterval) {
+        clearInterval(examTimerInterval);
+        examTimerInterval = null;
+    }
+
+    // Build answers array
+    var answerList = [];
+    for (var i = 0; i < examQuestions.length; i++) {
+        var q = examQuestions[i];
+        var qid = q.id || q.questionId;
+        answerList.push({
+            questionId: qid,
+            studentAnswer: examAnswers[qid] || ''
+        });
+    }
+
+    // Disable submit button
+    var submitBtn = document.getElementById('confirmSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '提交中...';
+
+    apiPost('/student/exams/' + examRecordId + '/submit', { answers: answerList }).then(function(result) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '确认提交';
+
+        // Calculate elapsed time
+        var elapsedSeconds = examTotalSeconds - examRemainingSeconds;
+
+        // Hide exam interface, show result
+        document.getElementById('examInterface').classList.add('hidden');
+        document.getElementById('examResultPage').classList.remove('hidden');
+
+        var score = result.score != null ? result.score : '--';
+        var totalScore = result.totalScore != null ? result.totalScore : '100';
+        var correctCount = result.correctCount != null ? result.correctCount : '--';
+        var totalCount = result.totalCount || examQuestions.length;
+        var accuracy = result.accuracy != null ? result.accuracy : (totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : '--');
+
+        document.getElementById('examResultSummary').textContent = '正确 ' + correctCount + ' / ' + totalCount + ' 题';
+        document.getElementById('examResultScore').textContent = score + ' / ' + totalScore;
+        document.getElementById('examResultAccuracy').textContent = (accuracy !== '--' ? accuracy + '%' : '--');
+        document.getElementById('examResultTime').textContent = formatTime(elapsedSeconds);
+    }).catch(function(err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '确认提交';
+        console.error('Failed to submit exam:', err);
+        alert('交卷失败，请重试');
+    });
+}
+
+// Initialize
+loadAvailableExams();
+</script>
 </body>
 </html>

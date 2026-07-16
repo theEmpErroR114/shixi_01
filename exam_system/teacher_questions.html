@@ -18,7 +18,7 @@
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-<!-- 侧边栏 (复用通用老师侧边栏) -->
+<!-- 侧边栏 -->
 <div class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 <iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>
@@ -66,39 +66,13 @@
 <!-- 左侧分类树 -->
 <div class="w-64 bg-white border-r border-gray-100 flex flex-col overflow-hidden">
 <div class="p-4 border-b border-gray-50 flex items-center justify-between">
-<span class="font-bold text-gray-800 text-sm">知识点分类</span>
-<iconify-icon class="text-gray-400 cursor-pointer" icon="mdi:cog"></iconify-icon>
+<span class="font-bold text-gray-800 text-sm">课程分类</span>
 </div>
-<div class="flex-1 overflow-y-auto py-2">
-<!-- 第一级 -->
-<div>
-<div class="tree-node flex items-center px-4 py-3 cursor-pointer text-sm font-medium">
-<iconify-icon class="mr-1 text-gray-400" icon="mdi:chevron-down"></iconify-icon>
-                            高等数学
-                        </div>
-<!-- 第二级 -->
-<div class="pl-4">
-<div class="tree-node flex items-center px-4 py-2 cursor-pointer text-sm text-gray-600 active">
-<iconify-icon class="mr-1 text-gray-300" icon="mdi:chevron-down"></iconify-icon>
-                                第一章 函数与极限
-                            </div>
-<!-- 第三级 -->
-<div class="pl-6">
-<div class="tree-node px-4 py-2 cursor-pointer text-xs text-gray-500">1.1 映射与函数</div>
-<div class="tree-node px-4 py-2 cursor-pointer text-xs text-gray-500 bg-blue-50/50">1.2 数列的极限</div>
+<div class="flex-1 overflow-y-auto py-2" id="courseTree">
+<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600 active" data-course-id="" onclick="selectCourse(this, '')">
+    全部题目
 </div>
-<div class="tree-node flex items-center px-4 py-2 cursor-pointer text-sm text-gray-600">
-<iconify-icon class="mr-1 text-gray-300" icon="mdi:chevron-right"></iconify-icon>
-                                第二章 导数与微分
-                            </div>
-</div>
-</div>
-<div class="mt-2">
-<div class="tree-node flex items-center px-4 py-3 cursor-pointer text-sm font-medium text-gray-800">
-<iconify-icon class="mr-1 text-gray-400" icon="mdi:chevron-right"></iconify-icon>
-                            线性代数
-                        </div>
-</div>
+<div class="text-center text-sm text-gray-400 py-4">加载中...</div>
 </div>
 </div>
 <!-- 右侧列表 -->
@@ -107,147 +81,505 @@
 <div class="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-50 flex flex-wrap items-center gap-6">
 <div class="flex items-center space-x-2">
 <span class="text-sm text-gray-500">题型：</span>
-<select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none">
-<option>全部题型</option>
-<option>单选题</option>
-<option>多选题</option>
-<option>判断题</option>
-<option>填空题</option>
-<option>简答题</option>
+<select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none" id="filterType" onchange="applyFilters()">
+<option value="">全部题型</option>
+<option value="SINGLE_CHOICE">单选题</option>
+<option value="MULTI_CHOICE">多选题</option>
+<option value="TRUE_FALSE">判断题</option>
+<option value="FILL_BLANK">填空题</option>
+<option value="SUBJECTIVE">简答题</option>
 </select>
 </div>
 <div class="flex items-center space-x-2">
 <span class="text-sm text-gray-500">难度：</span>
-<div class="flex space-x-1">
-<button class="px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded">全部</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50">易</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50">中</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50">难</button>
+<div class="flex space-x-1" id="difficultyBtns">
+<button class="px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded" data-difficulty="" onclick="selectDifficulty(this, '')">全部</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="EASY" onclick="selectDifficulty(this, 'EASY')">易</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="MEDIUM" onclick="selectDifficulty(this, 'MEDIUM')">中</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="HARD" onclick="selectDifficulty(this, 'HARD')">难</button>
 </div>
 </div>
 <div class="flex-1 relative min-w-[200px]">
-<input class="w-full border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm" placeholder="搜索题干关键词" type="text"/>
+<input class="w-full border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm" placeholder="搜索题干关键词" type="text" id="filterKeyword" onkeydown="if(event.key==='Enter')applyFilters()"/>
 <iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
 </div>
 </div>
 <!-- 题目卡片列表 -->
-<div class="flex-1 overflow-y-auto space-y-4">
-<!-- 题目 1 -->
-<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
-<div class="flex justify-between items-start mb-4">
-<div class="flex items-center space-x-2">
-<span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-bold rounded">单选题</span>
-<span class="px-2 py-0.5 bg-green-50 text-green-600 text-xs font-bold rounded">难度：易</span>
-<span class="text-gray-400 text-xs">ID: Q-10086</span>
+<div class="flex-1 overflow-y-auto space-y-4" id="questionList">
 </div>
-<div class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">
-<button class="text-blue-500 text-sm hover:underline">编辑</button>
-<button class="text-red-400 text-sm hover:underline">删除</button>
-</div>
-</div>
-<div class="text-gray-800 font-medium mb-4 leading-relaxed">
-                            设 f(x) 在 [a, b] 上连续，且 f(a) &lt; 0, f(b) &gt; 0，则在 (a, b) 内至少存在一点 ξ 使得 f(ξ) = 0，这是属于什么定理？
-                        </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
-<div class="p-2 border border-gray-100 rounded bg-gray-50">A. 罗尔定理</div>
-<div class="p-2 border border-gray-100 rounded bg-gray-50">B. 拉格朗日中值定理</div>
-<div class="p-2 border border-blue-200 rounded bg-blue-50 text-blue-700 font-medium">C. 零点存在性定理 (正确)</div>
-<div class="p-2 border border-gray-100 rounded bg-gray-50">D. 柯西中值定理</div>
-</div>
-<div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-<div class="text-xs text-gray-400">知识点：第一章 1.2 数列的极限</div>
-<div class="text-xs text-gray-400">创建时间：2026-07-10</div>
-</div>
-</div>
-<!-- 题目 2 -->
-<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
-<div class="flex justify-between items-start mb-4">
-<div class="flex items-center space-x-2">
-<span class="px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-bold rounded">多选题</span>
-<span class="px-2 py-0.5 bg-orange-50 text-orange-600 text-xs font-bold rounded">难度：中</span>
-<span class="text-gray-400 text-xs">ID: Q-10089</span>
-</div>
-<div class="flex items-center space-x-4">
-<button class="text-blue-500 text-sm hover:underline">编辑</button>
-<button class="text-red-400 text-sm hover:underline">删除</button>
-</div>
-</div>
-<div class="text-gray-800 font-medium mb-4 leading-relaxed">
-                            下列关于无穷小的说法中正确的是？
-                        </div>
-<div class="space-y-2 text-sm text-gray-600">
-<div class="flex items-center p-2 border border-blue-200 rounded bg-blue-50 text-blue-700">
-<iconify-icon class="mr-2" icon="mdi:check-circle"></iconify-icon>
-                                无穷小是以零为极限的变量
-                            </div>
-<div class="flex items-center p-2 border border-gray-100 rounded bg-gray-50">
-                                非常小的常量也是无穷小
-                            </div>
-<div class="flex items-center p-2 border border-blue-200 rounded bg-blue-50 text-blue-700">
-<iconify-icon class="mr-2" icon="mdi:check-circle"></iconify-icon>
-                                零是唯一的无穷小常量
-                            </div>
+<!-- 分页 -->
+<div class="flex items-center justify-between pt-4" id="paginationBar">
+<span class="text-sm text-gray-500" id="pageInfo">共 0 条</span>
+<div class="flex space-x-2" id="pageBtns"></div>
 </div>
 </div>
 </div>
 </div>
-</div>
-</div>
-<!-- 新增题目模态框 -->
+<!-- 题目表单模态框 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="qModal">
 <div class="absolute inset-0 bg-black/50" onclick="closeQuestionModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-<h3 class="text-lg font-bold">新增习题</h3>
+<h3 class="text-lg font-bold" id="qModalTitle">新增习题</h3>
 <button onclick="closeQuestionModal()"><iconify-icon class="text-xl text-gray-400" icon="mdi:close"></iconify-icon></button>
 </div>
 <div class="flex-1 overflow-y-auto p-6 space-y-6">
+<input type="hidden" id="qEditId"/>
 <div class="grid grid-cols-2 gap-4">
 <div>
+<label class="block text-sm font-medium text-gray-700 mb-1">所属课程</label>
+<select class="w-full border rounded-md px-3 py-2 text-sm" id="qCourseId"></select>
+</div>
+<div>
 <label class="block text-sm font-medium text-gray-700 mb-1">题型</label>
-<select class="w-full border rounded-md px-3 py-2 text-sm"><option>单选题</option><option>多选题</option><option>判断题</option></select>
+<select class="w-full border rounded-md px-3 py-2 text-sm" id="qType" onchange="onQuestionTypeChange()">
+<option value="SINGLE_CHOICE">单选题</option>
+<option value="MULTI_CHOICE">多选题</option>
+<option value="TRUE_FALSE">判断题</option>
+<option value="FILL_BLANK">填空题</option>
+<option value="SUBJECTIVE">简答题</option>
+</select>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">难度</label>
-<select class="w-full border rounded-md px-3 py-2 text-sm"><option>易</option><option>中</option><option>难</option></select>
+<select class="w-full border rounded-md px-3 py-2 text-sm" id="qDifficulty">
+<option value="EASY">易</option>
+<option value="MEDIUM">中</option>
+<option value="HARD">难</option>
+</select>
 </div>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">题干内容</label>
-<textarea class="w-full border rounded-md px-3 py-2 text-sm h-24" placeholder="请输入题目描述..."></textarea>
+<textarea class="w-full border rounded-md px-3 py-2 text-sm h-24" placeholder="请输入题目描述..." id="qContent"></textarea>
 </div>
-<div class="space-y-3">
+<div class="space-y-3" id="optionsArea">
 <div class="flex items-center justify-between">
 <label class="text-sm font-medium text-gray-700">选项设置</label>
-<button class="text-xs text-blue-500">+ 添加选项</button>
+<button class="text-xs text-blue-500" onclick="addOption()">+ 添加选项</button>
 </div>
-<div class="flex items-center space-x-3">
-<input checked="" name="correct" type="radio"/>
-<span class="w-6 text-sm text-gray-500 font-bold">A</span>
-<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" value="罗尔定理"/>
-<iconify-icon class="text-gray-400 cursor-pointer" icon="mdi:delete-outline"></iconify-icon>
+<div id="optionsContainer"></div>
 </div>
-<div class="flex items-center space-x-3">
-<input name="correct" type="radio"/>
-<span class="w-6 text-sm text-gray-500 font-bold">B</span>
-<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" value="拉格朗日中值定理"/>
-<iconify-icon class="text-gray-400 cursor-pointer" icon="mdi:delete-outline"></iconify-icon>
-</div>
+<div id="answerArea">
+<label class="block text-sm font-medium text-gray-700 mb-1">答案</label>
+<input class="w-full border rounded-md px-3 py-2 text-sm" placeholder="请输入正确答案..." type="text" id="qAnswer"/>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">答案解析</label>
-<textarea class="w-full border rounded-md px-3 py-2 text-sm h-20" placeholder="解释为什么这个答案是正确的..."></textarea>
+<textarea class="w-full border rounded-md px-3 py-2 text-sm h-20" placeholder="解释为什么这个答案是正确的..." id="qAnalysis"></textarea>
 </div>
 </div>
 <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
 <button class="px-4 py-2 text-sm text-gray-600 bg-gray-50 rounded" onclick="closeQuestionModal()">取消</button>
-<button class="px-4 py-2 text-sm text-white bg-[#1890FF] rounded shadow-md" onclick="closeQuestionModal()">保存题目</button>
+<button class="px-4 py-2 text-sm text-white bg-[#1890FF] rounded shadow-md" onclick="saveQuestion()">保存题目</button>
 </div>
 </div>
 </div>
 <script>
-        function openQuestionModal() { document.getElementById('qModal').classList.remove('hidden'); }
-        function closeQuestionModal() { document.getElementById('qModal').classList.add('hidden'); }
-    </script>
+    var API_BASE = 'http://localhost:8080/api';
+
+    function apiGet(url, params) {
+        var query = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiDelete(url) {
+        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    // 当前筛选状态
+    var currentCourseId = '';
+    var currentDifficulty = '';
+    var currentPage = 1;
+    var currentPageSize = 10;
+    var courseList = [];
+    var optionCount = 0;
+
+    var TYPE_LABELS = {
+        'SINGLE_CHOICE': '单选题',
+        'MULTI_CHOICE': '多选题',
+        'TRUE_FALSE': '判断题',
+        'FILL_BLANK': '填空题',
+        'SUBJECTIVE': '简答题'
+    };
+    var TYPE_COLORS = {
+        'SINGLE_CHOICE': 'blue',
+        'MULTI_CHOICE': 'purple',
+        'TRUE_FALSE': 'green',
+        'FILL_BLANK': 'orange',
+        'SUBJECTIVE': 'red'
+    };
+    var DIFFICULTY_LABELS = { 'EASY': '易', 'MEDIUM': '中', 'HARD': '难' };
+    var DIFFICULTY_COLORS = { 'EASY': 'green', 'MEDIUM': 'orange', 'HARD': 'red' };
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    // ===== 课程树 =====
+    function loadCourses() {
+        apiGet('/courses').then(function(data) {
+            courseList = data.records || data.list || data || [];
+            renderCourseTree(courseList);
+        }).catch(function(err) {
+            console.error('Failed to load courses:', err);
+        });
+    }
+
+    function renderCourseTree(courses) {
+        var tree = document.getElementById('courseTree');
+        var html = '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600 active" data-course-id="" onclick="selectCourse(this, \'\')">全部题目</div>';
+        for (var i = 0; i < courses.length; i++) {
+            var c = courses[i];
+            html += '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600" data-course-id="' + c.id + '" onclick="selectCourse(this, \'' + c.id + '\')">';
+            html += '<iconify-icon class="mr-1 text-gray-400" icon="mdi:book-outline"></iconify-icon>';
+            html += escapeHtml(c.courseName || c.name || '');
+            html += '</div>';
+        }
+        tree.innerHTML = html;
+    }
+
+    function selectCourse(el, courseId) {
+        var nodes = document.querySelectorAll('#courseTree .tree-node');
+        for (var i = 0; i < nodes.length; i++) {
+            nodes[i].classList.remove('active');
+        }
+        el.classList.add('active');
+        currentCourseId = courseId;
+        currentPage = 1;
+        loadQuestions();
+    }
+
+    // ===== 筛选 =====
+    function selectDifficulty(btn, difficulty) {
+        var btns = document.querySelectorAll('#difficultyBtns button');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].className = 'px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50';
+        }
+        btn.className = 'px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded';
+        currentDifficulty = difficulty;
+        currentPage = 1;
+        loadQuestions();
+    }
+
+    function applyFilters() {
+        currentPage = 1;
+        loadQuestions();
+    }
+
+    // ===== 题目列表 =====
+    function loadQuestions() {
+        var params = { page: currentPage, pageSize: currentPageSize };
+        if (currentCourseId) params.courseId = currentCourseId;
+        if (currentDifficulty) params.difficulty = currentDifficulty;
+        var typeVal = document.getElementById('filterType').value;
+        if (typeVal) params.questionType = typeVal;
+        var keyword = document.getElementById('filterKeyword').value.trim();
+        if (keyword) params.keyword = keyword;
+
+        apiGet('/teacher/questions', params).then(function(data) {
+            renderQuestions(data.records || data.list || []);
+            renderPagination(data);
+        }).catch(function(err) {
+            console.error('Failed to load questions:', err);
+        });
+    }
+
+    function renderQuestions(questions) {
+        var container = document.getElementById('questionList');
+        if (questions.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 py-12">暂无题目，点击右上角"新增题目"按钮添加</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < questions.length; i++) {
+            var q = questions[i];
+            var typeLabel = TYPE_LABELS[q.questionType] || q.questionType;
+            var typeColor = TYPE_COLORS[q.questionType] || 'gray';
+            var diffLabel = DIFFICULTY_LABELS[q.difficulty] || q.difficulty;
+            var diffColor = DIFFICULTY_COLORS[q.difficulty] || 'gray';
+
+            html += '<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">';
+            html += '<div class="flex justify-between items-start mb-4">';
+            html += '<div class="flex items-center space-x-2">';
+            html += '<span class="px-2 py-0.5 bg-' + typeColor + '-50 text-' + typeColor + '-600 text-xs font-bold rounded">' + typeLabel + '</span>';
+            html += '<span class="px-2 py-0.5 bg-' + diffColor + '-50 text-' + diffColor + '-600 text-xs font-bold rounded">难度：' + diffLabel + '</span>';
+            html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.id || '') + '</span>';
+            html += '</div>';
+            html += '<div class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">';
+            html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.id + '\')">编辑</button>';
+            html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="text-gray-800 font-medium mb-4 leading-relaxed">' + escapeHtml(q.content || '') + '</div>';
+
+            // 选项
+            var options = q.options || [];
+            if (options.length > 0) {
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">';
+                for (var j = 0; j < options.length; j++) {
+                    var opt = options[j];
+                    var isCorrect = opt.isCorrect;
+                    if (q.questionType === 'MULTI_CHOICE') {
+                        isCorrect = q.answer && q.answer.indexOf(opt.optionLabel) >= 0;
+                    }
+                    var optClass = isCorrect ? 'border border-blue-200 rounded bg-blue-50 text-blue-700 font-medium' : 'border border-gray-100 rounded bg-gray-50';
+                    html += '<div class="p-2 ' + optClass + '">' + escapeHtml(opt.optionLabel) + '. ' + escapeHtml(opt.optionContent) + (isCorrect ? ' (正确)' : '') + '</div>';
+                }
+                html += '</div>';
+            } else if (q.answer) {
+                html += '<div class="text-sm text-gray-500 mt-2">答案：' + escapeHtml(q.answer) + '</div>';
+            }
+
+            html += '<div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">';
+            html += '<div class="text-xs text-gray-400">课程：' + escapeHtml(q.courseName || '') + '</div>';
+            html += '<div class="text-xs text-gray-400">创建时间：' + (q.createTime || '') + '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function renderPagination(data) {
+        var total = data.total || 0;
+        var page = data.current || currentPage;
+        var pages = data.pages || Math.ceil(total / currentPageSize);
+        document.getElementById('pageInfo').textContent = '共 ' + total + ' 条';
+        var btnHtml = '';
+        if (page > 1) {
+            btnHtml += '<button class="px-3 py-1 border rounded text-sm hover:bg-gray-50" onclick="goPage(' + (page - 1) + ')">上一页</button>';
+        }
+        for (var p = 1; p <= pages && p <= 10; p++) {
+            if (p === page) {
+                btnHtml += '<button class="px-3 py-1 border rounded text-sm bg-blue-500 text-white">' + p + '</button>';
+            } else {
+                btnHtml += '<button class="px-3 py-1 border rounded text-sm hover:bg-gray-50" onclick="goPage(' + p + ')">' + p + '</button>';
+            }
+        }
+        if (page < pages) {
+            btnHtml += '<button class="px-3 py-1 border rounded text-sm hover:bg-gray-50" onclick="goPage(' + (page + 1) + ')">下一页</button>';
+        }
+        document.getElementById('pageBtns').innerHTML = btnHtml;
+    }
+
+    function goPage(p) {
+        currentPage = p;
+        loadQuestions();
+    }
+
+    // ===== 题目模态框 =====
+    function openQuestionModal() {
+        document.getElementById('qModalTitle').textContent = '新增习题';
+        document.getElementById('qEditId').value = '';
+        document.getElementById('qType').value = 'SINGLE_CHOICE';
+        document.getElementById('qDifficulty').value = 'EASY';
+        document.getElementById('qContent').value = '';
+        document.getElementById('qAnswer').value = '';
+        document.getElementById('qAnalysis').value = '';
+        optionCount = 0;
+        document.getElementById('optionsContainer').innerHTML = '';
+        populateCourseSelect('');
+        onQuestionTypeChange();
+        document.getElementById('qModal').classList.remove('hidden');
+    }
+
+    function closeQuestionModal() {
+        document.getElementById('qModal').classList.add('hidden');
+    }
+
+    function populateCourseSelect(selectedId) {
+        var sel = document.getElementById('qCourseId');
+        var html = '<option value="">请选择课程</option>';
+        for (var i = 0; i < courseList.length; i++) {
+            var c = courseList[i];
+            var selAttr = c.id == selectedId ? ' selected' : '';
+            html += '<option value="' + c.id + '"' + selAttr + '>' + escapeHtml(c.courseName || c.name || '') + '</option>';
+        }
+        sel.innerHTML = html;
+    }
+
+    function onQuestionTypeChange() {
+        var type = document.getElementById('qType').value;
+        var optionsArea = document.getElementById('optionsArea');
+        var answerArea = document.getElementById('answerArea');
+        var noOptions = type === 'FILL_BLANK' || type === 'SUBJECTIVE' || type === 'TRUE_FALSE';
+        optionsArea.style.display = noOptions ? 'none' : 'block';
+        if (type === 'TRUE_FALSE') {
+            document.getElementById('qAnswer').placeholder = '请输入答案（正确/错误 或 对/错）';
+        } else if (type === 'FILL_BLANK') {
+            document.getElementById('qAnswer').placeholder = '请输入正确答案...';
+        } else if (type === 'SUBJECTIVE') {
+            document.getElementById('qAnswer').placeholder = '请输入参考答案...';
+        } else {
+            document.getElementById('qAnswer').placeholder = '请输入正确答案选项（如 A 或 A,B）...';
+        }
+    }
+
+    function addOption() {
+        var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (optionCount >= labels.length) return;
+        var label = labels.charAt(optionCount);
+        optionCount++;
+        var container = document.getElementById('optionsContainer');
+        var div = document.createElement('div');
+        div.className = 'flex items-center space-x-3 mb-2';
+        div.id = 'optRow' + optionCount;
+        var type = document.getElementById('qType').value;
+        var inputType = type === 'MULTI_CHOICE' ? 'checkbox' : 'radio';
+        div.innerHTML = '<input type="' + inputType + '" name="correctOption" value="' + label + '"/>' +
+            '<span class="w-6 text-sm text-gray-500 font-bold">' + label + '</span>' +
+            '<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" placeholder="选项内容"/>' +
+            '<iconify-icon class="text-gray-400 cursor-pointer" icon="mdi:delete-outline" onclick="removeOption(\'optRow' + optionCount + '\')"></iconify-icon>';
+        container.appendChild(div);
+    }
+
+    function removeOption(rowId) {
+        var el = document.getElementById(rowId);
+        if (el) el.parentNode.removeChild(el);
+    }
+
+    function collectOptions() {
+        var rows = document.querySelectorAll('#optionsContainer > div');
+        var options = [];
+        for (var i = 0; i < rows.length; i++) {
+            var labelSpan = rows[i].querySelector('span');
+            var input = rows[i].querySelector('input[type="text"]');
+            var check = rows[i].querySelector('input[name="correctOption"]');
+            if (labelSpan && input) {
+                options.push({
+                    optionLabel: labelSpan.textContent.trim(),
+                    optionContent: input.value.trim(),
+                    isCorrect: check ? check.checked : false
+                });
+            }
+        }
+        return options;
+    }
+
+    function saveQuestion() {
+        var id = document.getElementById('qEditId').value;
+        var courseId = document.getElementById('qCourseId').value;
+        var questionType = document.getElementById('qType').value;
+        var difficulty = document.getElementById('qDifficulty').value;
+        var content = document.getElementById('qContent').value.trim();
+        var answer = document.getElementById('qAnswer').value.trim();
+        var analysis = document.getElementById('qAnalysis').value.trim();
+
+        if (!courseId) { alert('请选择课程'); return; }
+        if (!content) { alert('请输入题干内容'); return; }
+
+        var body = {
+            courseId: courseId,
+            questionType: questionType,
+            difficulty: difficulty,
+            content: content,
+            answer: answer,
+            analysis: analysis
+        };
+
+        var noOptions = questionType === 'FILL_BLANK' || questionType === 'SUBJECTIVE' || questionType === 'TRUE_FALSE';
+        if (!noOptions) {
+            body.options = collectOptions();
+            if (body.options.length === 0) { alert('请至少添加一个选项'); return; }
+        }
+
+        var promise;
+        if (id) {
+            promise = apiPut('/teacher/questions/' + id, body);
+        } else {
+            promise = apiPost('/teacher/questions', body);
+        }
+
+        promise.then(function(res) {
+            closeQuestionModal();
+            loadQuestions();
+        }).catch(function(err) {
+            console.error('Save failed:', err);
+            alert('保存失败：' + (err.message || '未知错误'));
+        });
+    }
+
+    function editQuestion(id) {
+        apiGet('/teacher/questions', { pageSize: 200 }).then(function(data) {
+            var list = data.records || data.list || [];
+            var q = null;
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].id == id) { q = list[i]; break; }
+            }
+            if (!q) { alert('未找到该题目'); return; }
+
+            document.getElementById('qModalTitle').textContent = '编辑习题';
+            document.getElementById('qEditId').value = q.id;
+            document.getElementById('qType').value = q.questionType || 'SINGLE_CHOICE';
+            document.getElementById('qDifficulty').value = q.difficulty || 'EASY';
+            document.getElementById('qContent').value = q.content || '';
+            document.getElementById('qAnswer').value = q.answer || '';
+            document.getElementById('qAnalysis').value = q.analysis || '';
+
+            populateCourseSelect(q.courseId || '');
+
+            optionCount = 0;
+            var container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            var options = q.options || [];
+            for (var j = 0; j < options.length; j++) {
+                addOption();
+                var row = container.lastChild;
+                if (row) {
+                    var inputs = row.querySelectorAll('input[type="text"]');
+                    if (inputs.length > 0) inputs[0].value = options[j].optionContent || '';
+                    var check = row.querySelector('input[name="correctOption"]');
+                    if (check) {
+                        if (q.questionType === 'MULTI_CHOICE' && q.answer) {
+                            check.checked = q.answer.indexOf(options[j].optionLabel) >= 0;
+                        } else {
+                            check.checked = options[j].isCorrect;
+                        }
+                    }
+                }
+            }
+
+            onQuestionTypeChange();
+            document.getElementById('qModal').classList.remove('hidden');
+        }).catch(function(err) {
+            console.error('Failed to load question:', err);
+        });
+    }
+
+    function deleteQuestion(id) {
+        if (!confirm('确定要删除该题目吗？')) return;
+        apiDelete('/teacher/questions/' + id).then(function(res) {
+            loadQuestions();
+        }).catch(function(err) {
+            console.error('Delete failed:', err);
+            alert('删除失败');
+        });
+    }
+
+    // ===== 初始化 =====
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCourses();
+        loadQuestions();
+    });
+</script>
 </body>
 </html>

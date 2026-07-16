@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.examsystem.mapper.ExamRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.examsystem.entity.ExamRecord">
+        <id column="exam_record_id" property="examRecordId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="paper_id" property="paperId"/>
+        <result column="total_score" property="totalScore"/>
+        <result column="start_time" property="startTime"/>
+        <result column="submit_time" property="submitTime"/>
+        <result column="status" property="status"/>
+        <result column="paper_name" property="paperName"/>
+        <result column="course_name" property="courseName"/>
+        <result column="paper_duration" property="paperDuration"/>
+        <result column="paper_total_score" property="paperTotalScore"/>
+        <result column="student_name" property="studentName"/>
+        <result column="class_name" property="className"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="examRecordId">
+        INSERT INTO t_exam_record (student_id, paper_id, total_score, start_time, submit_time, status)
+        VALUES (#{studentId}, #{paperId}, #{totalScore}, #{startTime}, #{submitTime}, #{status})
+    </insert>
+
+    <select id="selectByStudentIdAndPaperId" resultMap="BaseResultMap">
+        SELECT * FROM t_exam_record
+        WHERE student_id = #{studentId} AND paper_id = #{paperId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY start_time DESC
+    </select>
+
+    <select id="selectByStudentIdWithPage" resultMap="BaseResultMap">
+        SELECT er.*, p.paper_name, c.course_name
+        FROM t_exam_record er
+        LEFT JOIN t_paper p ON er.paper_id = p.paper_id
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        WHERE er.student_id = #{studentId}
+        ORDER BY er.start_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByStudentId" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_exam_record WHERE student_id = #{studentId}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT er.*, p.paper_name, c.course_name,
+               p.duration AS paper_duration, p.total_score AS paper_total_score,
+               s.real_name AS student_name, s.class_name
+        FROM t_exam_record er
+        LEFT JOIN t_paper p ON er.paper_id = p.paper_id
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_student s ON er.student_id = s.student_id
+        WHERE er.exam_record_id = #{examRecordId}
+    </select>
+
+    <update id="updateTotalScore">
+        UPDATE t_exam_record SET total_score = #{totalScore} WHERE exam_record_id = #{examRecordId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE t_exam_record SET status = #{status}, submit_time = #{submitTime}
+        WHERE exam_record_id = #{examRecordId}
+    </update>
+
+    <select id="selectExamScoresByStudentId" resultType="java.util.HashMap">
+        SELECT er.total_score, p.paper_name, p.total_score AS paper_total_score,
+               er.submit_time
+        FROM t_exam_record er
+        LEFT JOIN t_paper p ON er.paper_id = p.paper_id
+        WHERE er.student_id = #{studentId} AND er.status = 1
+        ORDER BY er.submit_time DESC
+    </select>
+
+    <select id="selectScoresByPaperId" resultType="java.util.HashMap">
+        SELECT s.student_id, s.real_name, s.class_name,
+               er.total_score, er.submit_time
+        FROM t_exam_record er
+        LEFT JOIN t_student s ON er.student_id = s.student_id
+        WHERE er.paper_id = #{paperId} AND er.status = 1
+        ORDER BY er.total_score DESC
+    </select>
+
+</mapper>

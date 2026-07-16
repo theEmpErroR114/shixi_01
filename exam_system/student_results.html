@@ -32,20 +32,20 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <p class="text-gray-400 text-sm">总测验次数</p>
-<p class="text-3xl font-bold text-gray-800 mt-2">5 次</p>
+<p class="text-3xl font-bold text-gray-800 mt-2" id="statTotalExams">-- 次</p>
 </div>
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <p class="text-gray-400 text-sm">平均分</p>
-<p class="text-3xl font-bold text-[#1890FF] mt-2">86.2</p>
+<p class="text-3xl font-bold text-[#1890FF] mt-2" id="statAvgScore">--</p>
 </div>
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <p class="text-gray-400 text-sm">最高分</p>
-<p class="text-3xl font-bold text-green-500 mt-2">94</p>
+<p class="text-3xl font-bold text-green-500 mt-2" id="statMaxScore">--</p>
 </div>
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
 <div>
 <p class="text-gray-400 text-sm">累计错题</p>
-<p class="text-3xl font-bold text-red-500 mt-2">24 题</p>
+<p class="text-3xl font-bold text-red-500 mt-2" id="statWrongCount">-- 题</p>
 </div>
 <button class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100">错题本</button>
 </div>
@@ -54,8 +54,8 @@
 <div class="p-6 border-b border-gray-50 flex items-center justify-between">
 <h3 class="text-lg font-bold text-gray-800">成绩明细</h3>
 <div class="flex space-x-2">
-<button class="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded font-bold">全部</button>
-<button class="px-3 py-1 text-gray-400 text-xs rounded hover:bg-gray-50">本月</button>
+<button class="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded font-bold" id="filterAll" onclick="filterResults('all')">全部</button>
+<button class="px-3 py-1 text-gray-400 text-xs rounded hover:bg-gray-50" id="filterMonth" onclick="filterResults('month')">本月</button>
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -71,41 +71,224 @@
 <th class="px-6 py-4 font-bold">操作</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-gray-50 text-sm text-gray-700">
-<tr>
-<td class="px-6 py-4 font-bold">高等数学期中模拟考试</td>
-<td class="px-6 py-4">2026-07-14</td>
-<td class="px-6 py-4"><span class="text-blue-600 font-bold">94</span> / 100</td>
-<td class="px-6 py-4">94%</td>
-<td class="px-6 py-4">85:12</td>
-<td class="px-6 py-4">3 / 150</td>
-<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
-</tr>
-<tr>
-<td class="px-6 py-4 font-bold">线性代数第一单元测试</td>
-<td class="px-6 py-4">2026-07-05</td>
-<td class="px-6 py-4"><span class="text-blue-600 font-bold">85</span> / 100</td>
-<td class="px-6 py-4">85%</td>
-<td class="px-6 py-4">45:00</td>
-<td class="px-6 py-4">12 / 120</td>
-<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
-</tr>
-<tr>
-<td class="px-6 py-4 font-bold">线性代数基础知识测试</td>
-<td class="px-6 py-4">2026-06-28</td>
-<td class="px-6 py-4"><span class="text-blue-600 font-bold">78</span> / 100</td>
-<td class="px-6 py-4">78%</td>
-<td class="px-6 py-4">32:15</td>
-<td class="px-6 py-4">45 / 120</td>
-<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline">题目回顾</button></td>
-</tr>
+<tbody class="divide-y divide-gray-50 text-sm text-gray-700" id="resultsTableBody">
+<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">加载中...</td></tr>
 </tbody>
 </table>
 </div>
-<div class="p-6 border-t border-gray-50 text-center">
-<button class="text-gray-400 text-xs hover:text-gray-600">加载更多记录...</button>
+<div class="p-6 border-t border-gray-50 text-center" id="loadMoreRow">
+<button class="text-gray-400 text-xs hover:text-gray-600" id="loadMoreBtn" onclick="loadMore()">加载更多记录...</button>
 </div>
 </div>
 </main>
+
+<!-- 成绩详情弹窗 -->
+<div class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center hidden" id="detailModal">
+<div class="bg-white p-8 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto mx-4">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold text-gray-800" id="detailTitle">成绩详情</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeDetail()">
+<iconify-icon class="text-2xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+<div class="space-y-4" id="detailContent">
+<p class="text-gray-400">加载中...</p>
+</div>
+</div>
+</div>
+
+<script>
+var API_BASE = 'http://localhost:8080/api';
+
+function apiGet(url, params) {
+    var query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+function apiPost(url, data) {
+    return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+
+var currentPage = 1;
+var currentPageSize = 10;
+var currentFilter = 'all';
+var hasMore = true;
+
+function formatDuration(seconds) {
+    if (seconds == null) return '--';
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function loadResults() {
+    var params = { page: currentPage, pageSize: currentPageSize };
+    if (currentFilter === 'month') {
+        params.filter = 'month';
+    }
+
+    apiGet('/student/results/exams', params).then(function(data) {
+        var list = data.list || data.records || (Array.isArray(data) ? data : []);
+        var total = data.total != null ? data.total : list.length;
+
+        // Update stats
+        var stats = data.stats || data.summary || {};
+        if (stats.totalExams != null) {
+            document.getElementById('statTotalExams').textContent = stats.totalExams + ' 次';
+        } else {
+            document.getElementById('statTotalExams').textContent = total + ' 次';
+        }
+        document.getElementById('statAvgScore').textContent = stats.avgScore != null ? stats.avgScore : '--';
+        document.getElementById('statMaxScore').textContent = stats.maxScore != null ? stats.maxScore : '--';
+        document.getElementById('statWrongCount').textContent = (stats.wrongCount != null ? stats.wrongCount : '--') + ' 题';
+
+        // Render table
+        var tbody = document.getElementById('resultsTableBody');
+        if (list.length === 0 && currentPage === 1) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">暂无成绩记录</td></tr>';
+            document.getElementById('loadMoreRow').style.display = 'none';
+            return;
+        }
+
+        var html = currentPage === 1 ? '' : tbody.innerHTML;
+
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            var recordId = item.id || item.examRecordId || item.recordId;
+            var examName = item.examName || item.title || item.name || '测验';
+            var examDate = item.examDate || item.date || item.createTime || '';
+            var score = item.score != null ? item.score : '--';
+            var totalScore = item.totalScore != null ? item.totalScore : '100';
+            var accuracy = item.accuracy != null ? item.accuracy : (item.totalCount > 0 ? Math.round((item.correctCount / item.totalCount) * 100) : '--');
+            var duration = formatDuration(item.duration || item.elapsedSeconds || item.timeUsed);
+            var rank = item.rank != null ? item.rank : '--';
+            var totalStudents = item.totalStudents != null ? '/' + item.totalStudents : '';
+            var rankDisplay = rank !== '--' ? rank + ' ' + totalStudents : '--';
+
+            html += '<tr>';
+            html += '<td class="px-6 py-4 font-bold">' + examName + '</td>';
+            html += '<td class="px-6 py-4">' + examDate + '</td>';
+            html += '<td class="px-6 py-4"><span class="text-blue-600 font-bold">' + score + '</span> / ' + totalScore + '</td>';
+            html += '<td class="px-6 py-4">' + (accuracy !== '--' ? accuracy + '%' : '--') + '</td>';
+            html += '<td class="px-6 py-4">' + duration + '</td>';
+            html += '<td class="px-6 py-4">' + rankDisplay + '</td>';
+            html += '<td class="px-6 py-4"><button class="text-[#1890FF] font-medium hover:underline" onclick="viewDetail(' + recordId + ')">题目回顾</button></td>';
+            html += '</tr>';
+        }
+
+        tbody.innerHTML = html;
+
+        // Handle pagination
+        if (list.length < currentPageSize) {
+            hasMore = false;
+            document.getElementById('loadMoreRow').style.display = 'none';
+        } else {
+            hasMore = true;
+            document.getElementById('loadMoreRow').style.display = '';
+            document.getElementById('loadMoreBtn').textContent = '加载更多记录...';
+        }
+    }).catch(function(err) {
+        console.error('Failed to load results:', err);
+        document.getElementById('resultsTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-red-400">加载失败，请刷新重试</td></tr>';
+    });
+}
+
+function loadMore() {
+    if (!hasMore) return;
+    currentPage++;
+    document.getElementById('loadMoreBtn').textContent = '加载中...';
+    loadResults();
+}
+
+function filterResults(type) {
+    currentFilter = type;
+    currentPage = 1;
+    hasMore = true;
+
+    // Update filter button styles
+    document.getElementById('filterAll').className = type === 'all'
+        ? 'px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded font-bold'
+        : 'px-3 py-1 text-gray-400 text-xs rounded hover:bg-gray-50';
+    document.getElementById('filterMonth').className = type === 'month'
+        ? 'px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded font-bold'
+        : 'px-3 py-1 text-gray-400 text-xs rounded hover:bg-gray-50';
+
+    document.getElementById('resultsTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">加载中...</td></tr>';
+    loadResults();
+}
+
+function viewDetail(recordId) {
+    document.getElementById('detailModal').classList.remove('hidden');
+    document.getElementById('detailTitle').textContent = '成绩详情';
+    document.getElementById('detailContent').innerHTML = '<p class="text-gray-400 text-center py-8">加载中...</p>';
+
+    apiGet('/student/results/exams/' + recordId).then(function(data) {
+        var questions = data.questions || data.detail || [];
+        var html = '';
+
+        // Summary
+        html += '<div class="bg-gray-50 p-4 rounded-lg mb-4">';
+        html += '<div class="flex justify-around text-center">';
+        html += '<div><p class="text-xs text-gray-400">得分</p><p class="text-lg font-bold text-blue-500">' + (data.score != null ? data.score : '--') + ' / ' + (data.totalScore || '100') + '</p></div>';
+        html += '<div><p class="text-xs text-gray-400">正确率</p><p class="text-lg font-bold text-green-500">' + (data.accuracy != null ? data.accuracy + '%' : '--') + '</p></div>';
+        html += '<div><p class="text-xs text-gray-400">排名</p><p class="text-lg font-bold text-gray-800">' + (data.rank != null ? data.rank : '--') + '</p></div>';
+        html += '</div></div>';
+
+        if (questions.length === 0) {
+            html += '<p class="text-gray-400 text-center py-4">暂无题目详情</p>';
+        } else {
+            html += '<h4 class="font-bold text-gray-700 mb-3">答题详情</h4>';
+            for (var i = 0; i < questions.length; i++) {
+                var q = questions[i];
+                var isCorrect = q.correct || q.isCorrect;
+                var statusColor = isCorrect ? 'text-green-500' : 'text-red-500';
+                var statusIcon = isCorrect ? 'mdi:check-circle' : 'mdi:close-circle';
+                var statusBg = isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+                var studentAnswer = q.studentAnswer || q.myAnswer || '未作答';
+                var correctAnswer = q.correctAnswer || q.answer || '';
+
+                html += '<div class="p-4 border rounded-lg mb-3 ' + statusBg + '">';
+                html += '<div class="flex items-start justify-between">';
+                html += '<div class="flex-1">';
+                html += '<p class="text-sm font-bold text-gray-800">' + (i + 1) + '. ' + (q.content || q.title || '') + '</p>';
+                html += '<p class="text-xs mt-2"><span class="text-gray-500">你的答案：</span><span class="' + (isCorrect ? 'text-green-600' : 'text-red-600') + ' font-medium">' + studentAnswer + '</span></p>';
+                if (!isCorrect && correctAnswer) {
+                    html += '<p class="text-xs mt-1"><span class="text-gray-500">正确答案：</span><span class="text-green-600 font-medium">' + correctAnswer + '</span></p>';
+                }
+                html += '</div>';
+                html += '<iconify-icon class="text-xl ' + statusColor + ' flex-shrink-0" icon="' + statusIcon + '"></iconify-icon>';
+                html += '</div></div>';
+            }
+        }
+
+        document.getElementById('detailContent').innerHTML = html;
+    }).catch(function(err) {
+        console.error('Failed to load detail:', err);
+        document.getElementById('detailContent').innerHTML = '<p class="text-red-400 text-center py-8">加载失败</p>';
+    });
+}
+
+function closeDetail() {
+    document.getElementById('detailModal').classList.add('hidden');
+}
+
+// Check URL params for direct detail view
+function checkUrlParams() {
+    var params = new URLSearchParams(window.location.search);
+    var recordId = params.get('recordId');
+    if (recordId) {
+        viewDetail(recordId);
+    }
+}
+
+// Initialize
+loadResults();
+checkUrlParams();
+</script>
 </body>
 </html>

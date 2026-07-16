@@ -14,7 +14,6 @@
 </head>
 <body class="h-screen flex items-center justify-center">
 <div class="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-<!-- 顶部标题区 -->
 <div class="bg-[#1890FF] py-8 text-center">
 <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
 <iconify-icon class="text-[#1890FF] text-3xl" icon="mdi:book-open-variant"></iconify-icon>
@@ -22,13 +21,12 @@
 <h1 class="text-white text-2xl font-bold tracking-wider">课程习题测验系统</h1>
 <p class="text-blue-100 mt-2 opacity-80">智能教学 · 精准测验 · 轻松管理</p>
 </div>
-<!-- 角色切换 Tab -->
 <div class="flex border-b">
 <button class="flex-1 py-4 text-center text-gray-500 font-medium hover:text-[#1890FF] transition-colors border-b-2 border-transparent" id="tab-admin" onclick="switchRole('admin')">管理员</button>
 <button class="flex-1 py-4 text-center text-gray-500 font-medium hover:text-[#1890FF] transition-colors border-b-2 border-transparent" id="tab-teacher" onclick="switchRole('teacher')">老师</button>
 <button class="flex-1 py-4 text-center text-gray-500 font-medium hover:text-[#1890FF] transition-colors border-b-2 border-transparent" id="tab-student" onclick="switchRole('student')">学生</button>
 </div>
-<!-- 登录表单 -->
+<div id="errorMsg" class="hidden mx-8 mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm text-center"></div>
 <div class="p-8">
 <form class="space-y-6" id="loginForm" onsubmit="handleLogin(event)">
 <input id="currentRole" type="hidden" value="student"/>
@@ -71,41 +69,59 @@
 </div>
 </div>
 <script>
+        var API_BASE = 'http://localhost:8080/api';
+
         function switchRole(role) {
             document.getElementById('currentRole').value = role;
-            
-            // 更新 UI 样式
-            ['admin', 'teacher', 'student'].forEach(r => {
-                const tab = document.getElementById('tab-' + r);
+            ['admin', 'teacher', 'student'].forEach(function(r) {
+                var tab = document.getElementById('tab-' + r);
                 if (r === role) {
                     tab.classList.add('tab-active');
                 } else {
                     tab.classList.remove('tab-active');
                 }
             });
-
-            // 更新占位符
-            const usernameInput = document.getElementById('username');
-            if (role === 'admin') usernameInput.placeholder = '请输入管理账号';
-            else if (role === 'teacher') usernameInput.placeholder = '请输入工号';
-            else usernameInput.placeholder = '请输入学号';
+            var input = document.getElementById('username');
+            if (role === 'admin') input.placeholder = '请输入管理账号';
+            else if (role === 'teacher') input.placeholder = '请输入工号';
+            else input.placeholder = '请输入学号';
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const role = document.getElementById('currentRole').value;
-            
-            // 模拟登录逻辑
-            if (role === 'admin') {
-                window.location.href = 'admin_dashboard.html';
-            } else if (role === 'teacher') {
-                window.location.href = 'teacher_dashboard.html';
-            } else {
-                window.location.href = 'student_dashboard.html';
+            var role = document.getElementById('currentRole').value;
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+            var errorEl = document.getElementById('errorMsg');
+            var btn = e.target.querySelector('button[type="submit"]');
+            errorEl.classList.add('hidden');
+            btn.textContent = '登录中...';
+            btn.disabled = true;
+
+            try {
+                var res = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({role: role, username: username, password: password})
+                });
+                var data = await res.json();
+                if (data.code === 200) {
+                    if (role === 'admin') window.location.href = 'admin_dashboard.html';
+                    else if (role === 'teacher') window.location.href = 'teacher_dashboard.html';
+                    else window.location.href = 'student_dashboard.html';
+                } else {
+                    errorEl.textContent = data.message || '登录失败，请检查账号密码';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.textContent = '无法连接到服务器，请确认后端已启动 (localhost:8080)';
+                errorEl.classList.remove('hidden');
             }
+            btn.textContent = '立即登录';
+            btn.disabled = false;
         }
 
-        // 默认激活学生
         switchRole('student');
     </script>
 </body>

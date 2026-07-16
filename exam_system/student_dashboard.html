@@ -29,8 +29,8 @@
 <div class="ml-auto flex items-center space-x-6">
 <iconify-icon class="text-xl text-gray-400 cursor-pointer" icon="mdi:bell-outline"></iconify-icon>
 <div class="flex items-center space-x-2 cursor-pointer group">
-<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">赵</div>
-<span class="text-sm text-gray-700 group-hover:text-[#1890FF]">赵敏</span>
+<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs" id="headerAvatar">赵</div>
+<span class="text-sm text-gray-700 group-hover:text-[#1890FF]" id="headerUserName">加载中...</span>
 <a class="text-xs text-gray-400 hover:text-red-500" href="login.html">退出</a>
 </div>
 </div>
@@ -39,8 +39,8 @@
 <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
 <!-- 欢迎语 -->
 <div class="mb-8">
-<h1 class="text-2xl font-bold text-gray-800">下午好，赵敏同学！</h1>
-<p class="text-gray-500 mt-1">今天是你连续学习的第 12 天，加油！</p>
+<h1 class="text-2xl font-bold text-gray-800"><span id="greetingTime">下午好</span>，<span id="welcomeName">同学</span>！</h1>
+<p class="text-gray-500 mt-1" id="welcomeSubtitle">欢迎回来，开始今天的学习吧！</p>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-8">
@@ -70,19 +70,19 @@
 <h3 class="text-lg font-bold text-gray-800 mb-6">本学期学习统计</h3>
 <div class="grid grid-cols-4 gap-4">
 <div class="text-center p-4">
-<p class="text-2xl font-bold text-gray-800">128</p>
+<p class="text-2xl font-bold text-gray-800" id="statPracticeCount">--</p>
 <p class="text-xs text-gray-400 mt-1">练习总次数</p>
 </div>
 <div class="text-center p-4 border-l">
-<p class="text-2xl font-bold text-gray-800">4</p>
+<p class="text-2xl font-bold text-gray-800" id="statExamCount">--</p>
 <p class="text-xs text-gray-400 mt-1">测验总次数</p>
 </div>
 <div class="text-center p-4 border-l">
-<p class="text-2xl font-bold text-green-500">92.5%</p>
+<p class="text-2xl font-bold text-green-500" id="statAccuracy">--</p>
 <p class="text-xs text-gray-400 mt-1">平均正确率</p>
 </div>
 <div class="text-center p-4 border-l">
-<p class="text-2xl font-bold text-blue-500">89.5</p>
+<p class="text-2xl font-bold text-blue-500" id="statAvgScore">--</p>
 <p class="text-xs text-gray-400 mt-1">平均测验分</p>
 </div>
 </div>
@@ -93,27 +93,8 @@
 <h3 class="text-lg font-bold text-gray-800">最近练习记录</h3>
 <a class="text-sm text-blue-500 hover:underline" href="student_results.html">查看全部记录</a>
 </div>
-<div class="space-y-4">
-<div class="flex items-center p-4 bg-gray-50 rounded-lg">
-<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
-<iconify-icon icon="mdi:function-variant"></iconify-icon>
-</div>
-<div class="flex-1">
-<h4 class="text-sm font-bold">第一章 函数与极限</h4>
-<p class="text-xs text-gray-400 mt-0.5">20 题 · 正确率 95%</p>
-</div>
-<span class="text-xs text-gray-400">昨天 18:30</span>
-</div>
-<div class="flex items-center p-4 bg-gray-50 rounded-lg">
-<div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mr-4">
-<iconify-icon icon="mdi:matrix"></iconify-icon>
-</div>
-<div class="flex-1">
-<h4 class="text-sm font-bold">线性代数：矩阵运算</h4>
-<p class="text-xs text-gray-400 mt-0.5">15 题 · 正确率 75%</p>
-</div>
-<span class="text-xs text-gray-400">3天前</span>
-</div>
+<div class="space-y-4" id="recentPracticeList">
+<p class="text-gray-400 text-sm text-center py-4">加载中...</p>
 </div>
 </div>
 </div>
@@ -125,43 +106,159 @@
 <iconify-icon class="text-orange-500 mr-2" icon="mdi:alert-circle"></iconify-icon>
                         待办测验
                     </h3>
-<div class="space-y-4">
-<div class="p-4 bg-orange-50 rounded-lg border border-orange-100">
-<h4 class="text-sm font-bold text-orange-900">高等数学期中模拟考试</h4>
-<div class="flex items-center text-xs text-orange-700 mt-2">
-<iconify-icon class="mr-1" icon="mdi:clock-outline"></iconify-icon>
-                                截止日期：2026-07-16 23:59
-                            </div>
-<button class="w-full mt-4 py-2 bg-orange-500 text-white rounded-md text-sm font-medium hover:bg-orange-600">立即前往</button>
-</div>
+<div class="space-y-4" id="upcomingExamsList">
+<p class="text-gray-400 text-sm text-center py-4">加载中...</p>
 </div>
 </div>
 <!-- 学习排行榜 -->
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <h3 class="text-lg font-bold text-gray-800 mb-6">班级练习榜</h3>
-<div class="space-y-4">
-<div class="flex items-center">
-<span class="w-6 text-sm font-bold text-orange-500">1</span>
-<div class="w-8 h-8 rounded-full bg-gray-200 mx-3"></div>
-<span class="flex-1 text-sm">李沐</span>
-<span class="text-xs text-gray-400">452 题</span>
-</div>
-<div class="flex items-center">
-<span class="w-6 text-sm font-bold text-gray-500">2</span>
-<div class="w-8 h-8 rounded-full bg-gray-200 mx-3"></div>
-<span class="flex-1 text-sm">王小二</span>
-<span class="text-xs text-gray-400">421 题</span>
-</div>
-<div class="flex items-center">
-<span class="w-6 text-sm font-bold text-orange-900/40">3</span>
-<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mx-3 text-[10px] font-bold">赵</div>
-<span class="flex-1 text-sm font-bold">我</span>
-<span class="text-xs text-gray-400">128 题</span>
-</div>
+<div class="space-y-4" id="leaderboardList">
+<p class="text-gray-400 text-sm text-center py-4">加载中...</p>
 </div>
 </div>
 </div>
 </div>
 </main>
+<script>
+var API_BASE = 'http://localhost:8080/api';
+
+function apiGet(url, params) {
+    var query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+function apiPost(url, data) {
+    return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+
+function getGreeting() {
+    var hour = new Date().getHours();
+    if (hour < 6) return '夜深了';
+    if (hour < 12) return '早上好';
+    if (hour < 18) return '下午好';
+    return '晚上好';
+}
+
+function loadDashboard() {
+    // Load current user
+    apiGet('/auth/current-user').then(function(user) {
+        if (user && user.realName) {
+            document.getElementById('headerUserName').textContent = user.realName;
+            document.getElementById('welcomeName').textContent = user.realName + '同学';
+            document.getElementById('headerAvatar').textContent = user.realName.charAt(0);
+            document.getElementById('greetingTime').textContent = getGreeting();
+        }
+    }).catch(function(err) {
+        console.error('Failed to load user:', err);
+    });
+
+    // Load dashboard stats
+    apiGet('/student/dashboard/stats').then(function(stats) {
+        if (stats) {
+            document.getElementById('statPracticeCount').textContent = stats.practiceCount != null ? stats.practiceCount : '--';
+            document.getElementById('statExamCount').textContent = stats.examCount != null ? stats.examCount : '--';
+            document.getElementById('statAccuracy').textContent = stats.avgAccuracy != null ? stats.avgAccuracy + '%' : '--';
+            document.getElementById('statAvgScore').textContent = stats.avgScore != null ? stats.avgScore : '--';
+        }
+    }).catch(function(err) {
+        console.error('Failed to load stats:', err);
+        document.getElementById('statPracticeCount').textContent = '0';
+        document.getElementById('statExamCount').textContent = '0';
+        document.getElementById('statAccuracy').textContent = '0%';
+        document.getElementById('statAvgScore').textContent = '0';
+    });
+
+    // Load upcoming exams
+    apiGet('/student/dashboard/upcoming-exams').then(function(exams) {
+        var container = document.getElementById('upcomingExamsList');
+        if (!exams || exams.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无待办测验</p>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < exams.length; i++) {
+            var exam = exams[i];
+            html += '<div class="p-4 bg-orange-50 rounded-lg border border-orange-100">';
+            html += '<h4 class="text-sm font-bold text-orange-900">' + (exam.title || exam.name || '测验') + '</h4>';
+            html += '<div class="flex items-center text-xs text-orange-700 mt-2">';
+            html += '<iconify-icon class="mr-1" icon="mdi:clock-outline"></iconify-icon>';
+            html += '截止日期：' + (exam.deadline || exam.endTime || '待定');
+            html += '</div>';
+            html += '<button class="w-full mt-4 py-2 bg-orange-500 text-white rounded-md text-sm font-medium hover:bg-orange-600" onclick="location.href=\'student_exam.html\'">立即前往</button>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }).catch(function(err) {
+        console.error('Failed to load upcoming exams:', err);
+        document.getElementById('upcomingExamsList').innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无待办测验</p>';
+    });
+
+    // Load recent practice
+    apiGet('/student/dashboard/recent-practice').then(function(records) {
+        var container = document.getElementById('recentPracticeList');
+        if (!records || records.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无练习记录</p>';
+            return;
+        }
+        var icons = ['mdi:function-variant', 'mdi:matrix', 'mdi:chart-line', 'mdi:calculator'];
+        var colors = ['blue', 'orange', 'green', 'purple'];
+        var html = '';
+        for (var i = 0; i < records.length; i++) {
+            var rec = records[i];
+            var color = colors[i % colors.length];
+            html += '<div class="flex items-center p-4 bg-gray-50 rounded-lg">';
+            html += '<div class="w-10 h-10 rounded-full bg-' + color + '-100 flex items-center justify-center text-' + color + '-600 mr-4">';
+            html += '<iconify-icon icon="' + (icons[i % icons.length]) + '"></iconify-icon>';
+            html += '</div>';
+            html += '<div class="flex-1">';
+            html += '<h4 class="text-sm font-bold">' + (rec.courseName || rec.title || '练习') + '</h4>';
+            html += '<p class="text-xs text-gray-400 mt-0.5">' + (rec.questionCount || rec.count || 0) + ' 题 · 正确率 ' + (rec.accuracy != null ? rec.accuracy + '%' : '--') + '</p>';
+            html += '</div>';
+            html += '<span class="text-xs text-gray-400">' + (rec.time || rec.createTime || '') + '</span>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }).catch(function(err) {
+        console.error('Failed to load recent practice:', err);
+        document.getElementById('recentPracticeList').innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无练习记录</p>';
+    });
+
+    // Load leaderboard (optional)
+    apiGet('/student/dashboard/leaderboard').then(function(data) {
+        var container = document.getElementById('leaderboardList');
+        var list = data && data.list ? data.list : (Array.isArray(data) ? data : []);
+        if (list.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无排行数据</p>';
+            return;
+        }
+        var ranks = ['text-orange-500', 'text-gray-500', 'text-orange-900/40'];
+        var html = '';
+        for (var j = 0; j < list.length; j++) {
+            var item = list[j];
+            var rankClass = j < 3 ? ranks[j] : 'text-gray-400';
+            var isMe = item.isMe || item.isCurrent;
+            html += '<div class="flex items-center">';
+            html += '<span class="w-6 text-sm font-bold ' + rankClass + '">' + (j + 1) + '</span>';
+            html += '<div class="w-8 h-8 rounded-full ' + (isMe ? 'bg-blue-100 flex items-center justify-center text-blue-500' : 'bg-gray-200') + ' mx-3 ' + (isMe ? 'text-[10px] font-bold' : '') + '">' + (isMe ? (item.realName || '我').charAt(0) : '') + '</div>';
+            html += '<span class="flex-1 text-sm' + (isMe ? ' font-bold' : '') + '">' + (isMe ? '我' : (item.realName || item.name || '')) + '</span>';
+            html += '<span class="text-xs text-gray-400">' + (item.count || item.practiceCount || 0) + ' 题</span>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }).catch(function(err) {
+        console.error('Failed to load leaderboard:', err);
+        document.getElementById('leaderboardList').innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无排行数据</p>';
+    });
+}
+
+// Initialize on page load
+loadDashboard();
+</script>
 </body>
 </html>

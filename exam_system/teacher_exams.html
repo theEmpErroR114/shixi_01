@@ -13,238 +13,164 @@
         .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
         .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
-        .step-active { color: #1890FF; border-color: #1890FF; }
+        .tab-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-<!-- 侧边栏 (复用) -->
 <div class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
-<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>
-            教学管理
-        </div>
+<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>教学管理</div>
 <nav class="flex-1 py-4">
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_dashboard.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>
-                首页
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>
-                习题管理
-            </a>
-<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_exams.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>
-                试卷管理
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="teacher_students.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>
-                学生情况
-            </a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_dashboard.html"><iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>首页</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html"><iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>习题管理</a>
+<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_exams.html"><iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>试卷管理</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_students.html"><iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>学生情况</a>
 </nav>
-<div class="p-4 border-t border-gray-800">
-<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
-                退出系统
-            </a>
+<div class="p-4 border-t border-gray-800"><a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html"><iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>退出系统</a></div>
 </div>
-</div>
-<!-- 主内容 -->
 <div class="flex-1 flex flex-col overflow-hidden">
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-<div class="flex items-center space-x-2 text-sm text-gray-500">
-<span>教学管理</span>
-<span>/</span>
-<span class="text-gray-900 font-medium">试卷管理</span>
+<div class="flex items-center space-x-2 text-sm text-gray-500"><span>教学管理</span><span>/</span><span class="text-gray-900 font-medium">试卷管理</span></div>
+<div class="flex items-center space-x-3">
+<span class="text-sm text-gray-500" id="teacherName">教师</span>
+<button class="bg-[#1890FF] text-white px-6 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600" onclick="showCreatePaper()"><iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>创建试卷</button>
 </div>
-<button class="bg-[#1890FF] text-white px-6 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-shadow shadow-sm" onclick="showCreateExam()">
-<iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>
-                创建试卷
-            </button>
 </header>
 <main class="flex-1 overflow-y-auto p-8" id="examMainList">
-<!-- 试卷列表状态 Tab -->
 <div class="flex space-x-8 border-b border-gray-200 mb-8">
-<button class="pb-3 border-b-2 border-[#1890FF] text-[#1890FF] font-medium">全部试卷</button>
-<button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">进行中</button>
-<button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">已结束</button>
-<button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">草稿箱</button>
+<button class="tab-item pb-3 border-b-2 font-medium tab-active" data-status="" onclick="filterPapers('', this)">全部试卷</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="1" onclick="filterPapers('1', this)">进行中</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="2" onclick="filterPapers('2', this)">已结束</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="0" onclick="filterPapers('0', this)">草稿箱</button>
 </div>
-<!-- 试卷卡片网格 -->
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-<!-- 卡片 1 -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-<div class="p-6">
-<div class="flex justify-between items-start mb-4">
-<span class="px-2 py-0.5 bg-green-50 text-green-600 text-xs font-bold rounded">已发布</span>
-<iconify-icon class="text-gray-400 cursor-pointer" icon="mdi:dots-vertical"></iconify-icon>
-</div>
-<h3 class="text-lg font-bold text-gray-800 mb-2">高等数学期中模拟考试</h3>
-<p class="text-sm text-gray-400 mb-6">旨在考查学生对第一、二章导数及其应用知识的掌握情况。</p>
-<div class="grid grid-cols-2 gap-y-3 text-sm">
-<div class="flex items-center text-gray-500"><iconify-icon class="mr-2" icon="mdi:format-list-numbered"></iconify-icon>题目: 25 题</div>
-<div class="flex items-center text-gray-500"><iconify-icon class="mr-2" icon="mdi:timer-outline"></iconify-icon>时长: 120 分钟</div>
-<div class="flex items-center text-gray-500"><iconify-icon class="mr-2" icon="mdi:star-outline"></iconify-icon>总分: 100 分</div>
-<div class="flex items-center text-gray-500"><iconify-icon class="mr-2" icon="mdi:calendar-clock"></iconify-icon>07-15 09:00</div>
-</div>
-</div>
-<div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between">
-<span class="text-xs text-gray-500">创建于 2026-07-10</span>
-<div class="flex space-x-3">
-<button class="text-red-500 text-sm hover:underline">回收</button>
-<button class="text-blue-600 text-sm hover:underline">查看分析</button>
-</div>
-</div>
-</div>
-<!-- 卡片 2 -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col opacity-80">
-<div class="p-6">
-<div class="flex justify-between items-start mb-4">
-<span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded">已结束</span>
-</div>
-<h3 class="text-lg font-bold text-gray-800 mb-2">线性代数第一章小测</h3>
-<div class="mt-4 p-3 bg-gray-50 rounded text-xs text-gray-500">已完成批阅，平均分：78.5</div>
-</div>
-<div class="bg-gray-50 p-4 border-t border-gray-100 text-center">
-<button class="text-blue-600 text-sm hover:underline">导出成绩单</button>
-</div>
-</div>
-</div>
-</main>
-<!-- 创建试卷分步流程界面 -->
-<main class="flex-1 overflow-y-auto p-8 hidden" id="createExamStep">
-<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100">
-<!-- 步骤条 -->
-<div class="p-8 border-b border-gray-50">
-<div class="flex items-center">
-<div class="flex flex-col items-center flex-1 relative" id="step-1">
-<div class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold mb-2 step-active">1</div>
-<span class="text-sm font-medium step-active">基本信息</span>
-<div class="absolute top-5 left-1/2 w-full h-0.5 bg-gray-100 -z-10"></div>
-</div>
-<div class="flex flex-col items-center flex-1 relative" id="step-2">
-<div class="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center font-bold mb-2 text-gray-400">2</div>
-<span class="text-sm font-medium text-gray-400">选题组卷</span>
-<div class="absolute top-5 left-1/2 w-full h-0.5 bg-gray-100 -z-10"></div>
-</div>
-<div class="flex flex-col items-center flex-1" id="step-3">
-<div class="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center font-bold mb-2 text-gray-400">3</div>
-<span class="text-sm font-medium text-gray-400">预览发布</span>
-</div>
-</div>
-</div>
-<!-- 步骤 1 内容 -->
-<div class="p-8 space-y-6" id="content-1">
-<div class="grid grid-cols-2 gap-6">
-<div class="col-span-2">
-<label class="block text-sm font-medium text-gray-700 mb-2">试卷名称</label>
-<input class="w-full border border-gray-300 rounded-md px-4 py-2 outline-none focus:ring-1 focus:ring-[#1890FF]" placeholder="例如：高等数学第二章随堂小测" type="text"/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">考试时长 (分钟)</label>
-<input class="w-full border border-gray-300 rounded-md px-4 py-2 outline-none focus:ring-1 focus:ring-[#1890FF]" type="number" value="60"/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">试卷总分</label>
-<input class="w-full border border-gray-300 rounded-md px-4 py-2 outline-none focus:ring-1 focus:ring-[#1890FF]" type="number" value="100"/>
-</div>
-<div class="col-span-2">
-<label class="block text-sm font-medium text-gray-700 mb-2">试卷说明</label>
-<textarea class="w-full border border-gray-300 rounded-md px-4 py-2 h-24 outline-none focus:ring-1 focus:ring-[#1890FF]" placeholder="请输入考试注意事项..."></textarea>
-</div>
-</div>
-</div>
-<!-- 步骤 2 内容 (模拟选题) -->
-<div class="p-8 hidden" id="content-2">
-<div class="flex h-[500px] border border-gray-100 rounded-lg">
-<div class="w-1/2 border-r border-gray-100 flex flex-col">
-<div class="p-3 bg-gray-50 font-bold text-xs text-gray-500 uppercase">备选题库</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-3">
-<div class="p-3 border rounded text-xs flex justify-between items-center group hover:border-[#1890FF]">
-<span>[单选] 设函数 f(x)...</span>
-<button class="text-[#1890FF]">+ 添加</button>
-</div>
-<div class="p-3 border rounded text-xs flex justify-between items-center group hover:border-[#1890FF]">
-<span>[填空] 计算极限 lim...</span>
-<button class="text-[#1890FF]">+ 添加</button>
-</div>
-</div>
-</div>
-<div class="w-1/2 flex flex-col">
-<div class="p-3 bg-gray-50 font-bold text-xs text-gray-500 uppercase">已选题目 (2)</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-3">
-<div class="p-3 bg-blue-50/50 border border-blue-100 rounded text-xs flex justify-between items-center">
-<span>1. [单选] 导数的定义是...</span>
-<button class="text-red-500">移除</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- 底部操作 -->
-<div class="p-8 border-t border-gray-50 flex justify-between">
-<button class="px-6 py-2 border border-gray-200 rounded text-gray-600" onclick="hideCreateExam()">取消</button>
-<div class="flex space-x-4">
-<button class="px-6 py-2 border border-[#1890FF] text-[#1890FF] rounded hidden" id="prevBtn" onclick="prevStep()">上一步</button>
-<button class="px-6 py-2 bg-[#1890FF] text-white rounded" id="nextBtn" onclick="nextStep()">下一步</button>
-</div>
-</div>
-</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="paperGrid"><div class="text-center text-gray-400 py-12 col-span-full">加载中...</div></div>
 </main>
 </div>
 <script>
-        let currentStep = 1;
-        function showCreateExam() {
-            document.getElementById('examMainList').classList.add('hidden');
-            document.getElementById('createExamStep').classList.remove('hidden');
-        }
-        function hideCreateExam() {
-            document.getElementById('examMainList').classList.remove('hidden');
-            document.getElementById('createExamStep').classList.add('hidden');
-        }
+    var API_BASE = 'http://localhost:8080/api';
+    var currentStatus = '';
+    var currentPage = 1;
 
-        function nextStep() {
-            if (currentStep < 3) {
-                document.getElementById('content-' + currentStep).classList.add('hidden');
-                document.getElementById('step-' + currentStep).querySelector('div').classList.remove('step-active');
-                document.getElementById('step-' + currentStep).querySelector('span').classList.remove('step-active');
-                
-                currentStep++;
-                
-                document.getElementById('content-' + currentStep).classList.remove('hidden');
-                const node = document.getElementById('step-' + currentStep);
-                node.querySelector('div').classList.add('step-active');
-                node.querySelector('div').classList.remove('text-gray-400', 'border-gray-200');
-                node.querySelector('span').classList.add('step-active');
-                node.querySelector('span').classList.remove('text-gray-400');
-                
-                document.getElementById('prevBtn').classList.remove('hidden');
-                if (currentStep === 3) {
-                    document.getElementById('nextBtn').innerText = '完成并发布';
-                }
+    function apiGet(url, params) {
+        var q = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + q, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: data ? JSON.stringify(data) : '{}' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiDel(url) {
+        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+
+    var STATUS_MAP = {0: '草稿', 1: '已发布', 2: '已回收'};
+    var STATUS_CLASS = {0: 'bg-gray-100 text-gray-500', 1: 'bg-green-50 text-green-600', 2: 'bg-red-50 text-red-500'};
+
+    function filterPapers(status, btn) {
+        currentStatus = status;
+        var btns = document.querySelectorAll('.tab-item');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].className = 'tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium';
+        }
+        btn.className = 'tab-item pb-3 border-b-2 font-medium tab-active';
+        loadPapers();
+    }
+
+    function loadPapers() {
+        var params = {page: currentPage, pageSize: 20};
+        if (currentStatus !== '') params.status = currentStatus;
+        apiGet('/teacher/papers', params).then(function(res) {
+            var list = res.data && res.data.list ? res.data.list : (res.list || res.records || []);
+            renderPapers(list);
+        }).catch(function() {});
+    }
+
+    function renderPapers(papers) {
+        var grid = document.getElementById('paperGrid');
+        if (papers.length === 0) {
+            grid.innerHTML = '<div class="text-center text-gray-400 py-12 col-span-full">暂无试卷</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < papers.length; i++) {
+            var p = papers[i];
+            var statusLabel = STATUS_MAP[p.status] !== undefined ? STATUS_MAP[p.status] : '未知';
+            var statusCls = STATUS_CLASS[p.status] || 'bg-gray-100 text-gray-500';
+            html += '<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">';
+            html += '<div class="p-6"><div class="flex justify-between items-start mb-4">';
+            html += '<span class="px-2 py-0.5 text-xs font-bold rounded ' + statusCls + '">' + statusLabel + '</span></div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + esc(p.paperName || '') + '</h3>';
+            html += '<p class="text-sm text-gray-400 mb-4">' + esc(p.courseName || '') + '</p>';
+            html += '<div class="grid grid-cols-2 gap-y-2 text-sm">';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:star-outline"></iconify-icon>总分: ' + (p.totalScore || 0) + ' 分</span>';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:timer-outline"></iconify-icon>时长: ' + (p.duration || 0) + ' 分钟</span>';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:calendar-clock"></iconify-icon>' + (p.createTime || '').substring(0, 10) + '</span>';
+            html += '</div></div>';
+            html += '<div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between">';
+            html += '<span class="text-xs text-gray-400">创建于 ' + (p.createTime || '').substring(0, 10) + '</span>';
+            html += '<div class="flex space-x-3">';
+            if (p.status === 0) {
+                html += '<button class="text-blue-600 text-sm hover:underline" onclick="publishPaper(' + p.paperId + ')">发布</button>';
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="deletePaper(' + p.paperId + ')">删除</button>';
+            } else if (p.status === 1) {
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="recallPaper(' + p.paperId + ')">回收</button>';
             } else {
-                alert('试卷发布成功！');
-                hideCreateExam();
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="deletePaper(' + p.paperId + ')">删除</button>';
             }
+            html += '</div></div></div>';
         }
+        grid.innerHTML = html;
+    }
 
-        function prevStep() {
-            if (currentStep > 1) {
-                document.getElementById('content-' + currentStep).classList.add('hidden');
-                document.getElementById('step-' + currentStep).querySelector('div').classList.remove('step-active');
-                document.getElementById('step-' + currentStep).querySelector('div').classList.add('text-gray-400', 'border-gray-200');
-                document.getElementById('step-' + currentStep).querySelector('span').classList.remove('step-active');
-                document.getElementById('step-' + currentStep).querySelector('span').classList.add('text-gray-400');
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-                currentStep--;
-                
-                document.getElementById('content-' + currentStep).classList.remove('hidden');
-                document.getElementById('step-' + currentStep).querySelector('div').classList.add('step-active');
-                document.getElementById('step-' + currentStep).querySelector('span').classList.add('step-active');
-                
-                if (currentStep === 1) document.getElementById('prevBtn').classList.add('hidden');
-                document.getElementById('nextBtn').innerText = '下一步';
-            }
-        }
-    </script>
+    function showCreatePaper() {
+        var name = prompt('请输入试卷名称：');
+        if (!name) return;
+        var courseId = prompt('请输入课程ID（1=Java程序设计, 2=数据库原理）：');
+        if (!courseId) return;
+        var duration = prompt('考试时长(分钟，默认60)：', '60');
+        var totalScore = prompt('总分(默认100)：', '100');
+        apiPost('/teacher/papers', {
+            paperName: name, courseId: parseInt(courseId),
+            duration: parseInt(duration) || 60, totalScore: parseInt(totalScore) || 100, questions: []
+        }).then(function(res) {
+            alert('试卷创建成功！请到习题管理中为试卷添加题目。');
+            loadPapers();
+        }).catch(function() { alert('创建失败'); });
+    }
+
+    function publishPaper(id) {
+        if (!confirm('确定要发布该试卷吗？')) return;
+        apiPut('/teacher/papers/' + id + '/publish').then(function() { loadPapers(); }).catch(function() { alert('发布失败'); });
+    }
+    function recallPaper(id) {
+        if (!confirm('确定要回收该试卷吗？')) return;
+        apiPut('/teacher/papers/' + id + '/recall').then(function() { loadPapers(); }).catch(function() { alert('回收失败'); });
+    }
+    function deletePaper(id) {
+        if (!confirm('确定要删除该试卷吗？')) return;
+        apiDel('/teacher/papers/' + id).then(function() { loadPapers(); }).catch(function() { alert('删除失败'); });
+    }
+
+    apiGet('/auth/current-user').then(function(res) {
+        if (res.data) document.getElementById('teacherName').textContent = res.data.realName || '教师';
+    });
+    loadPapers();
+</script>
 </body>
 </html>

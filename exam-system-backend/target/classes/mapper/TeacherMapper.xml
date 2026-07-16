@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.examsystem.mapper.TeacherMapper">
+
+    <resultMap id="BaseResultMap" type="com.examsystem.entity.Teacher">
+        <id column="teacher_id" property="teacherId"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="gender" property="gender"/>
+        <result column="phone" property="phone"/>
+        <result column="subject" property="subject"/>
+        <result column="status" property="status"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT * FROM t_teacher WHERE username = #{username}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM t_teacher WHERE teacher_id = #{teacherId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="teacherId">
+        INSERT INTO t_teacher (username, password, real_name, gender, phone, subject, status, create_by, create_time)
+        VALUES (#{username}, #{password}, #{realName}, #{gender}, #{phone}, #{subject}, #{status}, #{createBy}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE t_teacher
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="subject != null">subject = #{subject},</if>
+        </set>
+        WHERE teacher_id = #{teacherId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE t_teacher SET status = #{status} WHERE teacher_id = #{teacherId}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE t_teacher SET password = #{password} WHERE teacher_id = #{teacherId}
+    </update>
+
+    <select id="findByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM t_teacher
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByKeyword" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_teacher
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+</mapper>

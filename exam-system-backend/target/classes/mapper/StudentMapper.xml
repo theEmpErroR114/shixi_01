@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.examsystem.mapper.StudentMapper">
+
+    <resultMap id="BaseResultMap" type="com.examsystem.entity.Student">
+        <id column="student_id" property="studentId"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="gender" property="gender"/>
+        <result column="class_name" property="className"/>
+        <result column="phone" property="phone"/>
+        <result column="status" property="status"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT * FROM t_student WHERE username = #{username}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM t_student WHERE student_id = #{studentId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="studentId">
+        INSERT INTO t_student (username, password, real_name, gender, class_name, phone, status, create_by, create_time)
+        VALUES (#{username}, #{password}, #{realName}, #{gender}, #{className}, #{phone}, #{status}, #{createBy}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE t_student
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="className != null">class_name = #{className},</if>
+            <if test="phone != null">phone = #{phone},</if>
+        </set>
+        WHERE student_id = #{studentId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE t_student SET status = #{status} WHERE student_id = #{studentId}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE t_student SET password = #{password} WHERE student_id = #{studentId}
+    </update>
+
+    <select id="findByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM t_student
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="className != null and className != ''">
+                AND class_name = #{className}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByKeyword" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_student
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="className != null and className != ''">
+                AND class_name = #{className}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectStudentStats" resultType="java.util.HashMap">
+        SELECT
+            s.student_id,
+            s.real_name,
+            s.class_name,
+            COUNT(DISTINCT pr.record_id) AS practice_count,
+            ROUND(AVG(CASE WHEN pr.is_correct IS NOT NULL THEN pr.is_correct ELSE NULL END) * 100, 1) AS practice_correct_rate,
+            COUNT(DISTINCT er.exam_record_id) AS exam_count,
+            ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score
+        FROM t_student s
+        LEFT JOIN t_practice_record pr ON s.student_id = pr.student_id
+        LEFT JOIN t_exam_record er ON s.student_id = er.student_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (s.real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR s.username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        GROUP BY s.student_id, s.real_name, s.class_name
+        ORDER BY s.create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="selectStudentStatsByStudentId" resultType="java.util.HashMap">
+        SELECT
+            s.student_id,
+            s.real_name,
+            s.class_name,
+            COUNT(DISTINCT pr.record_id) AS practice_count,
+            ROUND(AVG(CASE WHEN pr.is_correct IS NOT NULL THEN pr.is_correct ELSE NULL END) * 100, 1) AS practice_correct_rate,
+            COUNT(DISTINCT er.exam_record_id) AS exam_count,
+            ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score
+        FROM t_student s
+        LEFT JOIN t_practice_record pr ON s.student_id = pr.student_id
+        LEFT JOIN t_exam_record er ON s.student_id = er.student_id
+        WHERE s.student_id = #{studentId}
+        GROUP BY s.student_id, s.real_name, s.class_name
+    </select>
+
+</mapper>

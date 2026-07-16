@@ -74,7 +74,7 @@
 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
 <iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
 </div>
-<span class="text-sm font-medium text-gray-700">超级管理员</span>
+<span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
 </div>
 </div>
 </header>
@@ -87,40 +87,36 @@
 <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
 <iconify-icon class="text-2xl text-blue-500" icon="mdi:account-tie"></iconify-icon>
 </div>
-<span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded">+12%</span>
 </div>
 <h3 class="text-gray-500 text-sm font-medium">老师总数</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1">1,248</p>
+<p class="text-2xl font-bold text-gray-800 mt-1" id="teacherCount">--</p>
 </div>
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
 <div class="flex items-center justify-between mb-4">
 <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
 <iconify-icon class="text-2xl text-purple-500" icon="mdi:school"></iconify-icon>
 </div>
-<span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded">+5%</span>
 </div>
 <h3 class="text-gray-500 text-sm font-medium">学生总数</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1">32,850</p>
+<p class="text-2xl font-bold text-gray-800 mt-1" id="studentCount">--</p>
 </div>
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
 <div class="flex items-center justify-between mb-4">
 <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
 <iconify-icon class="text-2xl text-green-500" icon="mdi:account-check"></iconify-icon>
 </div>
-<span class="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-1 rounded">-2%</span>
 </div>
 <h3 class="text-gray-500 text-sm font-medium">活跃老师数</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1">856</p>
+<p class="text-2xl font-bold text-gray-800 mt-1" id="activeTeacherCount">--</p>
 </div>
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
 <div class="flex items-center justify-between mb-4">
 <div class="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
 <iconify-icon class="text-2xl text-orange-500" icon="mdi:motion-sensor"></iconify-icon>
 </div>
-<span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded">+24%</span>
 </div>
-<h3 class="text-gray-500 text-sm font-medium">今日活跃学生</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1">12,402</p>
+<h3 class="text-gray-500 text-sm font-medium">活跃学生数</h3>
+<p class="text-2xl font-bold text-gray-800 mt-1" id="activeStudentCount">--</p>
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -184,44 +180,97 @@
 </main>
 </div>
 <script>
-        // 初始化图表
-        document.addEventListener('DOMContentLoaded', function() {
-            const chartDom = document.getElementById('visitChart');
-            const myChart = echarts.init(chartDom);
-            const option = {
-                grid: { top: '10%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                xAxis: {
-                    type: 'category',
-                    boundaryGap: false,
-                    data: ['07-08', '07-09', '07-10', '07-11', '07-12', '07-13', '07-14'],
-                    axisLine: { lineStyle: { color: '#E5E7EB' } },
-                    axisLabel: { color: '#9CA3AF' }
-                },
-                yAxis: {
-                    type: 'value',
-                    splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
-                    axisLabel: { color: '#9CA3AF' }
-                },
-                tooltip: { trigger: 'axis' },
-                series: [
-                    {
-                        name: '访问量',
-                        data: [820, 932, 901, 934, 1290, 1330, 1320],
-                        type: 'line',
-                        smooth: true,
-                        areaStyle: {
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-                                { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
-                            ])
-                        },
-                        itemStyle: { color: '#1890FF' }
-                    }
-                ]
-            };
-            myChart.setOption(option);
-            window.addEventListener('resize', () => myChart.resize());
+    var API_BASE = 'http://localhost:8080/api';
+
+    function apiGet(url, params) {
+        var query = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
         });
-    </script>
+    }
+
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 加载当前管理员信息
+        apiGet('/auth/current-user').then(function(user) {
+            var name = user.data ? (user.data.realName || user.data.username) : (user.realName || user.username);
+            if (name) {
+                document.getElementById('adminName').textContent = name;
+            }
+        }).catch(function() {
+            // 静默处理，保持默认显示
+        });
+
+        // 加载仪表盘统计数据
+        apiGet('/admin/dashboard/stats').then(function(data) {
+            var stats = data.data || data;
+            if (stats.teacherCount !== undefined) {
+                document.getElementById('teacherCount').textContent = stats.teacherCount.toLocaleString();
+            }
+            if (stats.activeTeacherCount !== undefined) {
+                document.getElementById('activeTeacherCount').textContent = stats.activeTeacherCount.toLocaleString();
+            }
+            if (stats.studentCount !== undefined) {
+                document.getElementById('studentCount').textContent = stats.studentCount.toLocaleString();
+            }
+            if (stats.activeStudentCount !== undefined) {
+                document.getElementById('activeStudentCount').textContent = stats.activeStudentCount.toLocaleString();
+            }
+        }).catch(function() {
+            // 静默处理，保持默认显示
+        });
+
+        // 初始化图表
+        var chartDom = document.getElementById('visitChart');
+        var myChart = echarts.init(chartDom);
+        var option = {
+            grid: { top: '10%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: ['07-08', '07-09', '07-10', '07-11', '07-12', '07-13', '07-14'],
+                axisLine: { lineStyle: { color: '#E5E7EB' } },
+                axisLabel: { color: '#9CA3AF' }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
+                axisLabel: { color: '#9CA3AF' }
+            },
+            tooltip: { trigger: 'axis' },
+            series: [
+                {
+                    name: '访问量',
+                    data: [820, 932, 901, 934, 1290, 1330, 1320],
+                    type: 'line',
+                    smooth: true,
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
+                            { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
+                        ])
+                    },
+                    itemStyle: { color: '#1890FF' }
+                }
+            ]
+        };
+        myChart.setOption(option);
+        window.addEventListener('resize', function() { myChart.resize(); });
+    });
+</script>
 </body>
 </html>

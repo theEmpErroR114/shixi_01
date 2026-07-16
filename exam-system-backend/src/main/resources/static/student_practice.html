@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>抽题练习 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .option-btn:hover { border-color: #1890FF; background-color: #f0f9ff; }
+        .option-btn.active { border-color: #1890FF; background-color: #e6f7ff; color: #1890FF; }
+        .nav-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<header class="bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-4 flex items-center h-16">
+<div class="flex items-center mr-12">
+<iconify-icon class="text-2xl text-[#1890FF] mr-2" icon="mdi:book-open-page-variant"></iconify-icon>
+<span class="text-xl font-bold text-gray-800">学习系统</span>
+</div>
+<nav class="flex space-x-8 h-full">
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_dashboard.html">我的首页</a>
+<a class="flex items-center h-full px-2 nav-active font-medium" href="student_practice.html">抽题练习</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_exam.html">参加测验</a>
+<a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_results.html">我的成绩</a>
+</nav>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
+<!-- 配置练习 -->
+<div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg" id="setupArea">
+<h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">抽题练习配置</h2>
+<div class="space-y-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">选择课程</label>
+<select id="courseSelect" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]">
+<option value="">加载中...</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">题型筛选</label>
+<select id="questionTypeSelect" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]">
+<option value="">混合题型</option>
+<option value="SINGLE_CHOICE">单选题</option>
+<option value="MULTIPLE_CHOICE">多选题</option>
+<option value="TRUE_FALSE">判断题</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">题目数量</label>
+<input id="questionCount" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]" type="number" value="10" min="1" max="50"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">难度</label>
+<select id="difficultySelect" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]">
+<option value="">不限</option>
+<option value="EASY">简单</option>
+<option value="MEDIUM">中等</option>
+<option value="HARD">困难</option>
+</select>
+</div>
+</div>
+<button class="w-full py-4 bg-[#1890FF] text-white rounded-xl text-lg font-bold shadow-lg hover:bg-blue-600 transition-colors mt-4" onclick="startPractice()">开始练习</button>
+</div>
+</div>
+<!-- 答题区域 -->
+<div class="hidden flex h-[600px] w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden" id="practiceArea">
+<!-- 左侧答题卡 -->
+<div class="w-64 border-r border-gray-100 p-6 flex flex-col">
+<h3 class="font-bold text-gray-800 mb-4" id="answerCardTitle">答题卡</h3>
+<div class="grid grid-cols-5 gap-2" id="answerCardGrid">
+</div>
+<div class="mt-auto space-y-2">
+<div class="flex items-center text-xs text-gray-400">
+<span class="w-3 h-3 bg-green-500 rounded-sm mr-2"></span> 已答
+                        <span class="w-3 h-3 bg-blue-500 rounded-sm ml-4 mr-2"></span> 当前
+                        <span class="w-3 h-3 border border-gray-200 rounded-sm ml-4 mr-2"></span> 未答
+                    </div>
+<div class="pt-4 border-t text-sm font-medium text-gray-700">
+                        已用时间: <span class="text-[#1890FF]" id="practiceTimer">00:00</span>
+</div>
+</div>
+</div>
+<!-- 右侧题目 -->
+<div class="flex-1 flex flex-col">
+<div class="p-10 flex-1 overflow-y-auto">
+<div class="flex items-center space-x-2 mb-6">
+<span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-bold rounded" id="questionTypeLabel">单选题</span>
+<span class="text-gray-400 text-sm" id="questionScore">分值：10分</span>
+</div>
+<div class="text-xl font-bold text-gray-800 leading-relaxed mb-8" id="questionContent">
+                        加载中...
+                    </div>
+<div class="space-y-4" id="optionsContainer">
+</div>
+</div>
+<div class="px-10 py-6 border-t border-gray-50 flex justify-between items-center bg-gray-50/30">
+<button class="px-6 py-2 border border-gray-200 rounded text-gray-500 hover:bg-white transition-colors" id="prevBtn" onclick="prevQuestion()">上一题</button>
+<button class="px-10 py-2 bg-[#1890FF] text-white rounded font-bold hover:bg-blue-600 shadow-md" id="nextBtn" onclick="nextQuestion()">下一题</button>
+</div>
+</div>
+</div>
+<!-- 结果反馈 -->
+<div class="hidden bg-white p-10 rounded-2xl shadow-xl w-full max-w-xl text-center" id="resultArea">
+<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6" id="resultIcon">
+<iconify-icon class="text-5xl text-green-500" icon="mdi:check-circle"></iconify-icon>
+</div>
+<h2 class="text-3xl font-bold text-gray-800 mb-2">练习完成！</h2>
+<p class="text-gray-500 mb-8" id="resultSummary">加载中...</p>
+<div class="flex justify-center space-x-12 mb-10">
+<div><p class="text-xs text-gray-400">正确率</p><p class="text-2xl font-bold text-green-500" id="resultAccuracy">--</p></div>
+<div><p class="text-xs text-gray-400">耗时</p><p class="text-2xl font-bold text-gray-800" id="resultTime">--</p></div>
+<div><p class="text-xs text-gray-400">正确/总数</p><p class="text-2xl font-bold text-blue-500" id="resultCorrectCount">--</p></div>
+</div>
+<div class="flex space-x-4">
+<button class="flex-1 py-3 border border-[#1890FF] text-[#1890FF] rounded-lg font-bold" onclick="reviewWrongQuestions()">查看错题解析</button>
+<button class="flex-1 py-3 bg-[#1890FF] text-white rounded-lg font-bold" onclick="location.reload()">再来一组</button>
+</div>
+</div>
+</main>
+<script>
+var API_BASE = '/api';
+
+function apiGet(url, params) {
+    var query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+function apiPost(url, data) {
+    return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+        if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+        return res.json();
+    });
+}
+
+// State
+var questions = [];
+var answers = [];       // answers[i] = selected option label or value
+var answerResults = []; // results[i] = { correct, correctAnswer } or null
+var currentIndex = 0;
+var timerInterval = null;
+var timerSeconds = 0;
+var submittedCount = 0;
+
+// Load courses on page load
+function loadCourses() {
+    apiGet('/courses').then(function(data) {
+        var select = document.getElementById('courseSelect');
+        var courses = Array.isArray(data) ? data : (data && data.list ? data.list : []);
+        select.innerHTML = '';
+        if (courses.length === 0) {
+            select.innerHTML = '<option value="">暂无课程</option>';
+            return;
+        }
+        for (var i = 0; i < courses.length; i++) {
+            var c = courses[i];
+            select.innerHTML += '<option value="' + c.id + '">' + (c.name || c.courseName || '') + '</option>';
+        }
+    }).catch(function(err) {
+        console.error('Failed to load courses:', err);
+        document.getElementById('courseSelect').innerHTML = '<option value="">加载失败</option>';
+    });
+}
+loadCourses();
+
+function formatTime(seconds) {
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function getOptionLabel(index) {
+    return String.fromCharCode(65 + index); // A, B, C, D...
+}
+
+function getTypeName(type) {
+    if (type === 'SINGLE_CHOICE' || type === 'SINGLE') return '单选题';
+    if (type === 'MULTIPLE_CHOICE' || type === 'MULTIPLE') return '多选题';
+    if (type === 'TRUE_FALSE' || type === 'TRUE_FALSE') return '判断题';
+    return '单选题';
+}
+
+function startPractice() {
+    var courseId = document.getElementById('courseSelect').value;
+    var questionType = document.getElementById('questionTypeSelect').value;
+    var difficulty = document.getElementById('difficultySelect').value;
+    var count = parseInt(document.getElementById('questionCount').value, 10) || 10;
+
+    if (!courseId) {
+        alert('请选择课程');
+        return;
+    }
+    if (count < 1 || count > 50) {
+        alert('题目数量需在1-50之间');
+        return;
+    }
+
+    var params = { courseId: courseId, count: count };
+    if (questionType) params.questionType = questionType;
+    if (difficulty) params.difficulty = difficulty;
+
+    // Show loading state
+    var btn = document.querySelector('#setupArea button');
+    btn.disabled = true;
+    btn.textContent = '正在生成题目...';
+
+    apiPost('/student/practice/generate', params).then(function(data) {
+        btn.disabled = false;
+        btn.textContent = '开始练习';
+
+        questions = Array.isArray(data) ? data : (data && data.questions ? data.questions : []);
+        if (questions.length === 0) {
+            alert('没有符合条件的题目，请调整筛选条件');
+            return;
+        }
+
+        // Initialize state
+        answers = new Array(questions.length);
+        answerResults = new Array(questions.length);
+        currentIndex = 0;
+        submittedCount = 0;
+        timerSeconds = 0;
+
+        // Switch to practice area
+        document.getElementById('setupArea').classList.add('hidden');
+        document.getElementById('practiceArea').classList.remove('hidden');
+        document.getElementById('resultArea').classList.add('hidden');
+
+        // Render answer card
+        renderAnswerCard();
+        // Render first question
+        renderQuestion();
+        // Start timer
+        startTimer();
+    }).catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = '开始练习';
+        console.error('Failed to generate practice:', err);
+        alert('生成题目失败，请重试');
+    });
+}
+
+function renderAnswerCard() {
+    var grid = document.getElementById('answerCardGrid');
+    document.getElementById('answerCardTitle').textContent = '答题卡 (' + (submittedCount) + '/' + questions.length + ')';
+    var html = '';
+    for (var i = 0; i < questions.length; i++) {
+        var cls = 'w-8 h-8 rounded border flex items-center justify-center text-xs cursor-pointer ';
+        if (i === currentIndex) {
+            cls += 'bg-blue-500 text-white border-blue-500';
+        } else if (answers[i] != null) {
+            cls += 'bg-green-500 text-white border-green-500';
+        } else {
+            cls += 'text-gray-400 border-gray-200';
+        }
+        html += '<div class="' + cls + '" onclick="jumpToQuestion(' + i + ')">' + (i + 1) + '</div>';
+    }
+    grid.innerHTML = html;
+}
+
+function renderQuestion() {
+    var q = questions[currentIndex];
+    if (!q) return;
+
+    document.getElementById('questionTypeLabel').textContent = getTypeName(q.questionType || q.type);
+    document.getElementById('questionScore').textContent = '分值：' + (q.score || 10) + '分';
+    document.getElementById('questionContent').textContent = (currentIndex + 1) + '. ' + (q.content || q.title || '');
+
+    // Update buttons
+    document.getElementById('prevBtn').style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
+    var nextText = currentIndex === questions.length - 1 ? '完成练习' : '下一题';
+    document.getElementById('nextBtn').textContent = nextText;
+
+    // Render options
+    var options = q.options || [];
+    var container = document.getElementById('optionsContainer');
+    var html = '';
+    var selectedAnswer = answers[currentIndex];
+
+    for (var i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var label = opt.label || getOptionLabel(i);
+        var content = opt.content || opt.text || opt.label || '';
+        var isSelected = (selectedAnswer === label || selectedAnswer === opt.id);
+        var cls = 'option-btn w-full text-left p-5 border-2 rounded-xl transition-all flex items-center';
+        if (isSelected) cls += ' active';
+
+        var labelCls = 'w-8 h-8 rounded-full border flex items-center justify-center mr-4 font-bold';
+        if (isSelected) {
+            labelCls += ' border-[#1890FF] bg-[#1890FF] text-white';
+        } else {
+            labelCls += ' border-gray-200';
+        }
+
+        html += '<button class="' + cls + '" onclick="selectAnswer(\'' + label + '\')">';
+        html += '<span class="' + labelCls + '">' + label + '</span>';
+        html += content;
+        html += '</button>';
+    }
+    container.innerHTML = html;
+
+    renderAnswerCard();
+}
+
+function selectAnswer(label) {
+    answers[currentIndex] = label;
+    // Submit answer to backend
+    var q = questions[currentIndex];
+    apiPost('/student/practice/submit', { questionId: q.id || q.questionId, studentAnswer: label }).then(function(result) {
+        if (result != null) {
+            answerResults[currentIndex] = result;
+            if (answers[currentIndex] != null && answerResults[currentIndex] == null) {
+                submittedCount++;
+            }
+            renderAnswerCard();
+        }
+    }).catch(function(err) {
+        console.error('Failed to submit answer:', err);
+    });
+    renderQuestion();
+}
+
+function jumpToQuestion(index) {
+    currentIndex = index;
+    renderQuestion();
+}
+
+function prevQuestion() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+    }
+}
+
+function nextQuestion() {
+    if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+    } else {
+        finishPractice();
+    }
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerSeconds = 0;
+    document.getElementById('practiceTimer').textContent = '00:00';
+    timerInterval = setInterval(function() {
+        timerSeconds++;
+        document.getElementById('practiceTimer').textContent = formatTime(timerSeconds);
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function finishPractice() {
+    stopTimer();
+
+    // Count results
+    var correctCount = 0;
+    for (var i = 0; i < answerResults.length; i++) {
+        if (answerResults[i] && answerResults[i].correct) correctCount++;
+    }
+    var total = questions.length;
+    var accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    // Switch to result area
+    document.getElementById('practiceArea').classList.add('hidden');
+    document.getElementById('resultArea').classList.remove('hidden');
+
+    document.getElementById('resultSummary').textContent = '本次练习共 ' + total + ' 题，正确 ' + correctCount + ' 题，错误 ' + (total - correctCount) + ' 题';
+    document.getElementById('resultAccuracy').textContent = accuracy + '%';
+    document.getElementById('resultTime').textContent = formatTime(timerSeconds);
+    document.getElementById('resultCorrectCount').textContent = correctCount + ' / ' + total;
+
+    // Update icon based on performance
+    var iconEl = document.getElementById('resultIcon');
+    if (accuracy >= 80) {
+        iconEl.innerHTML = '<iconify-icon class="text-5xl text-green-500" icon="mdi:check-circle"></iconify-icon>';
+    } else if (accuracy >= 60) {
+        iconEl.innerHTML = '<iconify-icon class="text-5xl text-orange-500" icon="mdi:alert-circle"></iconify-icon>';
+    } else {
+        iconEl.innerHTML = '<iconify-icon class="text-5xl text-red-500" icon="mdi:close-circle"></iconify-icon>';
+    }
+}
+
+function reviewWrongQuestions() {
+    // Find first wrong question and navigate back to practice area
+    var wrongIndex = -1;
+    for (var i = 0; i < answerResults.length; i++) {
+        if (answerResults[i] && !answerResults[i].correct) {
+            wrongIndex = i;
+            break;
+        }
+    }
+    if (wrongIndex >= 0) {
+        currentIndex = wrongIndex;
+        document.getElementById('resultArea').classList.add('hidden');
+        document.getElementById('practiceArea').classList.remove('hidden');
+        renderQuestion();
+        startTimer();
+    } else {
+        alert('恭喜，全部正确！');
+    }
+}
+</script>
+</body>
+</html>

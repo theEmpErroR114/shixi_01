@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>老师工作台 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/echarts.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .sidebar { background-color: #001529; }
+        .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
+        .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
+        .sidebar-item.active { color: #fff; background-color: #1890FF; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<div class="sidebar w-60 flex-none flex flex-col">
+<div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
+<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>
+            教学管理
+        </div>
+<nav class="flex-1 py-4">
+<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>
+                首页
+            </a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html">
+<iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>
+                习题管理
+            </a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_exams.html">
+<iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>
+                试卷管理
+            </a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_students.html">
+<iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>
+                学生情况
+            </a>
+</nav>
+<div class="p-4 border-t border-gray-800">
+<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
+<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
+                退出系统
+            </a>
+</div>
+</div>
+<!-- 主内容 -->
+<div class="flex-1 flex flex-col overflow-hidden">
+<header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
+<div class="flex items-center space-x-2 text-sm text-gray-500">
+<span>教学管理</span>
+<span>/</span>
+<span class="text-gray-900 font-medium">首页看板</span>
+</div>
+<div class="flex items-center space-x-4">
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900" id="headerUserName">加载中...</p>
+<p class="text-xs text-gray-500" id="headerUserDept"></p>
+</div>
+<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold" id="headerAvatar">教</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-8">
+<!-- 数据卡片 -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
+<div class="absolute right-[-10px] top-[-10px] text-6xl text-blue-50 opacity-10 group-hover:scale-110 transition-transform">
+<iconify-icon icon="mdi:bookshelf"></iconify-icon>
+</div>
+<p class="text-gray-500 text-sm">题库总数</p>
+<p class="text-3xl font-bold text-gray-800 mt-2" id="kpiQuestionCount">--</p>
+<p class="text-xs text-blue-600 mt-2 flex items-center">
+<iconify-icon class="mr-1" icon="mdi:arrow-up"></iconify-icon>
+                        本月新增 <span id="kpiNewQuestions">--</span> 题
+                    </p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
+<div class="absolute right-[-10px] top-[-10px] text-6xl text-purple-50 opacity-10 group-hover:scale-110 transition-transform">
+<iconify-icon icon="mdi:file-document-edit"></iconify-icon>
+</div>
+<p class="text-gray-500 text-sm">试卷总数</p>
+<p class="text-3xl font-bold text-gray-800 mt-2" id="kpiPaperCount">--</p>
+<p class="text-xs text-purple-600 mt-2" id="kpiPaperSub"></p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
+<div class="absolute right-[-10px] top-[-10px] text-6xl text-green-50 opacity-10 group-hover:scale-110 transition-transform">
+<iconify-icon icon="mdi:play-circle-outline"></iconify-icon>
+</div>
+<p class="text-gray-500 text-sm">已发布测验</p>
+<p class="text-3xl font-bold text-gray-800 mt-2" id="kpiPublishedCount">--</p>
+<p class="text-xs text-green-600 mt-2" id="kpiPublishedSub"></p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
+<div class="absolute right-[-10px] top-[-10px] text-6xl text-orange-50 opacity-10 group-hover:scale-110 transition-transform">
+<iconify-icon icon="mdi:account-group"></iconify-icon>
+</div>
+<p class="text-gray-500 text-sm">授课学生数</p>
+<p class="text-3xl font-bold text-gray-800 mt-2" id="kpiStudentCount">--</p>
+<p class="text-xs text-orange-600 mt-2" id="kpiStudentSub"></p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- 左侧：成绩概览 -->
+<div class="lg:col-span-2 space-y-8">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-gray-800">最近测验成绩概览</h3>
+<select class="text-sm border-none bg-gray-50 rounded px-2 py-1 outline-none" id="examSelect">
+<option value="">加载中...</option>
+</select>
+</div>
+<div class="h-[300px]" id="scoreChart"></div>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<h3 class="text-lg font-bold text-gray-800 mb-6">待批阅简答题</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm">
+<thead>
+<tr class="text-gray-400 border-b border-gray-100">
+<th class="pb-3 font-medium">试卷名称</th>
+<th class="pb-3 font-medium">学生</th>
+<th class="pb-3 font-medium">提交时间</th>
+<th class="pb-3 font-medium">操作</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-50" id="reviewTbody">
+</tbody>
+</table>
+</div>
+<p class="text-center text-sm text-gray-400 py-4 hidden" id="reviewEmpty">暂无待批阅的简答题</p>
+</div>
+</div>
+<!-- 右侧：最近发布试卷 -->
+<div class="space-y-6">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-gray-800">正在进行的测验</h3>
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+</div>
+<div class="space-y-4" id="activeExamsList">
+</div>
+<p class="text-center text-sm text-gray-400 py-4 hidden" id="activeExamsEmpty">暂无正在进行的测验</p>
+<a href="teacher_exams.html" class="block w-full mt-6 py-2 border border-gray-200 text-gray-600 text-sm rounded text-center hover:bg-gray-50 transition-colors">管理所有测验</a>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+<h3 class="text-lg font-bold text-gray-800 mb-4">快捷操作</h3>
+<div class="grid grid-cols-2 gap-4">
+<a class="p-4 bg-gray-50 rounded-lg hover:shadow-md transition-all text-center" href="teacher_questions.html">
+<iconify-icon class="text-2xl text-blue-500 mb-2" icon="mdi:plus-circle"></iconify-icon>
+<p class="text-sm font-medium">新增题目</p>
+</a>
+<a class="p-4 bg-gray-50 rounded-lg hover:shadow-md transition-all text-center" href="teacher_exams.html">
+<iconify-icon class="text-2xl text-purple-500 mb-2" icon="mdi:file-plus"></iconify-icon>
+<p class="text-sm font-medium">创建试卷</p>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+    var API_BASE = '/api';
+
+    function apiGet(url, params) {
+        var query = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+    function apiDelete(url) {
+        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    function loadCurrentUser() {
+        apiGet('/auth/current-user').then(function(user) {
+            var name = user.realName || user.username || '老师';
+            document.getElementById('headerUserName').textContent = name + ' 老师';
+            document.getElementById('headerUserDept').textContent = (user.college || '') + (user.major ? ' · ' + user.major : '');
+            document.getElementById('headerAvatar').textContent = name.charAt(0);
+        }).catch(function(err) {
+            console.error('Failed to load user:', err);
+        });
+    }
+
+    function loadDashboardStats() {
+        apiGet('/teacher/dashboard/stats').then(function(stats) {
+            document.getElementById('kpiQuestionCount').textContent = (stats.questionCount != null ? stats.questionCount.toLocaleString() : '--');
+            document.getElementById('kpiPaperCount').textContent = (stats.paperCount != null ? stats.paperCount : '--');
+            document.getElementById('kpiPublishedCount').textContent = (stats.publishedPaperCount != null ? stats.publishedPaperCount : '--');
+            document.getElementById('kpiStudentCount').textContent = (stats.studentCount != null ? stats.studentCount : '--');
+
+            document.getElementById('kpiNewQuestions').textContent = stats.newQuestionsThisMonth || 0;
+            document.getElementById('kpiPaperSub').textContent = '包含 ' + (stats.draftPaperCount || 0) + ' 份草稿';
+            document.getElementById('kpiPublishedSub').textContent = (stats.activeExamCount || 0) + ' 个正在进行中';
+            document.getElementById('kpiStudentSub').textContent = '涉及 ' + (stats.classCount || 0) + ' 个行政班级';
+        }).catch(function(err) {
+            console.error('Failed to load stats:', err);
+        });
+    }
+
+    function loadActiveExams() {
+        apiGet('/teacher/papers', { status: 'PUBLISHED', pageSize: 5 }).then(function(data) {
+            var list = data.records || data.list || [];
+            var container = document.getElementById('activeExamsList');
+            var empty = document.getElementById('activeExamsEmpty');
+            if (list.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            var html = '';
+            for (var i = 0; i < list.length; i++) {
+                var paper = list[i];
+                html += '<div class="p-4 bg-blue-50 rounded-lg border border-blue-100">';
+                html += '<div class="flex justify-between items-start mb-2">';
+                html += '<h4 class="font-bold text-blue-900">' + escapeHtml(paper.paperName || paper.name || '') + '</h4>';
+                html += '<span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded">进行中</span>';
+                html += '</div>';
+                html += '<div class="flex justify-between text-xs text-blue-700 mt-3">';
+                html += '<span>已提交: ' + (paper.submittedCount || 0) + ' / ' + (paper.totalStudentCount || 0) + '</span>';
+                html += '</div>';
+                html += '<div class="w-full bg-blue-200 h-1.5 rounded-full mt-2 overflow-hidden">';
+                var pct = paper.totalStudentCount > 0 ? Math.round(paper.submittedCount / paper.totalStudentCount * 100) : 0;
+                html += '<div class="bg-blue-600 h-full" style="width: ' + pct + '%"></div>';
+                html += '</div></div>';
+            }
+            container.innerHTML = html;
+        }).catch(function(err) {
+            console.error('Failed to load active exams:', err);
+        });
+    }
+
+    function loadPendingReviews() {
+        apiGet('/teacher/questions', { questionType: 'SUBJECTIVE', pageSize: 5 }).then(function(data) {
+            var tbody = document.getElementById('reviewTbody');
+            var empty = document.getElementById('reviewEmpty');
+            // Pending reviews would come from a grading endpoint - keeping this section prepared
+            // For now show empty state
+            empty.classList.remove('hidden');
+        }).catch(function(err) {
+            console.error('Failed to load reviews:', err);
+            var empty = document.getElementById('reviewEmpty');
+            empty.classList.remove('hidden');
+        });
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCurrentUser();
+        loadDashboardStats();
+        loadActiveExams();
+        loadPendingReviews();
+
+        var myChart = echarts.init(document.getElementById('scoreChart'));
+        myChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: ['0-60', '60-70', '70-80', '80-90', '90-100'], axisLine: { lineStyle: { color: '#ddd' } } },
+            yAxis: { type: 'value', name: '学生人数', splitLine: { lineStyle: { type: 'dashed' } } },
+            series: [{
+                data: [12, 25, 48, 65, 30],
+                type: 'bar',
+                barWidth: '40%',
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: '#1890FF' },
+                        { offset: 1, color: '#69c0ff' }
+                    ]),
+                    borderRadius: [4, 4, 0, 0]
+                }
+            }]
+        });
+        window.addEventListener('resize', function() { myChart.resize(); });
+    });
+</script>
+</body>
+</html>

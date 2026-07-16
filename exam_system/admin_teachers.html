@@ -65,7 +65,7 @@
 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
 <iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
 </div>
-<span class="text-sm font-medium text-gray-700">超级管理员</span>
+<span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
 </div>
 </header>
 <!-- 内容区域 -->
@@ -75,10 +75,10 @@
 <div class="p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
 <div class="flex items-center space-x-4">
 <div class="relative">
-<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索工号/姓名/手机号" type="text"/>
+<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索工号/姓名/手机号" type="text" id="searchKeyword"/>
 <iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
 </div>
-<select class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1890FF]">
+<select class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1890FF]" id="searchStatus">
 <option value="">全部状态</option>
 <option value="1">启用</option>
 <option value="0">禁用</option>
@@ -97,84 +97,22 @@
 <th class="px-6 py-4 font-medium">序号</th>
 <th class="px-6 py-4 font-medium">工号</th>
 <th class="px-6 py-4 font-medium">姓名</th>
-<th class="px-6 py-4 font-medium">所属院系</th>
+<th class="px-6 py-4 font-medium">性别</th>
 <th class="px-6 py-4 font-medium">手机号</th>
+<th class="px-6 py-4 font-medium">学科/院系</th>
 <th class="px-6 py-4 font-medium">状态</th>
 <th class="px-6 py-4 font-medium">创建时间</th>
 <th class="px-6 py-4 font-medium text-center">操作</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-gray-100 text-sm">
-<tr>
-<td class="px-6 py-4">1</td>
-<td class="px-6 py-4 text-blue-600 font-medium">T2021001</td>
-<td class="px-6 py-4">张伟</td>
-<td class="px-6 py-4 text-gray-600">数学学院</td>
-<td class="px-6 py-4 text-gray-600">13800138001</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">启用</span>
-</td>
-<td class="px-6 py-4 text-gray-500 text-xs">2026-07-01 14:30</td>
-<td class="px-6 py-4 text-center">
-<div class="flex items-center justify-center space-x-3">
-<button class="text-blue-500 hover:text-blue-700" onclick="openModal('edit')">编辑</button>
-<button class="text-orange-500 hover:text-orange-700">重置密码</button>
-<button class="text-red-500 hover:text-red-700">禁用</button>
-</div>
-</td>
-</tr>
-<tr class="bg-gray-50/30">
-<td class="px-6 py-4">2</td>
-<td class="px-6 py-4 text-blue-600 font-medium">T2021005</td>
-<td class="px-6 py-4">李芳</td>
-<td class="px-6 py-4 text-gray-600">物理学院</td>
-<td class="px-6 py-4 text-gray-600">13911223344</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">启用</span>
-</td>
-<td class="px-6 py-4 text-gray-500 text-xs">2026-07-05 09:20</td>
-<td class="px-6 py-4 text-center">
-<div class="flex items-center justify-center space-x-3">
-<button class="text-blue-500 hover:text-blue-700">编辑</button>
-<button class="text-orange-500 hover:text-orange-700">重置密码</button>
-<button class="text-red-500 hover:text-red-700">禁用</button>
-</div>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4">3</td>
-<td class="px-6 py-4 text-blue-600 font-medium">T2022012</td>
-<td class="px-6 py-4">王磊</td>
-<td class="px-6 py-4 text-gray-600">信息工程学院</td>
-<td class="px-6 py-4 text-gray-600">18822334455</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">禁用</span>
-</td>
-<td class="px-6 py-4 text-gray-500 text-xs">2026-07-10 11:15</td>
-<td class="px-6 py-4 text-center">
-<div class="flex items-center justify-center space-x-3">
-<button class="text-blue-500 hover:text-blue-700">编辑</button>
-<button class="text-orange-500 hover:text-orange-700">重置密码</button>
-<button class="text-green-500 hover:text-green-700">启用</button>
-</div>
-</td>
-</tr>
+<tbody class="divide-y divide-gray-100 text-sm" id="teacherTableBody">
 </tbody>
 </table>
 </div>
 <!-- 分页 -->
-<div class="p-6 border-t border-gray-100 flex items-center justify-between text-sm">
-<span class="text-gray-500">共 156 条记录，每页 10 条</span>
-<div class="flex items-center space-x-2">
-<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled="">
-<iconify-icon icon="mdi:chevron-left"></iconify-icon>
-</button>
-<button class="px-3 py-1 bg-[#1890FF] text-white rounded">1</button>
-<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
-<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
-<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">
-<iconify-icon icon="mdi:chevron-right"></iconify-icon>
-</button>
+<div class="p-6 border-t border-gray-100 flex items-center justify-between text-sm" id="paginationArea">
+<span class="text-gray-500" id="paginationInfo">加载中...</span>
+<div class="flex items-center space-x-2" id="paginationButtons">
 </div>
 </div>
 </div>
@@ -191,28 +129,30 @@
 </button>
 </div>
 <div class="p-6">
-<form class="space-y-4">
+<form class="space-y-4" id="teacherForm" onsubmit="submitForm(event)">
+<input type="hidden" id="editId"/>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">工号 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_id" type="text"/>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_username" type="text" required/>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_name" type="text"/>
-</div>
-<div id="passwordField">
-<label class="block text-sm font-medium text-gray-700 mb-1">初始密码 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" placeholder="默认 123456" type="password"/>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_realName" type="text" required/>
 </div>
 <div>
-<label class="block text-sm font-medium text-gray-700 mb-1">所属院系 <span class="text-red-500">*</span></label>
-<select class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none">
-<option value="">请选择院系</option>
-<option value="1">数学学院</option>
-<option value="2">物理学院</option>
-<option value="3">信息工程学院</option>
-<option value="4">外国语学院</option>
+<label class="block text-sm font-medium text-gray-700 mb-1">性别 <span class="text-red-500">*</span></label>
+<select class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_gender">
+<option value="1">男</option>
+<option value="0">女</option>
 </select>
+</div>
+<div id="passwordField">
+<label class="block text-sm font-medium text-gray-700 mb-1">初始密码</label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" placeholder="不填则默认为 123456" id="t_password" type="password"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">学科/院系 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="t_subject" type="text" required/>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
@@ -220,37 +160,285 @@
 </div>
 <div class="pt-4 flex justify-end space-x-3">
 <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closeModal()" type="button">取消</button>
-<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" onclick="closeModal()" type="button">确定</button>
+<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" type="submit">确定</button>
 </div>
 </form>
 </div>
 </div>
 </div>
 <script>
-        function openModal(type) {
-            const modal = document.getElementById('modal');
-            const title = document.getElementById('modalTitle');
-            const pwdField = document.getElementById('passwordField');
-            
-            modal.classList.remove('hidden');
-            if (type === 'edit') {
-                title.innerText = '编辑老师信息';
-                pwdField.classList.add('hidden');
-                document.getElementById('t_id').value = 'T2021001';
-                document.getElementById('t_name').value = '张伟';
-                document.getElementById('t_phone').value = '13800138001';
-            } else {
-                title.innerText = '新增老师';
-                pwdField.classList.remove('hidden');
-                document.getElementById('t_id').value = '';
-                document.getElementById('t_name').value = '';
-                document.getElementById('t_phone').value = '';
+    var API_BASE = 'http://localhost:8080/api';
+
+    function apiGet(url, params) {
+        var query = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
+    var currentPage = 1;
+    var pageSize = 10;
+    var totalPages = 1;
+    var editingId = null;
+
+    // 加载管理员姓名
+    function loadAdminName() {
+        apiGet('/auth/current-user').then(function(user) {
+            var data = user.data || user;
+            var name = data.realName || data.username;
+            if (name) {
+                document.getElementById('adminName').textContent = name;
+            }
+        }).catch(function() {});
+    }
+
+    // 加载老师列表
+    function loadTeachers() {
+        var keyword = document.getElementById('searchKeyword').value;
+        var status = document.getElementById('searchStatus').value;
+        var params = { page: currentPage, pageSize: pageSize };
+        if (keyword) params.keyword = keyword;
+        if (status !== '') params.status = status;
+
+        apiGet('/admin/teachers', params).then(function(res) {
+            var data = res.data || res;
+            var list = data.records || data.list || data || [];
+            var total = data.total || 0;
+            totalPages = Math.ceil(total / pageSize) || 1;
+            renderTable(list);
+            renderPagination(total);
+        }).catch(function(err) {
+            console.error('加载老师列表失败:', err);
+            document.getElementById('teacherTableBody').innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+        });
+    }
+
+    // 渲染表格
+    function renderTable(list) {
+        var tbody = document.getElementById('teacherTableBody');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">暂无数据</td></tr>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+            var t = list[i];
+            var isActive = t.status === 1 || t.status === '1';
+            var statusClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            var statusText = isActive ? '启用' : '禁用';
+            var toggleText = isActive ? '禁用' : '启用';
+            var toggleClass = isActive ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700';
+            var genderText = t.gender === 1 || t.gender === '1' ? '男' : (t.gender === 0 || t.gender === '0' ? '女' : (t.gender || '--'));
+            var rowClass = (i % 2 === 1) ? ' class="bg-gray-50/30"' : '';
+            var createTime = t.createTime || t.createdAt || '';
+            if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
+                createTime = createTime.replace('T', ' ');
+            }
+
+            html += '<tr' + rowClass + '>';
+            html += '<td class="px-6 py-4">' + ((currentPage - 1) * pageSize + i + 1) + '</td>';
+            html += '<td class="px-6 py-4 text-blue-600 font-medium">' + escapeHtml(t.username) + '</td>';
+            html += '<td class="px-6 py-4">' + escapeHtml(t.realName) + '</td>';
+            html += '<td class="px-6 py-4">' + escapeHtml(genderText) + '</td>';
+            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(t.phone || '--') + '</td>';
+            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(t.subject || '--') + '</td>';
+            html += '<td class="px-6 py-4">';
+            html += '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + statusClass + '">' + statusText + '</span>';
+            html += '</td>';
+            html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
+            html += '<td class="px-6 py-4 text-center">';
+            html += '<div class="flex items-center justify-center space-x-3">';
+            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + t.id + ')">编辑</button>';
+            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + t.id + ')">重置密码</button>';
+            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + t.id + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
+            html += '</div>';
+            html += '</td>';
+            html += '</tr>';
+        }
+        tbody.innerHTML = html;
+    }
+
+    // 渲染分页
+    function renderPagination(total) {
+        document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条记录，每页 ' + pageSize + ' 条';
+        var buttonsHtml = '';
+
+        buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>';
+        buttonsHtml += '<iconify-icon icon="mdi:chevron-left"></iconify-icon>';
+        buttonsHtml += '</button>';
+
+        var startPage = Math.max(1, currentPage - 2);
+        var endPage = Math.min(totalPages, currentPage + 2);
+        if (startPage > 1) {
+            buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(1)">1</button>';
+            if (startPage > 2) {
+                buttonsHtml += '<span class="px-2">...</span>';
             }
         }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
+        for (var p = startPage; p <= endPage; p++) {
+            if (p === currentPage) {
+                buttonsHtml += '<button class="px-3 py-1 bg-[#1890FF] text-white rounded">' + p + '</button>';
+            } else {
+                buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + p + ')">' + p + '</button>';
+            }
         }
-    </script>
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                buttonsHtml += '<span class="px-2">...</span>';
+            }
+            buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + totalPages + ')">' + totalPages + '</button>';
+        }
+
+        buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>';
+        buttonsHtml += '<iconify-icon icon="mdi:chevron-right"></iconify-icon>';
+        buttonsHtml += '</button>';
+
+        document.getElementById('paginationButtons').innerHTML = buttonsHtml;
+    }
+
+    function goToPage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        loadTeachers();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // 搜索功能
+    var searchTimer = null;
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAdminName();
+        loadTeachers();
+
+        document.getElementById('searchKeyword').addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                currentPage = 1;
+                loadTeachers();
+            }, 400);
+        });
+
+        document.getElementById('searchStatus').addEventListener('change', function() {
+            currentPage = 1;
+            loadTeachers();
+        });
+    });
+
+    // 打开新增模态框
+    function openModal(type) {
+        editingId = null;
+        document.getElementById('editId').value = '';
+        document.getElementById('modalTitle').innerText = '新增老师';
+        document.getElementById('passwordField').classList.remove('hidden');
+        document.getElementById('t_username').value = '';
+        document.getElementById('t_realName').value = '';
+        document.getElementById('t_gender').value = '1';
+        document.getElementById('t_password').value = '';
+        document.getElementById('t_subject').value = '';
+        document.getElementById('t_phone').value = '';
+        document.getElementById('t_username').disabled = false;
+        document.getElementById('modal').classList.remove('hidden');
+    }
+
+    // 打开编辑模态框
+    function openEditModal(id) {
+        editingId = id;
+        apiGet('/admin/teachers/' + id).then(function(res) {
+            var t = res.data || res;
+            document.getElementById('editId').value = t.id;
+            document.getElementById('modalTitle').innerText = '编辑老师信息';
+            document.getElementById('passwordField').classList.add('hidden');
+            document.getElementById('t_username').value = t.username;
+            document.getElementById('t_username').disabled = true;
+            document.getElementById('t_realName').value = t.realName || '';
+            document.getElementById('t_gender').value = (t.gender === 1 || t.gender === '1') ? '1' : '0';
+            document.getElementById('t_password').value = '';
+            document.getElementById('t_subject').value = t.subject || '';
+            document.getElementById('t_phone').value = t.phone || '';
+            document.getElementById('modal').classList.remove('hidden');
+        }).catch(function(err) {
+            alert('获取老师信息失败');
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+    }
+
+    // 提交表单
+    function submitForm(e) {
+        e.preventDefault();
+        var data = {
+            username: document.getElementById('t_username').value.trim(),
+            realName: document.getElementById('t_realName').value.trim(),
+            gender: parseInt(document.getElementById('t_gender').value),
+            subject: document.getElementById('t_subject').value.trim(),
+            phone: document.getElementById('t_phone').value.trim()
+        };
+
+        var password = document.getElementById('t_password').value.trim();
+        if (password) {
+            data.password = password;
+        }
+
+        if (editingId) {
+            delete data.username;
+            apiPut('/admin/teachers/' + editingId, data).then(function() {
+                closeModal();
+                loadTeachers();
+            }).catch(function(err) {
+                alert('更新失败，请稍后重试');
+            });
+        } else {
+            apiPost('/admin/teachers', data).then(function() {
+                closeModal();
+                loadTeachers();
+            }).catch(function(err) {
+                alert('创建失败，请稍后重试');
+            });
+        }
+        return false;
+    }
+
+    // 切换状态
+    function toggleStatus(id, newStatus) {
+        if (!confirm('确定要' + (newStatus === 1 ? '启用' : '禁用') + '该老师账号吗？')) return;
+        apiPut('/admin/teachers/' + id + '/status', { status: newStatus }).then(function() {
+            loadTeachers();
+        }).catch(function(err) {
+            alert('操作失败，请稍后重试');
+        });
+    }
+
+    // 重置密码
+    function resetPassword(id) {
+        if (!confirm('确定要重置该老师的密码吗？重置后密码将恢复为默认密码。')) return;
+        apiPut('/admin/teachers/' + id + '/reset-password').then(function() {
+            alert('密码重置成功');
+        }).catch(function(err) {
+            alert('重置失败，请稍后重试');
+        });
+    }
+</script>
 </body>
 </html>
