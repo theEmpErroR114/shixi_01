@@ -7,18 +7,23 @@
 <title>管理员控制台 - 课程习题测验系统</title>
 <script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
 <script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
-<script src="https://modao.cc/agent-py/static/source/js/echarts.min.js"></script>
+
 <style>
         body { background-color: #F0F2F5; }
         .sidebar { background-color: #001529; }
         .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
         .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
-    </style>
+        .sidebar.collapsed { display: none; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #f5f5f5; }
+</style>
 </head>
 <body class="flex h-screen overflow-hidden">
 <!-- 侧边栏 -->
-<div class="sidebar w-60 flex-none flex flex-col">
+<div id="sidebar" class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 <iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
             管理中心
@@ -36,52 +41,43 @@
 <iconify-icon class="mr-3 text-lg" icon="mdi:school"></iconify-icon>
                 学生账号管理
             </a>
-<div class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">系统设置</div>
-<a class="sidebar-item flex items-center px-6 py-4" href="#">
-<iconify-icon class="mr-3 text-lg" icon="mdi:cog"></iconify-icon>
-                系统设置
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="#">
-<iconify-icon class="mr-3 text-lg" icon="mdi:database-outline"></iconify-icon>
-                数据备份
-            </a>
+
 </nav>
-<div class="p-4 border-t border-gray-800">
-<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
-                退出登录
-            </a>
-</div>
+
+
 </div>
 <!-- 主内容区 -->
 <div class="flex-1 flex flex-col overflow-hidden">
 <!-- 顶部导航 -->
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
 <div class="flex items-center text-gray-500">
-<iconify-icon class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
+<iconify-icon id="menuToggle" class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
 <div class="flex items-center space-x-2 text-sm">
 <span>管理中心</span>
 <span class="text-gray-300">/</span>
 <span class="text-gray-900 font-medium">仪表盘</span>
 </div>
 </div>
-<div class="flex items-center space-x-6">
-<div class="relative cursor-pointer">
-<iconify-icon class="text-xl text-gray-600" icon="mdi:bell-outline"></iconify-icon>
-<span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-</div>
-<div class="flex items-center space-x-3 cursor-pointer">
+<div class="relative">
+<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
 <iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
 </div>
 <span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
+<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+</div>
+<div class="user-dropdown" id="userDropdown">
+<a href="login.html">
+<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+                                    退出登录
+                                </a>
 </div>
 </div>
 </header>
 <!-- 内容区域 -->
 <main class="flex-1 overflow-y-auto p-8">
 <!-- KPI 卡片 -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
 <div class="flex items-center justify-between mb-4">
 <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -100,83 +96,9 @@
 <h3 class="text-gray-500 text-sm font-medium">学生总数</h3>
 <p class="text-2xl font-bold text-gray-800 mt-1" id="studentCount">--</p>
 </div>
-<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-<div class="flex items-center justify-between mb-4">
-<div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-<iconify-icon class="text-2xl text-green-500" icon="mdi:account-check"></iconify-icon>
 </div>
-</div>
-<h3 class="text-gray-500 text-sm font-medium">活跃老师数</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1" id="activeTeacherCount">--</p>
-</div>
-<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-<div class="flex items-center justify-between mb-4">
-<div class="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
-<iconify-icon class="text-2xl text-orange-500" icon="mdi:motion-sensor"></iconify-icon>
-</div>
-</div>
-<h3 class="text-gray-500 text-sm font-medium">活跃学生数</h3>
-<p class="text-2xl font-bold text-gray-800 mt-1" id="activeStudentCount">--</p>
-</div>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- 统计图表 -->
-<div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-<div class="flex items-center justify-between mb-6">
-<h3 class="text-lg font-bold text-gray-800">系统访问趋势</h3>
-<div class="flex space-x-2">
-<button class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded">近7天</button>
-<button class="px-3 py-1 text-xs text-gray-500 hover:bg-gray-50 rounded">近30天</button>
-</div>
-</div>
-<div class="h-[300px]" id="visitChart"></div>
-</div>
-<!-- 最近操作日志 -->
-<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-<h3 class="text-lg font-bold text-gray-800 mb-6">最近操作日志</h3>
-<div class="space-y-6">
-<div class="flex">
-<div class="flex-none mr-4 relative">
-<div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center z-10 relative">
-<iconify-icon class="text-blue-500" icon="mdi:account-plus"></iconify-icon>
-</div>
-<div class="absolute top-8 left-4 w-px h-full bg-gray-100 -ml-px"></div>
-</div>
-<div class="flex-1 pb-4">
-<p class="text-sm font-medium text-gray-800">新增老师账号</p>
-<p class="text-xs text-gray-400 mt-1">2026-07-14 10:45:22</p>
-<p class="text-xs text-gray-500 mt-2">管理员 <span class="text-blue-500">Admin_01</span> 创建了老师 <span class="text-gray-800 font-medium">张三</span> 的账号</p>
-</div>
-</div>
-<div class="flex">
-<div class="flex-none mr-4 relative">
-<div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center z-10 relative">
-<iconify-icon class="text-green-500" icon="mdi:lock-reset"></iconify-icon>
-</div>
-<div class="absolute top-8 left-4 w-px h-full bg-gray-100 -ml-px"></div>
-</div>
-<div class="flex-1 pb-4">
-<p class="text-sm font-medium text-gray-800">重置学生密码</p>
-<p class="text-xs text-gray-400 mt-1">2026-07-14 09:12:05</p>
-<p class="text-xs text-gray-500 mt-2">管理员重置了学号为 <span class="text-blue-500">20240012</span> 的登录密码</p>
-</div>
-</div>
-<div class="flex">
-<div class="flex-none mr-4 relative">
-<div class="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center z-10 relative">
-<iconify-icon class="text-orange-500" icon="mdi:cog-outline"></iconify-icon>
-</div>
-</div>
-<div class="flex-1">
-<p class="text-sm font-medium text-gray-800">系统参数更新</p>
-<p class="text-xs text-gray-400 mt-1">2026-07-14 08:30:00</p>
-<p class="text-xs text-gray-500 mt-2">更新了测验并发限制配置</p>
-</div>
-</div>
-</div>
-<button class="w-full mt-6 py-2 text-sm text-[#1890FF] bg-blue-50 rounded hover:bg-blue-100 transition-colors">查看全部日志</button>
-</div>
-</div>
+
+
 </main>
 </div>
 <script>
@@ -205,6 +127,22 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // 侧边栏切换
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 用户下拉菜单切换
+        var userMenuTrigger = document.getElementById('userMenuTrigger');
+        var userDropdown = document.getElementById('userDropdown');
+        userMenuTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            userDropdown.classList.remove('show');
+        });
+
         // 加载当前管理员信息
         apiGet('/auth/current-user').then(function(user) {
             var name = user.data ? (user.data.realName || user.data.username) : (user.realName || user.username);
@@ -221,55 +159,12 @@
             if (stats.teacherCount !== undefined) {
                 document.getElementById('teacherCount').textContent = stats.teacherCount.toLocaleString();
             }
-            if (stats.activeTeacherCount !== undefined) {
-                document.getElementById('activeTeacherCount').textContent = stats.activeTeacherCount.toLocaleString();
-            }
             if (stats.studentCount !== undefined) {
                 document.getElementById('studentCount').textContent = stats.studentCount.toLocaleString();
-            }
-            if (stats.activeStudentCount !== undefined) {
-                document.getElementById('activeStudentCount').textContent = stats.activeStudentCount.toLocaleString();
             }
         }).catch(function() {
             // 静默处理，保持默认显示
         });
-
-        // 初始化图表
-        var chartDom = document.getElementById('visitChart');
-        var myChart = echarts.init(chartDom);
-        var option = {
-            grid: { top: '10%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false,
-                data: ['07-08', '07-09', '07-10', '07-11', '07-12', '07-13', '07-14'],
-                axisLine: { lineStyle: { color: '#E5E7EB' } },
-                axisLabel: { color: '#9CA3AF' }
-            },
-            yAxis: {
-                type: 'value',
-                splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
-                axisLabel: { color: '#9CA3AF' }
-            },
-            tooltip: { trigger: 'axis' },
-            series: [
-                {
-                    name: '访问量',
-                    data: [820, 932, 901, 934, 1290, 1330, 1320],
-                    type: 'line',
-                    smooth: true,
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-                            { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
-                        ])
-                    },
-                    itemStyle: { color: '#1890FF' }
-                }
-            ]
-        };
-        myChart.setOption(option);
-        window.addEventListener('resize', function() { myChart.resize(); });
     });
 </script>
 </body>

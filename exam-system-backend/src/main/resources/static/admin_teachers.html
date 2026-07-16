@@ -13,12 +13,17 @@
         .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
         .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
+        .sidebar.collapsed { display: none; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #f5f5f5; }
         .modal { transition: opacity 0.3s ease-out; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 <!-- 侧边栏 -->
-<div class="sidebar w-60 flex-none flex flex-col">
+<div id="sidebar" class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 <iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
             管理中心
@@ -36,36 +41,37 @@
 <iconify-icon class="mr-3 text-lg" icon="mdi:school"></iconify-icon>
                 学生账号管理
             </a>
-<div class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">系统设置</div>
-<a class="sidebar-item flex items-center px-6 py-4" href="#">
-<iconify-icon class="mr-3 text-lg" icon="mdi:cog"></iconify-icon>
-                系统设置
-            </a>
+
 </nav>
-<div class="p-4 border-t border-gray-800">
-<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
-                退出登录
-            </a>
-</div>
+
+
 </div>
 <!-- 主内容区 -->
 <div class="flex-1 flex flex-col overflow-hidden">
 <!-- 顶部导航 -->
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
 <div class="flex items-center text-gray-500">
-<iconify-icon class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
+<iconify-icon id="menuToggle" class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
 <div class="flex items-center space-x-2 text-sm">
 <span>管理中心</span>
 <span class="text-gray-300">/</span>
 <span class="text-gray-900 font-medium">老师账号管理</span>
 </div>
 </div>
-<div class="flex items-center space-x-3 cursor-pointer">
+<div class="relative">
+<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
 <iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
 </div>
 <span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
+<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+</div>
+<div class="user-dropdown" id="userDropdown">
+<a href="login.html">
+<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+                                    退出登录
+                                </a>
+</div>
 </div>
 </header>
 <!-- 内容区域 -->
@@ -327,6 +333,22 @@
     // 搜索功能
     var searchTimer = null;
     document.addEventListener('DOMContentLoaded', function() {
+        // 侧边栏切换
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 用户下拉菜单切换
+        var userMenuTrigger = document.getElementById('userMenuTrigger');
+        var userDropdown = document.getElementById('userDropdown');
+        userMenuTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            userDropdown.classList.remove('show');
+        });
+
         loadAdminName();
         loadTeachers();
 

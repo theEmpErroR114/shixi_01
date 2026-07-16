@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-课程习题测验系统 (Course Exercise Quiz System) — a Spring Boot + MyBatis + MySQL web application with three user roles: Admin, Teacher, Student. The frontend is 12 static HTML pages served from the same Spring Boot server (port 8080).
+课程习题测验系统 (Course Exercise Quiz System) — a Spring Boot + MyBatis + MySQL web application with three user roles: Admin, Teacher, Student. The frontend is 12 static HTML pages served from the same Spring Boot server (port 8080):
+- Login: `login.html`
+- Admin (3): `admin_dashboard.html`, `admin_teachers.html`, `admin_students.html`
+- Teacher (4): `teacher_dashboard.html`, `teacher_questions.html`, `teacher_exams.html`, `teacher_students.html`
+- Student (4): `student_dashboard.html`, `student_practice.html`, `student_exam.html`, `student_results.html`
 
 ## Build & Run
 
@@ -74,6 +78,14 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 4. Gender is `M`/`F` string, NOT `1`/`0`.
 5. Question type and difficulty are integers, NOT strings like `"SINGLE_CHOICE"` or `"EASY"`.
 6. Session is cookie-based — all fetches need `credentials: 'include'`. 401 means redirect to `login.html`.
+
+## Frontend Shared UI Patterns
+
+All three admin pages share these patterns (keep them consistent across pages):
+
+**Sidebar toggle:** Each admin page has `id="sidebar"` on the sidebar `<div>`, `id="menuToggle"` on the hamburger icon, and CSS `.sidebar.collapsed { display: none; }`. The toggle JS switches the `collapsed` class.
+
+**User dropdown:** Each admin page has a user menu in the top-right (`id="userMenuTrigger"` on the clickable area, `id="userDropdown"` on the dropdown). Click toggles `.show` on the dropdown; clicking elsewhere closes it (`e.stopPropagation()` + document-level listener).
 
 ## Key Constraints
 
