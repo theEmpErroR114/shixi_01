@@ -15,6 +15,10 @@
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
         .tree-node:hover { background-color: #f3f4f6; }
         .tree-node.active { background-color: #e6f7ff; color: #1890FF; border-right: 3px solid #1890FF; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #f5f5f5; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -42,12 +46,7 @@
                 学生情况
             </a>
 </nav>
-<div class="p-4 border-t border-gray-800">
-<a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>
-                退出系统
-            </a>
-</div>
+
 </div>
 <!-- 主内容区 -->
 <div class="flex-1 flex flex-col overflow-hidden">
@@ -57,10 +56,22 @@
 <span>/</span>
 <span class="text-gray-900 font-medium">习题管理</span>
 </div>
-<button class="bg-[#1890FF] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="openQuestionModal()">
-<iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>
-                新增题目
-            </button>
+<div class="relative">
+<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900" id="headerUserName">加载中...</p>
+<p class="text-xs text-gray-500" id="headerUserDept"></p>
+</div>
+<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold" id="headerAvatar">教</div>
+<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+</div>
+<div class="user-dropdown" id="userDropdown">
+<a href="login.html">
+<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+退出登录
+</a>
+</div>
+</div>
 </header>
 <div class="flex-1 flex overflow-hidden">
 <!-- 左侧分类树 -->
@@ -94,15 +105,21 @@
 <span class="text-sm text-gray-500">难度：</span>
 <div class="flex space-x-1" id="difficultyBtns">
 <button class="px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded" data-difficulty="" onclick="selectDifficulty(this, '')">全部</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="EASY" onclick="selectDifficulty(this, 'EASY')">易</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="MEDIUM" onclick="selectDifficulty(this, 'MEDIUM')">中</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="HARD" onclick="selectDifficulty(this, 'HARD')">难</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="1" onclick="selectDifficulty(this, '1')">易</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="2" onclick="selectDifficulty(this, '2')">中</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="3" onclick="selectDifficulty(this, '3')">难</button>
 </div>
 </div>
 <div class="flex-1 relative min-w-[200px]">
 <input class="w-full border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm" placeholder="搜索题干关键词" type="text" id="filterKeyword" onkeydown="if(event.key==='Enter')applyFilters()"/>
 <iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
 </div>
+</div>
+<div class="flex justify-between items-center mb-4 px-6">
+<p class="text-sm text-gray-500" id="questionCount"></p>
+<button class="bg-[#1890FF] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="openQuestionModal()">
+<iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>新增题目
+</button>
 </div>
 <!-- 题目卡片列表 -->
 <div class="flex-1 overflow-y-auto space-y-4" id="questionList">
@@ -163,6 +180,11 @@
 <div id="answerArea">
 <label class="block text-sm font-medium text-gray-700 mb-1">答案</label>
 <input class="w-full border rounded-md px-3 py-2 text-sm" placeholder="请输入正确答案..." type="text" id="qAnswer"/>
+<select class="w-full border rounded-md px-3 py-2 text-sm hidden" id="qAnswerTf">
+<option value="">请选择</option>
+<option value="对">对</option>
+<option value="错">错</option>
+</select>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">答案解析</label>
@@ -251,7 +273,7 @@
         var html = '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600 active" data-course-id="" onclick="selectCourse(this, \'\')">全部题目</div>';
         for (var i = 0; i < courses.length; i++) {
             var c = courses[i];
-            html += '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600" data-course-id="' + c.id + '" onclick="selectCourse(this, \'' + c.id + '\')">';
+            html += '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600" data-course-id="' + c.courseId + '" onclick="selectCourse(this, \'' + c.courseId + '\')">';
             html += '<iconify-icon class="mr-1 text-gray-400" icon="mdi:book-outline"></iconify-icon>';
             html += escapeHtml(c.courseName || c.name || '');
             html += '</div>';
@@ -325,11 +347,11 @@
             html += '<div class="flex items-center space-x-2">';
             html += '<span class="px-2 py-0.5 bg-' + typeColor + '-50 text-' + typeColor + '-600 text-xs font-bold rounded">' + typeLabel + '</span>';
             html += '<span class="px-2 py-0.5 bg-' + diffColor + '-50 text-' + diffColor + '-600 text-xs font-bold rounded">难度：' + diffLabel + '</span>';
-            html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.id || '') + '</span>';
+            html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.questionId || '') + '</span>';
             html += '</div>';
             html += '<div class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">';
-            html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.id + '\')">编辑</button>';
-            html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
+            html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.questionId + '\')">编辑</button>';
+            html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.questionId + '\')">删除</button>';
             html += '</div>';
             html += '</div>';
             html += '<div class="text-gray-800 font-medium mb-4 leading-relaxed">' + escapeHtml(q.content || '') + '</div>';
@@ -341,7 +363,7 @@
                 for (var j = 0; j < options.length; j++) {
                     var opt = options[j];
                     var isCorrect = opt.isCorrect;
-                    if (q.questionType === 'MULTI_CHOICE') {
+                    if (q.questionType == 2 || q.questionType === '2' || q.questionType === 'MULTI_CHOICE') {
                         isCorrect = q.answer && q.answer.indexOf(opt.optionLabel) >= 0;
                     }
                     var optClass = isCorrect ? 'border border-blue-200 rounded bg-blue-50 text-blue-700 font-medium' : 'border border-gray-100 rounded bg-gray-50';
@@ -392,10 +414,11 @@
     function openQuestionModal() {
         document.getElementById('qModalTitle').textContent = '新增习题';
         document.getElementById('qEditId').value = '';
-        document.getElementById('qType').value = 'SINGLE_CHOICE';
-        document.getElementById('qDifficulty').value = 'EASY';
+        document.getElementById('qType').value = '1';
+        document.getElementById('qDifficulty').value = '1';
         document.getElementById('qContent').value = '';
         document.getElementById('qAnswer').value = '';
+        document.getElementById('qAnswerTf').value = '';
         document.getElementById('qAnalysis').value = '';
         optionCount = 0;
         document.getElementById('optionsContainer').innerHTML = '';
@@ -413,8 +436,8 @@
         var html = '<option value="">请选择课程</option>';
         for (var i = 0; i < courseList.length; i++) {
             var c = courseList[i];
-            var selAttr = c.id == selectedId ? ' selected' : '';
-            html += '<option value="' + c.id + '"' + selAttr + '>' + escapeHtml(c.courseName || c.name || '') + '</option>';
+            var selAttr = c.courseId == selectedId ? ' selected' : '';
+            html += '<option value="' + c.courseId + '"' + selAttr + '>' + escapeHtml(c.courseName || '') + '</option>';
         }
         sel.innerHTML = html;
     }
@@ -423,16 +446,19 @@
         var type = document.getElementById('qType').value;
         var optionsArea = document.getElementById('optionsArea');
         var answerArea = document.getElementById('answerArea');
-        var noOptions = type == 4 || type == 5 || type == 3;
+        // 判断题/填空题/简答题：隐藏选项区，显示答案区
+        // 单选题/多选题：显示选项区，隐藏答案区（答案从勾选自动生成）
+        var noOptions = type == 3 || type == 4 || type == 5;
         optionsArea.style.display = noOptions ? 'none' : 'block';
-        if (type == 3) {
-            document.getElementById('qAnswer').placeholder = '请输入答案（正确/错误 或 对/错）';
-        } else if (type == 4) {
+        answerArea.style.display = (type == 1 || type == 2) ? 'none' : 'block';
+        // 判断题：下拉选择；填空/简答：文本输入
+        var isTf = type == 3;
+        document.getElementById('qAnswer').className = isTf ? 'hidden' : 'w-full border rounded-md px-3 py-2 text-sm';
+        document.getElementById('qAnswerTf').className = isTf ? 'w-full border rounded-md px-3 py-2 text-sm' : 'hidden';
+        if (type == 4) {
             document.getElementById('qAnswer').placeholder = '请输入正确答案...';
         } else if (type == 5) {
             document.getElementById('qAnswer').placeholder = '请输入参考答案...';
-        } else {
-            document.getElementById('qAnswer').placeholder = '请输入正确答案选项（如 A 或 A,B）...';
         }
     }
 
@@ -470,7 +496,7 @@
                 options.push({
                     optionLabel: labelSpan.textContent.trim(),
                     optionContent: input.value.trim(),
-                    isCorrect: check ? check.checked : false
+                    isCorrect: check && check.checked ? 1 : 0
                 });
             }
         }
@@ -483,25 +509,39 @@
         var questionType = document.getElementById('qType').value;
         var difficulty = document.getElementById('qDifficulty').value;
         var content = document.getElementById('qContent').value.trim();
-        var answer = document.getElementById('qAnswer').value.trim();
+        var answer = (questionType == 3) ? document.getElementById('qAnswerTf').value : document.getElementById('qAnswer').value.trim();
         var analysis = document.getElementById('qAnalysis').value.trim();
 
         if (!courseId) { alert('请选择课程'); return; }
         if (!content) { alert('请输入题干内容'); return; }
+        if (questionType == 3 && !answer) { alert('请选择判断题答案'); return; }
 
         var body = {
-            courseId: courseId,
-            questionType: questionType,
-            difficulty: difficulty,
+            courseId: parseInt(courseId),
+            questionType: parseInt(questionType),
+            difficulty: parseInt(difficulty),
             content: content,
             answer: answer,
             analysis: analysis
         };
 
-        var noOptions = questionType === 'FILL_BLANK' || questionType === 'SUBJECTIVE' || questionType === 'TRUE_FALSE';
+        var noOptions = questionType == 3 || questionType == 4 || questionType == 5;
         if (!noOptions) {
             body.options = collectOptions();
             if (body.options.length === 0) { alert('请至少添加一个选项'); return; }
+
+            // 单选/多选：从勾选的选项自动生成答案
+            var correctLabels = [];
+            for (var i = 0; i < body.options.length; i++) {
+                if (body.options[i].isCorrect) {
+                    correctLabels.push(body.options[i].optionLabel);
+                }
+            }
+            if (correctLabels.length === 0) {
+                alert('请勾选正确答案');
+                return;
+            }
+            body.answer = correctLabels.join(',');
         }
 
         var promise;
@@ -512,6 +552,10 @@
         }
 
         promise.then(function(res) {
+            if (res.code !== 200) {
+                alert('保存失败：' + (res.message || '未知错误'));
+                return;
+            }
             closeQuestionModal();
             loadQuestions();
         }).catch(function(err) {
@@ -521,21 +565,20 @@
     }
 
     function editQuestion(id) {
-        apiGet('/teacher/questions', { pageSize: 200 }).then(function(data) {
-            data = data.data || data;
-            var list = data.records || data.list || [];
-            var q = null;
-            for (var i = 0; i < list.length; i++) {
-                if (list[i].id == id) { q = list[i]; break; }
-            }
+        apiGet('/teacher/questions/' + id).then(function(data) {
+            var q = data.data || data;
             if (!q) { alert('未找到该题目'); return; }
 
             document.getElementById('qModalTitle').textContent = '编辑习题';
-            document.getElementById('qEditId').value = q.id;
-            document.getElementById('qType').value = q.questionType || 'SINGLE_CHOICE';
-            document.getElementById('qDifficulty').value = q.difficulty || 'EASY';
+            document.getElementById('qEditId').value = q.questionId;
+            document.getElementById('qType').value = q.questionType || '1';
+            document.getElementById('qDifficulty').value = q.difficulty || '2';
             document.getElementById('qContent').value = q.content || '';
-            document.getElementById('qAnswer').value = q.answer || '';
+            if (q.questionType == 3) {
+                document.getElementById('qAnswerTf').value = q.answer || '';
+            } else {
+                document.getElementById('qAnswer').value = q.answer || '';
+            }
             document.getElementById('qAnalysis').value = q.analysis || '';
 
             populateCourseSelect(q.courseId || '');
@@ -552,7 +595,7 @@
                     if (inputs.length > 0) inputs[0].value = options[j].optionContent || '';
                     var check = row.querySelector('input[name="correctOption"]');
                     if (check) {
-                        if (q.questionType === 'MULTI_CHOICE' && q.answer) {
+                        if ((q.questionType == 2 || q.questionType === '2' || q.questionType === 'MULTI_CHOICE') && q.answer) {
                             check.checked = q.answer.indexOf(options[j].optionLabel) >= 0;
                         } else {
                             check.checked = options[j].isCorrect;
@@ -578,10 +621,33 @@
         });
     }
 
+    function loadCurrentUser() {
+        apiGet('/auth/current-user').then(function(user) {
+            var u = user.data || user;
+            var name = u.realName || u.username || '老师';
+            document.getElementById('headerUserName').textContent = name + ' 老师';
+            document.getElementById('headerUserDept').textContent = (u.college || '') + (u.major ? ' · ' + u.major : '');
+            document.getElementById('headerAvatar').textContent = name.charAt(0);
+        }).catch(function(err) {
+            console.error('Failed to load user:', err);
+        });
+    }
+
     // ===== 初始化 =====
     document.addEventListener('DOMContentLoaded', function() {
+        loadCurrentUser();
         loadCourses();
         loadQuestions();
+    });
+
+    var userMenuTrigger = document.getElementById('userMenuTrigger');
+    var userDropdown = document.getElementById('userDropdown');
+    userMenuTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function() {
+        userDropdown.classList.remove('show');
     });
 </script>
 </body>

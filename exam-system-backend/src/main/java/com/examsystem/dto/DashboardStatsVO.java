@@ -12,6 +12,10 @@ public class DashboardStatsVO {
 
     // Teacher dashboard
     private Long questionCount;
+    private Long newQuestionsThisMonth;
     private Long paperCount;
+    private Long draftPaperCount;
     private Long publishedPaperCount;
+    private Long activeExamCount;
+    private Long classCount;
 }

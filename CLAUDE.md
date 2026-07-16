@@ -73,19 +73,195 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 ## Frontend Key Rules
 
 1. The HTML files under `resources/static/` are what the app serves — edit these, not the `exam_system/` copies.
-2. Every `apiGet/apiPost/apiPut/apiDelete` returns `{code, data, message}`. Always unwrap with `var actual = response.data || response;` before using.
-3. API response fields are camelCase: `teacherId`, `studentId`, `courseId`, `questionId`, `paperId`, `realName`, `className`, `createTime`. Never use `.id`.
+2. All fetches need `credentials: 'include'` (cookie-based session). 401 response means redirect to `login.html`.
+3. API response fields are camelCase. **Never use `.id`** — each entity has its own PK name (see Common Bugs section for the full table).
 4. Gender is `M`/`F` string, NOT `1`/`0`.
-5. Question type and difficulty are integers, NOT strings like `"SINGLE_CHOICE"` or `"EASY"`.
-6. Session is cookie-based — all fetches need `credentials: 'include'`. 401 means redirect to `login.html`.
+5. Question type, difficulty, and paper status are integers, NOT enum strings.
+6. Every API response is `{code, data, message}`. See Common Bugs section for how to unwrap `data` (it differs by endpoint) and always check `res.code !== 200`.
+
+## ⚠️ HTML Editing — Tag Balancing (CRITICAL)
+
+**This is the #1 source of layout-breaking bugs.** When modifying HTML, always follow these rules:
+
+1. **Never use sed/Python string replace for multi-element HTML edits.** Use the Edit tool, which does exact string matching. If the Edit tool can't match, the indentation is wrong — check with `cat -e` or `python3 -c "print(repr(line))"` to see exact whitespace (tabs vs spaces). This project's HTML files use **tab indentation** in some files and **4-space indentation** in others.
+
+2. **Always replace opening + closing tags together.** If you replace a `<div>` wrapper, replace both the opening `<div ...>` AND its corresponding `</div>` in a single Edit call. Never split them across separate edits.
+
+3. **After every HTML edit, verify tag nesting.** Run: `node -e "const fs=require('fs');const h=fs.readFileSync('file.html','utf-8');const re=/<script[^>]*>([\\s\\S]*?)<\\/script>/g;let m,s=[];while((m=re.exec(h))!==null)s.push(m[1]);const js=s[s.length-1];const o=(js.match(/\{/g)||[]).length;const c=(js.match(/\}/g)||[]).length;console.log('Braces:',o,'{',c,'}',o===c?'OK':'UNBALANCED!');try{new Function(js);console.log('JS syntax: OK')}catch(e){console.log('JS ERROR:',e.message)}"` — this checks both JS syntax and brace balance in one shot.
+   Or manually trace the nesting: for each `<div ...>` opening, confirm exactly one `</div>` closes it. Look at the indent level — matching tags should be at the same indent level.
+
+4. **When removing an outer wrapper div, remove BOTH the opening tag AND its closing `</div>`.** This happened twice already (admin pages and teacher_exams.html) — the opening tag was deleted but the closing `</div>` was left behind, breaking flex layouts.
+
+5. **Prefer Edit over Bash for HTML changes.** The Edit tool gives you an exact-match guarantee — if it succeeds, the replacement is precise. Bash sed/awk operate on regex and can silently produce broken partial replacements.
 
 ## Frontend Shared UI Patterns
 
-All three admin pages share these patterns (keep them consistent across pages):
+These patterns are used across admin AND teacher pages. Keep them consistent.
 
-**Sidebar toggle:** Each admin page has `id="sidebar"` on the sidebar `<div>`, `id="menuToggle"` on the hamburger icon, and CSS `.sidebar.collapsed { display: none; }`. The toggle JS switches the `collapsed` class.
+**User dropdown (all admin + teacher pages):** The top-right header area has a clickable user menu (`id="userMenuTrigger"`) with avatar + name + chevron-down icon, and a dropdown (`id="userDropdown"` with class `user-dropdown`). CSS: `.user-dropdown { display: none; position: absolute; ... }` and `.user-dropdown.show { display: block; }`. JS: click on trigger toggles `.show`; document-level click listener removes it. The logout link (`href="login.html"`) is inside the dropdown. The sidebar logout link has been removed from teacher pages — logout is ONLY through the dropdown.
 
-**User dropdown:** Each admin page has a user menu in the top-right (`id="userMenuTrigger"` on the clickable area, `id="userDropdown"` on the dropdown). Click toggles `.show` on the dropdown; clicking elsewhere closes it (`e.stopPropagation()` + document-level listener).
+**Sidebar toggle (admin pages only):** Each admin page has `id="sidebar"` on the sidebar `<div>`, `id="menuToggle"` on the hamburger icon, and CSS `.sidebar.collapsed { display: none; }`. The toggle JS switches the `collapsed` class.
+
+**KPI cards (teacher dashboard):** Four stat cards in a 4-column grid showing question count, paper count (with draft subtotal), published exams, and student count.
+
+## Common Bugs & Anti-Patterns (LEARN FROM PAST MISTAKES)
+
+These bugs occurred **repeatedly** across multiple pages in this project. Read before writing any frontend or backend code.
+
+### 🔴 CRITICAL: `.id` — Every Entity Uses Its Own PK Name
+
+This is the **#1 most frequent bug**. Do NOT use `.id` on API response objects. Each entity has its own primary key field:
+
+| Entity | PK Field | Wrong |
+|--------|----------|-------|
+| Course | `courseId` | ~~`c.id`~~ |
+| Question | `questionId` | ~~`q.id`~~ |
+| Paper | `paperId` | ~~`p.id`~~ |
+| Admin | `adminId` | ~~`a.id`~~ |
+| Teacher | `teacherId` | ~~`t.id`~~ |
+| Student | `studentId` | ~~`s.id`~~ |
+
+**Every time** you write `.id` on an API response object, STOP and check the entity class. This bug has occurred in: course tree rendering, question edit button onclick, question delete button onclick, question ID display, question edit form population, paper card onclick handlers.
+
+### 🔴 CRITICAL: Always Check `res.code` After API Calls
+
+`fetch()` only rejects on network errors. HTTP 400/500 responses still resolve. **Every** `.then()` must check:
+```javascript
+.then(function(res) {
+    if (res.code !== 200) {
+        alert('操作失败：' + (res.message || '未知错误'));
+        return;
+    }
+    // ... actual success logic
+})
+```
+This was missing in: `savePaper()`, `saveQuestion()`, and multiple other places. Without it, the user sees "success" but nothing actually happened.
+
+### 🔴 CRITICAL: Question Type & Difficulty Are Integers, NOT Strings
+
+```javascript
+// WRONG — these will break filtering, comparison, and API calls
+questionType === 'MULTI_CHOICE'    // 2 !== 'MULTI_CHOICE'
+difficulty === 'EASY'              // 1 !== 'EASY'
+status === 'PUBLISHED'             // 1 !== 'PUBLISHED'
+var noOptions = type === 'FILL_BLANK'  // '4' !== 'FILL_BLANK'
+
+// RIGHT — use integer comparison
+questionType == 2                  // Multi-choice
+difficulty == 1                    // Easy
+status == 1                        // Published
+var noOptions = type == 3 || type == 4 || type == 5  // True/False, Fill, Subjective
+```
+
+This bug appeared in: difficulty filter buttons, question type display logic, question save validation, dashboard active exams query, loadActiveExams status parameter.
+
+### 🔴 CRITICAL: JavaScript `str.replace` in Python — Match the RIGHT Occurrence
+
+When using Python to modify HTML/JS files, `str.replace('</script>', ...)` will match ALL `</script>` tags — including CDN script tags. Always:
+1. Use `re.finditer` to list ALL matches first
+2. Verify which occurrence you're targeting
+3. Use exact context strings to uniquely identify the target
+
+Examples of failures:
+- `content.replace('</script>', ...)` inserted JS into `<script src="...tailwindcss.js">` tags
+- `content.replace('    loadPapers();\n', ...)` matched the `loadPapers()` inside `filterPapers()` instead of the standalone call at end of script
+
+### 🔴 CRITICAL: Verify Function Scope Before Inserting Code
+
+When inserting JS functions into existing code via Python:
+1. Check brace depth at insertion point: `js[:insertion_point].count('{') - js[:insertion_point].count('}')`
+2. Depth must be 0 for global-scope functions
+3. If depth > 0, you're inserting inside another function — add `}` to close it first
+
+The `editPaperQuestions` function was inserted inside `filterPapers()` and took 5+ rounds of debugging to fix.
+
+### 🟡 `isCorrect` Is Integer (1/0), Not Boolean
+
+```javascript
+// WRONG
+isCorrect: check ? check.checked : false     // sends boolean true/false
+isCorrect: check.checked                      // sends boolean
+
+// RIGHT  
+isCorrect: check && check.checked ? 1 : 0    // sends integer 1/0
+```
+
+Backend `QuestionOption.isCorrect` is `Integer`. Jackson does NOT coerce `true` → `1`.
+
+### 🟡 Select Values Are Strings — `parseInt` Before Sending
+
+HTML `<select>` values are always strings. Backend DTOs expect `Integer`/`Long`:
+```javascript
+// WRONG
+courseId: courseId,           // "1" — Jackson will fail to deserialize to Long/Integer
+questionType: questionType,   // "2" — same
+difficulty: difficulty,       // "3" — same
+
+// RIGHT
+courseId: parseInt(courseId),
+questionType: parseInt(questionType),
+difficulty: parseInt(difficulty),
+```
+
+### 🟡 `innerHTML = optionsHtml` Overwrites Default `<option>`
+
+When populating a `<select>` dynamically, always prepend the placeholder:
+```javascript
+var optionsHtml = '<option value="">请选择课程</option>';  // ← MUST include
+for (var i = 0; i < items.length; i++) {
+    optionsHtml += '<option value="' + items[i].xxx + '">...</option>';
+}
+selectElement.innerHTML = optionsHtml;
+```
+
+### 🟡 Backend Java Changes Require Server Restart
+
+After editing `.java` files:
+1. `mvn clean package -DskipTests` — compiles `.java` → `.class`
+2. `pkill -f "exam-system-backend"` — **KILL OLD PROCESS** (this step was frequently forgotten)
+3. `java -jar ...` — start with new bytecode
+
+Skipping step 2 means old bytecode keeps running and new fields/methods don't appear in API responses.
+
+### 🟡 Auto-Derive Answer from Options for Single/Multi Choice
+
+For single-choice (type=1) and multi-choice (type=2), the answer should be auto-generated from which options are checked, NOT manually typed. Both the answer input field should be hidden for these types, and `saveQuestion()` should derive `body.answer` from `collectOptions()`:
+```javascript
+var correctLabels = [];
+for (var i = 0; i < body.options.length; i++) {
+    if (body.options[i].isCorrect) correctLabels.push(body.options[i].optionLabel);
+}
+if (correctLabels.length === 0) { alert('请勾选正确答案'); return; }
+body.answer = correctLabels.join(',');  // "A" for single, "A,C" for multi
+```
+
+### 🟡 Paper Question Score Must Not Exceed Paper Total Score
+
+Validate before saving paper questions that `sum(scores) <= paper.totalScore`. Block saving if exceeded. Also validate on publish that `sum(scores) === paper.totalScore` (exact match required).
+
+### 🟡 Default Form Values Must Use Numeric Strings
+
+When setting select values for new forms, use numeric strings matching the option values:
+```javascript
+// WRONG
+document.getElementById('qType').value = 'SINGLE_CHOICE';  // no option has this value
+document.getElementById('qDifficulty').value = 'EASY';     // no option has this value
+
+// RIGHT
+document.getElementById('qType').value = '1';   // 单选题
+document.getElementById('qDifficulty').value = '1';  // 易
+```
+
+### 🟡 API Response Data Unwrapping
+
+Different endpoints return different `data` shapes:
+- `GET /api/courses` → `res.data` is the array directly (NOT `res.data.list`)
+- `GET /api/teacher/papers` → `res.data.list` is the array (PageResult wrapper)
+- `GET /api/teacher/questions` → `res.data.list` is the array (PageResult wrapper)
+- `GET /api/teacher/papers/{id}` → `res.data` is the single Paper object
+- `GET /api/teacher/questions/{id}` → `res.data` is the single Question object
+
+Always verify: `res.data.list` for paginated endpoints, `res.data` for single-entity and list endpoints.
 
 ## Key Constraints
 

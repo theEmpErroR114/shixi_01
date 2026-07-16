@@ -13,6 +13,10 @@
         .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
         .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #f5f5f5; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -25,16 +29,35 @@
 <a class="sidebar-item flex items-center px-6 py-4" href="teacher_exams.html"><iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>试卷管理</a>
 <a class="sidebar-item active flex items-center px-6 py-4" href="teacher_students.html"><iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>学生情况</a>
 </nav>
-<div class="p-4 border-t border-gray-800"><a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html"><iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>退出系统</a></div>
+
 </div>
 <div class="flex-1 flex flex-col overflow-hidden">
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
 <div class="flex items-center space-x-2 text-sm text-gray-500"><span>教学管理</span><span>/</span><span class="text-gray-900 font-medium">学生情况</span></div>
-<div class="relative"><input class="border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm w-64" placeholder="搜索学生姓名..." type="text" id="searchInput" onkeydown="if(event.key==='Enter')searchStudents()"/><iconify-icon class="absolute left-3 top-2 text-gray-400" icon="mdi:magnify"></iconify-icon></div>
+<div class="relative">
+<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900" id="headerUserName">加载中...</p>
+<p class="text-xs text-gray-500" id="headerUserDept"></p>
+</div>
+<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold" id="headerAvatar">教</div>
+<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+</div>
+<div class="user-dropdown" id="userDropdown">
+<a href="login.html">
+<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+退出登录
+</a>
+</div>
+</div>
 </header>
 <main class="flex-1 overflow-y-auto p-8">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-lg font-bold text-gray-800">学生成绩统计</h3>
+<div class="relative"><input class="border border-gray-200 rounded-md pl-10 pr-4 py-1.5 text-sm w-64" placeholder="搜索学生姓名..." type="text" id="searchInput" onkeydown="if(event.key==='Enter')searchStudents()"/><iconify-icon class="absolute left-3 top-2 text-gray-400" icon="mdi:magnify"></iconify-icon></div>
+</div>
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-<div class="p-6 border-b border-gray-50"><h3 class="text-lg font-bold text-gray-800">学生成绩统计</h3></div>
+
 <div class="overflow-x-auto">
 <table class="w-full text-left">
 <thead><tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-wider">
@@ -150,7 +173,30 @@
 
     function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); }
 
+    function loadCurrentUser() {
+        apiGet('/auth/current-user').then(function(user) {
+            var u = user.data || user;
+            var name = u.realName || u.username || '老师';
+            document.getElementById('headerUserName').textContent = name + ' 老师';
+            document.getElementById('headerUserDept').textContent = (u.college || '') + (u.major ? ' · ' + u.major : '');
+            document.getElementById('headerAvatar').textContent = name.charAt(0);
+        }).catch(function(err) {
+            console.error('Failed to load user:', err);
+        });
+    }
+
+    loadCurrentUser();
     loadStudents();
+
+    var userMenuTrigger = document.getElementById('userMenuTrigger');
+    var userDropdown = document.getElementById('userDropdown');
+    userMenuTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function() {
+        userDropdown.classList.remove('show');
+    });
 </script>
 </body>
 </html>

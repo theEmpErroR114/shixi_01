@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>试卷管理 - 课程习题测验系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #F0F2F5; }
+        .sidebar { background-color: #001529; }
+        .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
+        .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
+        .sidebar-item.active { color: #fff; background-color: #1890FF; }
+        .tab-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<div class="sidebar w-60 flex-none flex flex-col">
+<div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
+<iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>教学管理</div>
+<nav class="flex-1 py-4">
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_dashboard.html"><iconify-icon class="mr-3 text-lg" icon="mdi:home"></iconify-icon>首页</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_questions.html"><iconify-icon class="mr-3 text-lg" icon="mdi:file-question-outline"></iconify-icon>习题管理</a>
+<a class="sidebar-item active flex items-center px-6 py-4" href="teacher_exams.html"><iconify-icon class="mr-3 text-lg" icon="mdi:clipboard-text-outline"></iconify-icon>试卷管理</a>
+<a class="sidebar-item flex items-center px-6 py-4" href="teacher_students.html"><iconify-icon class="mr-3 text-lg" icon="mdi:account-group-outline"></iconify-icon>学生情况</a>
+</nav>
+<div class="p-4 border-t border-gray-800"><a class="sidebar-item flex items-center px-4 py-2 rounded" href="login.html"><iconify-icon class="mr-3 text-lg" icon="mdi:logout"></iconify-icon>退出系统</a></div>
+</div>
+<div class="flex-1 flex flex-col overflow-hidden">
+<header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
+<div class="flex items-center space-x-2 text-sm text-gray-500"><span>教学管理</span><span>/</span><span class="text-gray-900 font-medium">试卷管理</span></div>
+<div class="flex items-center space-x-4">
+	<div class="text-right">
+	<p class="text-sm font-medium text-gray-900" id="headerUserName">加载中...</p>
+	<p class="text-xs text-gray-500" id="headerUserDept"></p>
+	</div>
+	<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold" id="headerAvatar">教</div>
+	</div>
+</header>
+<main class="flex-1 overflow-y-auto p-8" id="examMainList">
+<div class="flex space-x-8 border-b border-gray-200 mb-8">
+<button class="tab-item pb-3 border-b-2 font-medium tab-active" data-status="" onclick="filterPapers('', this)">全部试卷</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="1" onclick="filterPapers('1', this)">进行中</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="2" onclick="filterPapers('2', this)">已结束</button>
+<button class="tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-status="0" onclick="filterPapers('0', this)">草稿箱</button>
+</div>
+<div class="flex justify-between items-center mb-6">
+	<p class="text-sm text-gray-500">共 <span id="paperCount">0</span> 份试卷</p>
+	<button class="bg-[#1890FF] text-white px-6 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="showCreatePaper()"><iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>创建试卷</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="paperGrid"><div class="text-center text-gray-400 py-12 col-span-full">加载中...</div></div>
+</main>
+</div>
+<!-- 创建试卷模态框 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="paperModal">
+<div class="absolute inset-0 bg-black/50" onclick="closePaperModal()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-lg">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<h3 class="text-lg font-bold">创建试卷</h3>
+<button onclick="closePaperModal()"><iconify-icon class="text-xl text-gray-400" icon="mdi:close"></iconify-icon></button>
+</div>
+<div class="p-6 space-y-5">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">试卷名称 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="请输入试卷名称" type="text" id="paperName"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">所属课程 <span class="text-red-500">*</span></label>
+<select class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" id="paperCourseId">
+<option value="">请选择课程</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">考试时长（分钟）</label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" type="number" id="paperDuration" value="60" min="1" max="300"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">试卷总分</label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" type="number" id="paperTotalScore" value="100" min="1" max="1000"/>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+<button class="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" onclick="closePaperModal()">取消</button>
+<button class="px-4 py-2 text-sm text-white bg-[#1890FF] rounded-md hover:bg-blue-600 transition-colors shadow-sm" onclick="savePaper()">确认创建</button>
+</div>
+</div>
+</div>
+
+<!-- 编辑试卷题目模态框 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="questionEditorModal">
+<div class="absolute inset-0 bg-black/50" onclick="closeQuestionEditor()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-none">
+<h3 class="text-lg font-bold" id="qePaperTitle">编辑试卷题目</h3>
+<button onclick="closeQuestionEditor()"><iconify-icon class="text-xl text-gray-400" icon="mdi:close"></iconify-icon></button>
+</div>
+<div class="px-6 py-4 border-b border-gray-50 flex-none">
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2">
+<span class="text-sm text-gray-500">题型：</span>
+<select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none" id="qeFilterType" onchange="renderQuestionList()">
+<option value="">全部题型</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
+</select>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-sm text-gray-500">难度：</span>
+<select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none" id="qeFilterDifficulty" onchange="renderQuestionList()">
+<option value="">全部</option>
+<option value="1">易</option>
+<option value="2">中</option>
+<option value="3">难</option>
+</select>
+</div>
+<div class="flex-1"></div>
+<div class="text-sm text-gray-500">
+已选 <span class="font-bold text-blue-600" id="qeSelectedCount">0</span> 题，
+合计 <span class="font-bold text-blue-600" id="qeTotalScore">0</span> 分
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-6" id="qeQuestionList">
+<div class="text-center text-gray-400 py-8">加载中...</div>
+</div>
+<div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3 flex-none">
+<button class="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" onclick="closeQuestionEditor()">取消</button>
+<button class="px-4 py-2 text-sm text-white bg-[#1890FF] rounded-md hover:bg-blue-600 transition-colors shadow-sm" onclick="savePaperQuestions()">保存组卷</button>
+</div>
+</div>
+</div>
+
+
+<script>
+    var API_BASE = '/api';
+    var currentStatus = '';
+    var currentPage = 1;
+
+    function apiGet(url, params) {
+        var q = params ? '?' + new URLSearchParams(params).toString() : '';
+        return fetch(API_BASE + url + q, { credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiPost(url, data) {
+        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiPut(url, data) {
+        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: data ? JSON.stringify(data) : '{}' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+    function apiDel(url) {
+        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
+            return res.json();
+        });
+    }
+
+    var STATUS_MAP = {0: '草稿', 1: '已发布', 2: '已回收'};
+    var STATUS_CLASS = {0: 'bg-gray-100 text-gray-500', 1: 'bg-green-50 text-green-600', 2: 'bg-red-50 text-red-500'};
+
+    function filterPapers(status, btn) {
+        currentStatus = status;
+        var btns = document.querySelectorAll('.tab-item');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].className = 'tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium';
+        }
+        btn.className = 'tab-item pb-3 border-b-2 font-medium tab-active';
+        loadPapers();
+
+    // ===== 编辑试卷题目 =====
+    var qePaperId = null;
+    var qeAllQuestions = [];
+    var qeSelectedIds = {};  // questionId -> score
+    var qePaperCourseId = null;
+
+    function editPaperQuestions(paperId) {
+        alert('进入editPaperQuestions, paperId=' + paperId);
+        console.log('editPaperQuestions called with:', paperId);
+        qePaperId = paperId;
+        qeSelectedIds = {};
+        document.getElementById('questionEditorModal').classList.remove('hidden');
+
+        // Load paper detail to get existing questions
+        apiGet('/teacher/papers/' + paperId).then(function(res) {
+            var paper = res.data || res;
+            document.getElementById('qePaperTitle').textContent = '编辑题目 - ' + (paper.paperName || '');
+            qePaperCourseId = paper.courseId;
+
+            // Mark already-assigned questions
+            var existingQuestions = paper.questions || [];
+            for (var i = 0; i < existingQuestions.length; i++) {
+                var pq = existingQuestions[i];
+                qeSelectedIds[pq.questionId] = pq.score || 10;
+            }
+
+            // Load all questions for this course
+            return apiGet('/teacher/questions', { courseId: paper.courseId, pageSize: 200 });
+        }).then(function(res) {
+            var data = res.data || res;
+            qeAllQuestions = data.list || data.records || [];
+            renderQuestionList();
+        }).catch(function(err) {
+            console.error('Failed to load question editor:', err);
+            document.getElementById('qeQuestionList').innerHTML = '<div class="text-center text-red-400 py-8">加载失败，请重试</div>';
+        });
+    }
+
+    function closeQuestionEditor() {
+        document.getElementById('questionEditorModal').classList.add('hidden');
+        qePaperId = null;
+        qeAllQuestions = [];
+        qeSelectedIds = {};
+    }
+
+    var QE_TYPE_LABELS = {'1':'单选','2':'多选','3':'判断','4':'填空','5':'简答'};
+    var QE_TYPE_COLORS = {'1':'blue','2':'purple','3':'green','4':'orange','5':'red'};
+    var QE_DIFF_LABELS = {'1':'易','2':'中','3':'难'};
+    var QE_DIFF_COLORS = {'1':'green','2':'orange','3':'red'};
+
+    function renderQuestionList() {
+        var container = document.getElementById('qeQuestionList');
+        var filterType = document.getElementById('qeFilterType').value;
+        var filterDiff = document.getElementById('qeFilterDifficulty').value;
+
+        var filtered = qeAllQuestions.filter(function(q) {
+            if (filterType && q.questionType != filterType) return false;
+            if (filterDiff && q.difficulty != filterDiff) return false;
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 py-8">暂无匹配题目</div>';
+            updateQESummary();
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+            var q = filtered[i];
+            var qid = q.questionId || q.id;
+            var isChecked = qeSelectedIds.hasOwnProperty(qid);
+            var score = isChecked ? qeSelectedIds[qid] : 10;
+            var typeLabel = QE_TYPE_LABELS[q.questionType] || q.questionType;
+            var typeColor = QE_TYPE_COLORS[q.questionType] || 'gray';
+            var diffLabel = QE_DIFF_LABELS[q.difficulty] || q.difficulty;
+            var diffColor = QE_DIFF_COLORS[q.difficulty] || 'gray';
+
+            html += '<div class="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg mb-3 ' + (isChecked ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50') + '">';
+            html += '<input type="checkbox" class="mt-1 w-4 h-4 text-blue-600 rounded" ' + (isChecked ? 'checked' : '') + ' onchange="toggleQEQuestion(\'' + qid + '\', this.checked)" id="qechk_' + qid + '"/>';
+            html += '<div class="flex-1 min-w-0">';
+            html += '<div class="flex items-center space-x-2 mb-1">';
+            html += '<span class="px-1.5 py-0.5 bg-' + typeColor + '-50 text-' + typeColor + '-600 text-xs rounded font-medium">' + typeLabel + '</span>';
+            html += '<span class="px-1.5 py-0.5 bg-' + diffColor + '-50 text-' + diffColor + '-600 text-xs rounded font-medium">' + diffLabel + '</span>';
+            html += '</div>';
+            html += '<p class="text-sm text-gray-800 leading-relaxed">' + esc(q.content || '') + '</p>';
+            var options = q.options || [];
+            if (options.length > 0) {
+                html += '<div class="flex flex-wrap gap-2 mt-2">';
+                for (var j = 0; j < options.length; j++) {
+                    var opt = options[j];
+                    html += '<span class="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded">' + esc(opt.optionLabel) + '. ' + esc(opt.optionContent) + '</span>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '<div class="flex items-center space-x-2 flex-none">';
+            html += '<span class="text-xs text-gray-400">分值</span>';
+            html += '<input type="number" class="w-16 border border-gray-200 rounded px-2 py-1 text-sm text-center" value="' + score + '" min="1" max="100" onchange="updateQEScore(\'' + qid + '\', this.value)" onfocus="this.select()"/>';
+            html += '</div>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+        updateQESummary();
+    }
+
+    function toggleQEQuestion(qid, checked) {
+        if (checked) {
+            qeSelectedIds[qid] = 10; // default score
+        } else {
+            delete qeSelectedIds[qid];
+        }
+        // Re-render just this row's background
+        var row = document.getElementById('qechk_' + qid).closest('.flex');
+        if (row) {
+            if (checked) {
+                row.className = row.className.replace('bg-white hover:bg-gray-50', 'bg-blue-50 border-blue-200');
+                row.className = row.className.replace('border-gray-100', 'border-blue-200');
+            } else {
+                row.className = row.className.replace('bg-blue-50 border-blue-200', 'bg-white hover:bg-gray-50 border-gray-100');
+            }
+        }
+        updateQESummary();
+    }
+
+    function updateQEScore(qid, value) {
+        var score = parseInt(value) || 10;
+        if (score < 1) score = 1;
+        qeSelectedIds[qid] = score;
+        updateQESummary();
+    }
+
+    function updateQESummary() {
+        var ids = Object.keys(qeSelectedIds);
+        var total = 0;
+        for (var i = 0; i < ids.length; i++) {
+            total += qeSelectedIds[ids[i]] || 0;
+        }
+        document.getElementById('qeSelectedCount').textContent = ids.length;
+        document.getElementById('qeTotalScore').textContent = total;
+    }
+
+    function savePaperQuestions() {
+        var questions = [];
+        var sortOrder = 1;
+        var ids = Object.keys(qeSelectedIds);
+        for (var i = 0; i < ids.length; i++) {
+            questions.push({
+                questionId: parseInt(ids[i]),
+                score: qeSelectedIds[ids[i]] || 10,
+                sortOrder: sortOrder++
+            });
+        }
+
+        apiGet('/teacher/papers/' + qePaperId).then(function(res) {
+            var paper = res.data || res;
+            return apiPut('/teacher/papers/' + qePaperId, {
+                paperName: paper.paperName,
+                courseId: paper.courseId,
+                duration: paper.duration,
+                totalScore: paper.totalScore,
+                questions: questions
+            });
+        }).then(function(res) {
+            if (res.code !== 200) {
+                alert('保存失败：' + (res.message || '未知错误'));
+                return;
+            }
+            closeQuestionEditor();
+            alert('组卷成功！');
+            loadPapers();
+        }).catch(function() {
+            alert('保存失败，请检查网络连接');
+        });
+    }
+
+    function loadPapers() {
+        var params = {page: currentPage, pageSize: 20};
+        if (currentStatus !== '') params.status = currentStatus;
+        apiGet('/teacher/papers', params).then(function(res) {
+            var data = res.data || res;
+            var list = data.list || data.records || [];
+            renderPapers(list);
+        }).catch(function(err) {
+            console.error('Failed to load papers:', err);
+        });
+    }
+
+    function renderPapers(papers) {
+        document.getElementById('paperCount').textContent = papers.length;
+        var grid = document.getElementById('paperGrid');
+        if (papers.length === 0) {
+            grid.innerHTML = '<div class="text-center text-gray-400 py-12 col-span-full">暂无试卷</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < papers.length; i++) {
+            var p = papers[i];
+            var statusLabel = STATUS_MAP[p.status] !== undefined ? STATUS_MAP[p.status] : '未知';
+            var statusCls = STATUS_CLASS[p.status] || 'bg-gray-100 text-gray-500';
+            html += '<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">';
+            html += '<div class="p-6"><div class="flex justify-between items-start mb-4">';
+            html += '<span class="px-2 py-0.5 text-xs font-bold rounded ' + statusCls + '">' + statusLabel + '</span></div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + esc(p.paperName || '') + '</h3>';
+            html += '<p class="text-sm text-gray-400 mb-4">' + esc(p.courseName || '') + '</p>';
+            html += '<div class="grid grid-cols-2 gap-y-2 text-sm">';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:star-outline"></iconify-icon>总分: ' + (p.totalScore || 0) + ' 分</span>';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:timer-outline"></iconify-icon>时长: ' + (p.duration || 0) + ' 分钟</span>';
+            html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:calendar-clock"></iconify-icon>' + (p.createTime || '').substring(0, 10) + '</span>';
+            html += '</div></div>';
+            html += '<div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between">';
+            html += '<span class="text-xs text-gray-400">创建于 ' + (p.createTime || '').substring(0, 10) + '</span>';
+            html += '<div class="flex space-x-3">';
+            if (p.status === 0) {
+                html += '<button class="text-green-600 text-sm hover:underline" onclick="editPaperQuestions(' + p.paperId + ')">编辑题目</button>';
+                html += '<button class="text-blue-600 text-sm hover:underline" onclick="publishPaper(' + p.paperId + ')">发布</button>';
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="deletePaper(' + p.paperId + ')">删除</button>';
+            } else if (p.status === 1) {
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="recallPaper(' + p.paperId + ')">回收</button>';
+            } else {
+                html += '<button class="text-red-500 text-sm hover:underline" onclick="deletePaper(' + p.paperId + ')">删除</button>';
+            }
+            html += '</div></div></div>';
+        }
+        grid.innerHTML = html;
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    function showCreatePaper() {
+        // 加载课程列表到下拉框
+        apiGet('/courses').then(function(res) {
+            var courses = res.data || [];
+            var optionsHtml = '<option value="">请选择课程</option>';
+            for (var i = 0; i < courses.length; i++) {
+                var c = courses[i];
+                optionsHtml += '<option value="' + c.courseId + '">' + esc(c.courseName || '') + '</option>';
+            }
+            document.getElementById('paperCourseId').innerHTML = optionsHtml;
+            document.getElementById('paperModal').classList.remove('hidden');
+        }).catch(function() {
+            document.getElementById('paperModal').classList.remove('hidden');
+        });
+    }
+
+    function closePaperModal() {
+        document.getElementById('paperModal').classList.add('hidden');
+    }
+
+    function savePaper() {
+        var name = document.getElementById('paperName').value.trim();
+        var courseId = document.getElementById('paperCourseId').value;
+        var duration = parseInt(document.getElementById('paperDuration').value) || 60;
+        var totalScore = parseInt(document.getElementById('paperTotalScore').value) || 100;
+
+        if (!name) { alert('请输入试卷名称'); return; }
+        if (!courseId) { alert('请选择课程'); return; }
+
+        apiPost('/teacher/papers', {
+            paperName: name,
+            courseId: parseInt(courseId),
+            duration: duration,
+            totalScore: totalScore,
+            questions: []
+        }).then(function(res) {
+            if (res.code !== 200) {
+                alert('创建失败：' + (res.message || '未知错误'));
+                return;
+            }
+            closePaperModal();
+            alert('试卷创建成功！点击试卷卡片上的「编辑题目」按钮来选题组卷。');
+            loadPapers();
+        }).catch(function() { alert('创建失败，请检查网络连接'); });
+    }
+
+    function publishPaper(id) {
+        if (!confirm('确定要发布该试卷吗？')) return;
+        apiPut('/teacher/papers/' + id + '/publish').then(function() { loadPapers(); }).catch(function() { alert('发布失败'); });
+    }
+    function recallPaper(id) {
+        if (!confirm('确定要回收该试卷吗？')) return;
+        apiPut('/teacher/papers/' + id + '/recall').then(function() { loadPapers(); }).catch(function() { alert('回收失败'); });
+    }
+    function deletePaper(id) {
+        if (!confirm('确定要删除该试卷吗？')) return;
+        apiDel('/teacher/papers/' + id).then(function() { loadPapers(); }).catch(function() { alert('删除失败'); });
+    }
+
+    function loadCurrentUser() {
+        apiGet('/auth/current-user').then(function(user) {
+            var u = user.data || user;
+            var name = u.realName || u.username || '老师';
+            document.getElementById('headerUserName').textContent = name + ' 老师';
+            document.getElementById('headerUserDept').textContent = (u.college || '') + (u.major ? ' · ' + u.major : '');
+            document.getElementById('headerAvatar').textContent = name.charAt(0);
+        }).catch(function(err) {
+            console.error('Failed to load user:', err);
+        });
+    }
+
+    loadCurrentUser();
+    loadPapers();
+</script>
+</body>
+</html>

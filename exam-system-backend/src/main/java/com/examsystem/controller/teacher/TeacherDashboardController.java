@@ -29,7 +29,9 @@ public class TeacherDashboardController {
         DashboardStatsVO vo = new DashboardStatsVO();
         vo.setQuestionCount(questionMapper.countByFilters(teacherId, null, null, null, null));
         vo.setPaperCount(paperMapper.countByFilters(teacherId, null, null));
+        vo.setDraftPaperCount(paperMapper.countByFilters(teacherId, 0, null));
         vo.setPublishedPaperCount(paperMapper.countByFilters(teacherId, 1, null));
+        vo.setActiveExamCount(paperMapper.countByFilters(teacherId, 1, null));
         vo.setStudentCount(studentMapper.countByKeyword(null, null, 1));
         return Result.success(vo);
     }
