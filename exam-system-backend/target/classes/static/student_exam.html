@@ -167,6 +167,7 @@ function formatTime(seconds) {
 // Load available exams
 function loadAvailableExams() {
     apiGet('/student/exams/available').then(function(data) {
+        data = data.data || data;
         var exams = Array.isArray(data) ? data : (data && data.list ? data.list : []);
         var container = document.getElementById('examListContainer');
         if (exams.length === 0) {
@@ -182,7 +183,7 @@ function loadAvailableExams() {
             var statusText = isActive ? (exam.statusText || '进行中') : (exam.statusText || '已完成');
             var btnHtml = '';
             if (isActive) {
-                btnHtml = '<button class="px-6 py-2 bg-[#1890FF] text-white rounded-md font-bold hover:bg-blue-600" onclick="enterExam(' + exam.id + ')">进入测验</button>';
+                btnHtml = '<button class="px-6 py-2 bg-[#1890FF] text-white rounded-md font-bold hover:bg-blue-600" onclick="enterExam(' + (exam.paperId || exam.id) + ')">进入测验</button>';
             } else if (exam.hasResult || exam.score != null) {
                 btnHtml = '<button class="px-6 py-2 border border-gray-200 text-gray-500 rounded-md font-medium hover:bg-gray-50" onclick="viewExamResult(' + (exam.examRecordId || exam.recordId || exam.id) + ')">查看解析</button>';
             } else {
@@ -228,6 +229,7 @@ function viewExamResult(recordId) {
 function enterExam(paperId) {
     // Start exam
     apiPost('/student/exams/' + paperId + '/start').then(function(data) {
+        data = data.data || data;
         examRecordId = data.examRecordId || data.id || data.recordId;
         if (!examRecordId) {
             alert('开始测验失败');
@@ -243,6 +245,7 @@ function enterExam(paperId) {
 
 function loadExamDetail() {
     apiGet('/student/exams/' + examRecordId + '/detail').then(function(data) {
+        data = data.data || data;
         examQuestions = data.questions || data.list || [];
         if (examQuestions.length === 0) {
             alert('题目加载失败');

@@ -277,7 +277,7 @@ function renderExamAnswerCard() {
     var html = '';
     for (var i = 0; i < examQuestions.length; i++) {
         var q = examQuestions[i];
-        var qid = q.id || q.questionId;
+        var qid = q.questionId || q.questionId;
         var isAnswered = examAnswers[qid] != null;
         var isCurrent = i === examCurrentIndex;
         var cls = 'w-10 h-10 rounded border flex items-center justify-center font-bold text-sm cursor-pointer ';
@@ -299,7 +299,7 @@ function renderExamQuestion() {
     var q = examQuestions[examCurrentIndex];
     if (!q) return;
 
-    var qid = q.id || q.questionId;
+    var qid = q.questionId || q.questionId;
     var typeName = getTypeName(q.questionType || q.type);
     document.getElementById('examQuestionLabel').textContent = typeName + ' (' + (examCurrentIndex + 1) + '/' + examQuestions.length + ')';
     document.getElementById('examQuestionContent').textContent = (examCurrentIndex + 1) + '. ' + (q.content || q.title || '');
@@ -333,7 +333,7 @@ function renderExamQuestion() {
 
 function examSelectAnswer(label) {
     var q = examQuestions[examCurrentIndex];
-    var qid = q.id || q.questionId;
+    var qid = q.questionId || q.questionId;
     examAnswers[qid] = label;
     renderExamAnswerCard();
 }
@@ -409,7 +409,7 @@ function submitExam() {
     var answerList = [];
     for (var i = 0; i < examQuestions.length; i++) {
         var q = examQuestions[i];
-        var qid = q.id || q.questionId;
+        var qid = q.questionId || q.questionId;
         answerList.push({
             questionId: qid,
             studentAnswer: examAnswers[qid] || ''

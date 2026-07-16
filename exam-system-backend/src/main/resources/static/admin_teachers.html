@@ -263,9 +263,9 @@
             html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
             html += '<td class="px-6 py-4 text-center">';
             html += '<div class="flex items-center justify-center space-x-3">';
-            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + t.id + ')">编辑</button>';
-            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + t.id + ')">重置密码</button>';
-            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + t.id + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
+            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + t.teacherId + ')">编辑</button>';
+            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + t.teacherId + ')">重置密码</button>';
+            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + t.teacherId + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
             html += '</div>';
             html += '</td>';
             html += '</tr>';
@@ -365,7 +365,7 @@
         editingId = id;
         apiGet('/admin/teachers/' + id).then(function(res) {
             var t = res.data || res;
-            document.getElementById('editId').value = t.id;
+            document.getElementById('editId').value = t.teacherId;
             document.getElementById('modalTitle').innerText = '编辑老师信息';
             document.getElementById('passwordField').classList.add('hidden');
             document.getElementById('t_username').value = t.username;

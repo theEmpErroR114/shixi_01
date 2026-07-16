@@ -83,20 +83,20 @@
 <span class="text-sm text-gray-500">题型：</span>
 <select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none" id="filterType" onchange="applyFilters()">
 <option value="">全部题型</option>
-<option value="SINGLE_CHOICE">单选题</option>
-<option value="MULTI_CHOICE">多选题</option>
-<option value="TRUE_FALSE">判断题</option>
-<option value="FILL_BLANK">填空题</option>
-<option value="SUBJECTIVE">简答题</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
 </select>
 </div>
 <div class="flex items-center space-x-2">
 <span class="text-sm text-gray-500">难度：</span>
 <div class="flex space-x-1" id="difficultyBtns">
 <button class="px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded" data-difficulty="" onclick="selectDifficulty(this, '')">全部</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="EASY" onclick="selectDifficulty(this, 'EASY')">易</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="MEDIUM" onclick="selectDifficulty(this, 'MEDIUM')">中</button>
-<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="HARD" onclick="selectDifficulty(this, 'HARD')">难</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="1" onclick="selectDifficulty(this, 'EASY')">易</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="2" onclick="selectDifficulty(this, 'MEDIUM')">中</button>
+<button class="px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50" data-difficulty="3" onclick="selectDifficulty(this, 'HARD')">难</button>
 </div>
 </div>
 <div class="flex-1 relative min-w-[200px]">
@@ -133,19 +133,19 @@
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">题型</label>
 <select class="w-full border rounded-md px-3 py-2 text-sm" id="qType" onchange="onQuestionTypeChange()">
-<option value="SINGLE_CHOICE">单选题</option>
-<option value="MULTI_CHOICE">多选题</option>
-<option value="TRUE_FALSE">判断题</option>
-<option value="FILL_BLANK">填空题</option>
-<option value="SUBJECTIVE">简答题</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
 </select>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">难度</label>
 <select class="w-full border rounded-md px-3 py-2 text-sm" id="qDifficulty">
-<option value="EASY">易</option>
-<option value="MEDIUM">中</option>
-<option value="HARD">难</option>
+<option value="1">易</option>
+<option value="2">中</option>
+<option value="3">难</option>
 </select>
 </div>
 </div>
@@ -213,20 +213,20 @@
     var optionCount = 0;
 
     var TYPE_LABELS = {
-        'SINGLE_CHOICE': '单选题',
-        'MULTI_CHOICE': '多选题',
-        'TRUE_FALSE': '判断题',
-        'FILL_BLANK': '填空题',
-        'SUBJECTIVE': '简答题'
+        '1': '单选题',
+        '2': '多选题',
+        '3': '判断题',
+        '4': '填空题',
+        '5': '简答题'
     };
     var TYPE_COLORS = {
-        'SINGLE_CHOICE': 'blue',
-        'MULTI_CHOICE': 'purple',
-        'TRUE_FALSE': 'green',
-        'FILL_BLANK': 'orange',
-        'SUBJECTIVE': 'red'
+        '1': 'blue',
+        '2': 'purple',
+        '3': 'green',
+        '4': 'orange',
+        '5': 'red'
     };
-    var DIFFICULTY_LABELS = { 'EASY': '易', 'MEDIUM': '中', 'HARD': '难' };
+    var DIFFICULTY_LABELS = { '1': '易', '2': '中', '3': '难' };
     var DIFFICULTY_COLORS = { 'EASY': 'green', 'MEDIUM': 'orange', 'HARD': 'red' };
 
     function escapeHtml(str) {
@@ -250,7 +250,7 @@
         var html = '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600 active" data-course-id="" onclick="selectCourse(this, \'\')">全部题目</div>';
         for (var i = 0; i < courses.length; i++) {
             var c = courses[i];
-            html += '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600" data-course-id="' + c.id + '" onclick="selectCourse(this, \'' + c.id + '\')">';
+            html += '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600" data-course-id="' + c.courseId + '" onclick="selectCourse(this, \'' + c.courseId + '\')">';
             html += '<iconify-icon class="mr-1 text-gray-400" icon="mdi:book-outline"></iconify-icon>';
             html += escapeHtml(c.courseName || c.name || '');
             html += '</div>';
@@ -323,11 +323,11 @@
             html += '<div class="flex items-center space-x-2">';
             html += '<span class="px-2 py-0.5 bg-' + typeColor + '-50 text-' + typeColor + '-600 text-xs font-bold rounded">' + typeLabel + '</span>';
             html += '<span class="px-2 py-0.5 bg-' + diffColor + '-50 text-' + diffColor + '-600 text-xs font-bold rounded">难度：' + diffLabel + '</span>';
-            html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.id || '') + '</span>';
+            html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.questionId || '') + '</span>';
             html += '</div>';
             html += '<div class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">';
-            html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.id + '\')">编辑</button>';
-            html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
+            html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.questionId + '\')">编辑</button>';
+            html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.questionId + '\')">删除</button>';
             html += '</div>';
             html += '</div>';
             html += '<div class="text-gray-800 font-medium mb-4 leading-relaxed">' + escapeHtml(q.content || '') + '</div>';
@@ -339,7 +339,7 @@
                 for (var j = 0; j < options.length; j++) {
                     var opt = options[j];
                     var isCorrect = opt.isCorrect;
-                    if (q.questionType === 'MULTI_CHOICE') {
+                    if (q.questionType == 2) {
                         isCorrect = q.answer && q.answer.indexOf(opt.optionLabel) >= 0;
                     }
                     var optClass = isCorrect ? 'border border-blue-200 rounded bg-blue-50 text-blue-700 font-medium' : 'border border-gray-100 rounded bg-gray-50';
@@ -411,8 +411,8 @@
         var html = '<option value="">请选择课程</option>';
         for (var i = 0; i < courseList.length; i++) {
             var c = courseList[i];
-            var selAttr = c.id == selectedId ? ' selected' : '';
-            html += '<option value="' + c.id + '"' + selAttr + '>' + escapeHtml(c.courseName || c.name || '') + '</option>';
+            var selAttr = c.courseId == selectedId ? ' selected' : '';
+            html += '<option value="' + c.courseId + '"' + selAttr + '>' + escapeHtml(c.courseName || c.name || '') + '</option>';
         }
         sel.innerHTML = html;
     }
@@ -421,13 +421,13 @@
         var type = document.getElementById('qType').value;
         var optionsArea = document.getElementById('optionsArea');
         var answerArea = document.getElementById('answerArea');
-        var noOptions = type === 'FILL_BLANK' || type === 'SUBJECTIVE' || type === 'TRUE_FALSE';
+        var noOptions = type == 4 || type == 5 || type == 3;
         optionsArea.style.display = noOptions ? 'none' : 'block';
-        if (type === 'TRUE_FALSE') {
+        if (type == 3) {
             document.getElementById('qAnswer').placeholder = '请输入答案（正确/错误 或 对/错）';
-        } else if (type === 'FILL_BLANK') {
+        } else if (type == 4) {
             document.getElementById('qAnswer').placeholder = '请输入正确答案...';
-        } else if (type === 'SUBJECTIVE') {
+        } else if (type == 5) {
             document.getElementById('qAnswer').placeholder = '请输入参考答案...';
         } else {
             document.getElementById('qAnswer').placeholder = '请输入正确答案选项（如 A 或 A,B）...';
@@ -444,7 +444,7 @@
         div.className = 'flex items-center space-x-3 mb-2';
         div.id = 'optRow' + optionCount;
         var type = document.getElementById('qType').value;
-        var inputType = type === 'MULTI_CHOICE' ? 'checkbox' : 'radio';
+        var inputType = type == 2 ? 'checkbox' : 'radio';
         div.innerHTML = '<input type="' + inputType + '" name="correctOption" value="' + label + '"/>' +
             '<span class="w-6 text-sm text-gray-500 font-bold">' + label + '</span>' +
             '<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" placeholder="选项内容"/>' +
@@ -528,7 +528,7 @@
             if (!q) { alert('未找到该题目'); return; }
 
             document.getElementById('qModalTitle').textContent = '编辑习题';
-            document.getElementById('qEditId').value = q.id;
+            document.getElementById('qEditId').value = q.questionId;
             document.getElementById('qType').value = q.questionType || 'SINGLE_CHOICE';
             document.getElementById('qDifficulty').value = q.difficulty || 'EASY';
             document.getElementById('qContent').value = q.content || '';
@@ -549,7 +549,7 @@
                     if (inputs.length > 0) inputs[0].value = options[j].optionContent || '';
                     var check = row.querySelector('input[name="correctOption"]');
                     if (check) {
-                        if (q.questionType === 'MULTI_CHOICE' && q.answer) {
+                        if (q.questionType == 2 && q.answer) {
                             check.checked = q.answer.indexOf(options[j].optionLabel) >= 0;
                         } else {
                             check.checked = options[j].isCorrect;

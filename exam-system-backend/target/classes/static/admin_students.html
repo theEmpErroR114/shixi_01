@@ -248,7 +248,7 @@
             var statusText = isActive ? '启用' : '禁用';
             var toggleText = isActive ? '禁用' : '启用';
             var toggleClass = isActive ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700';
-            var genderText = s.gender === 1 || s.gender === '1' ? '男' : (s.gender === 0 || s.gender === '0' ? '女' : (s.gender || '--'));
+            var genderText = s.gender === 'M' ? '男' : (s.gender === 'F' ? '女' : (s.gender || '--'));
             var rowClass = (i % 2 === 1) ? ' class="bg-gray-50/30"' : '';
             var createTime = s.createTime || s.createdAt || '';
             if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
@@ -268,9 +268,9 @@
             html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
             html += '<td class="px-6 py-4 text-center">';
             html += '<div class="flex items-center justify-center space-x-3">';
-            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + s.id + ')">编辑</button>';
-            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + s.id + ')">重置密码</button>';
-            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + s.id + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
+            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + s.studentId + ')">编辑</button>';
+            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + s.studentId + ')">重置密码</button>';
+            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + s.studentId + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
             html += '</div>';
             html += '</td>';
             html += '</tr>';
@@ -370,13 +370,13 @@
         editingId = id;
         apiGet('/admin/students/' + id).then(function(res) {
             var s = res.data || res;
-            document.getElementById('editId').value = s.id;
+            document.getElementById('editId').value = s.studentId;
             document.getElementById('modalTitle').innerText = '编辑学生信息';
             document.getElementById('passwordField').classList.add('hidden');
             document.getElementById('s_username').value = s.username;
             document.getElementById('s_username').disabled = true;
             document.getElementById('s_realName').value = s.realName || '';
-            document.getElementById('s_gender').value = (s.gender === 1 || s.gender === '1') ? '1' : '0';
+            document.getElementById('s_gender').value = (s.gender === 'M' ? 'M' : 'F');
             document.getElementById('s_password').value = '';
             document.getElementById('s_className').value = s.className || '';
             document.getElementById('s_phone').value = s.phone || '';
@@ -396,7 +396,7 @@
         var data = {
             username: document.getElementById('s_username').value.trim(),
             realName: document.getElementById('s_realName').value.trim(),
-            gender: parseInt(document.getElementById('s_gender').value),
+            gender: document.getElementById('s_gender').value,
             className: document.getElementById('s_className').value.trim(),
             phone: document.getElementById('s_phone').value.trim()
         };

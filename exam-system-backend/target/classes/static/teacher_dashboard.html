@@ -194,9 +194,10 @@
 
     function loadCurrentUser() {
         apiGet('/auth/current-user').then(function(user) {
-            var name = user.realName || user.username || '老师';
+            var u = user.data || user;
+            var name = u.realName || u.username || '老师';
             document.getElementById('headerUserName').textContent = name + ' 老师';
-            document.getElementById('headerUserDept').textContent = (user.college || '') + (user.major ? ' · ' + user.major : '');
+            document.getElementById('headerUserDept').textContent = (u.college || '') + (u.major ? ' · ' + u.major : '');
             document.getElementById('headerAvatar').textContent = name.charAt(0);
         }).catch(function(err) {
             console.error('Failed to load user:', err);
@@ -205,6 +206,7 @@
 
     function loadDashboardStats() {
         apiGet('/teacher/dashboard/stats').then(function(stats) {
+            stats = stats.data || stats;
             document.getElementById('kpiQuestionCount').textContent = (stats.questionCount != null ? stats.questionCount.toLocaleString() : '--');
             document.getElementById('kpiPaperCount').textContent = (stats.paperCount != null ? stats.paperCount : '--');
             document.getElementById('kpiPublishedCount').textContent = (stats.publishedPaperCount != null ? stats.publishedPaperCount : '--');
@@ -221,6 +223,7 @@
 
     function loadActiveExams() {
         apiGet('/teacher/papers', { status: 'PUBLISHED', pageSize: 5 }).then(function(data) {
+            data = data.data || data;
             var list = data.records || data.list || [];
             var container = document.getElementById('activeExamsList');
             var empty = document.getElementById('activeExamsEmpty');

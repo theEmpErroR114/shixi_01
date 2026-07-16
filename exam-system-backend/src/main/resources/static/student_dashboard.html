@@ -147,7 +147,8 @@ function getGreeting() {
 
 function loadDashboard() {
     // Load current user
-    apiGet('/auth/current-user').then(function(user) {
+    apiGet('/auth/current-user').then(function(res) {
+        var user = res.data || res;
         if (user && user.realName) {
             document.getElementById('headerUserName').textContent = user.realName;
             document.getElementById('welcomeName').textContent = user.realName + '同学';
@@ -159,7 +160,8 @@ function loadDashboard() {
     });
 
     // Load dashboard stats
-    apiGet('/student/dashboard/stats').then(function(stats) {
+    apiGet('/student/dashboard/stats').then(function(res) {
+        var stats = res.data || res;
         if (stats) {
             document.getElementById('statPracticeCount').textContent = stats.practiceCount != null ? stats.practiceCount : '--';
             document.getElementById('statExamCount').textContent = stats.examCount != null ? stats.examCount : '--';
@@ -176,6 +178,7 @@ function loadDashboard() {
 
     // Load upcoming exams
     apiGet('/student/dashboard/upcoming-exams').then(function(exams) {
+        exams = exams.data || exams;
         var container = document.getElementById('upcomingExamsList');
         if (!exams || exams.length === 0) {
             container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无待办测验</p>';
@@ -201,6 +204,7 @@ function loadDashboard() {
 
     // Load recent practice
     apiGet('/student/dashboard/recent-practice').then(function(records) {
+        records = records.data || records;
         var container = document.getElementById('recentPracticeList');
         if (!records || records.length === 0) {
             container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无练习记录</p>';
@@ -231,6 +235,7 @@ function loadDashboard() {
 
     // Load leaderboard (optional)
     apiGet('/student/dashboard/leaderboard').then(function(data) {
+        data = data.data || data;
         var container = document.getElementById('leaderboardList');
         var list = data && data.list ? data.list : (Array.isArray(data) ? data : []);
         if (list.length === 0) {

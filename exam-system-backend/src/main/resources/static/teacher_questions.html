@@ -83,11 +83,11 @@
 <span class="text-sm text-gray-500">题型：</span>
 <select class="border border-gray-200 rounded px-2 py-1 text-sm outline-none" id="filterType" onchange="applyFilters()">
 <option value="">全部题型</option>
-<option value="SINGLE_CHOICE">单选题</option>
-<option value="MULTI_CHOICE">多选题</option>
-<option value="TRUE_FALSE">判断题</option>
-<option value="FILL_BLANK">填空题</option>
-<option value="SUBJECTIVE">简答题</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
 </select>
 </div>
 <div class="flex items-center space-x-2">
@@ -133,19 +133,19 @@
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">题型</label>
 <select class="w-full border rounded-md px-3 py-2 text-sm" id="qType" onchange="onQuestionTypeChange()">
-<option value="SINGLE_CHOICE">单选题</option>
-<option value="MULTI_CHOICE">多选题</option>
-<option value="TRUE_FALSE">判断题</option>
-<option value="FILL_BLANK">填空题</option>
-<option value="SUBJECTIVE">简答题</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
 </select>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-1">难度</label>
 <select class="w-full border rounded-md px-3 py-2 text-sm" id="qDifficulty">
-<option value="EASY">易</option>
-<option value="MEDIUM">中</option>
-<option value="HARD">难</option>
+<option value="1">易</option>
+<option value="2">中</option>
+<option value="3">难</option>
 </select>
 </div>
 </div>
@@ -213,21 +213,21 @@
     var optionCount = 0;
 
     var TYPE_LABELS = {
-        'SINGLE_CHOICE': '单选题',
-        'MULTI_CHOICE': '多选题',
-        'TRUE_FALSE': '判断题',
-        'FILL_BLANK': '填空题',
-        'SUBJECTIVE': '简答题'
+        '1': '单选题',
+        '2': '多选题',
+        '3': '判断题',
+        '4': '填空题',
+        '5': '简答题'
     };
     var TYPE_COLORS = {
-        'SINGLE_CHOICE': 'blue',
-        'MULTI_CHOICE': 'purple',
-        'TRUE_FALSE': 'green',
-        'FILL_BLANK': 'orange',
-        'SUBJECTIVE': 'red'
+        '1': 'blue',
+        '2': 'purple',
+        '3': 'green',
+        '4': 'orange',
+        '5': 'red'
     };
-    var DIFFICULTY_LABELS = { 'EASY': '易', 'MEDIUM': '中', 'HARD': '难' };
-    var DIFFICULTY_COLORS = { 'EASY': 'green', 'MEDIUM': 'orange', 'HARD': 'red' };
+    var DIFFICULTY_LABELS = { '1': '易', '2': '中', '3': '难' };
+    var DIFFICULTY_COLORS = { '1': 'green', '2': 'orange', '3': 'red' };
 
     function escapeHtml(str) {
         var div = document.createElement('div');
@@ -238,6 +238,7 @@
     // ===== 课程树 =====
     function loadCourses() {
         apiGet('/courses').then(function(data) {
+            data = data.data || data;
             courseList = data.records || data.list || data || [];
             renderCourseTree(courseList);
         }).catch(function(err) {
@@ -297,6 +298,7 @@
         if (keyword) params.keyword = keyword;
 
         apiGet('/teacher/questions', params).then(function(data) {
+            data = data.data || data;
             renderQuestions(data.records || data.list || []);
             renderPagination(data);
         }).catch(function(err) {
@@ -421,13 +423,13 @@
         var type = document.getElementById('qType').value;
         var optionsArea = document.getElementById('optionsArea');
         var answerArea = document.getElementById('answerArea');
-        var noOptions = type === 'FILL_BLANK' || type === 'SUBJECTIVE' || type === 'TRUE_FALSE';
+        var noOptions = type == 4 || type == 5 || type == 3;
         optionsArea.style.display = noOptions ? 'none' : 'block';
-        if (type === 'TRUE_FALSE') {
+        if (type == 3) {
             document.getElementById('qAnswer').placeholder = '请输入答案（正确/错误 或 对/错）';
-        } else if (type === 'FILL_BLANK') {
+        } else if (type == 4) {
             document.getElementById('qAnswer').placeholder = '请输入正确答案...';
-        } else if (type === 'SUBJECTIVE') {
+        } else if (type == 5) {
             document.getElementById('qAnswer').placeholder = '请输入参考答案...';
         } else {
             document.getElementById('qAnswer').placeholder = '请输入正确答案选项（如 A 或 A,B）...';
@@ -444,7 +446,7 @@
         div.className = 'flex items-center space-x-3 mb-2';
         div.id = 'optRow' + optionCount;
         var type = document.getElementById('qType').value;
-        var inputType = type === 'MULTI_CHOICE' ? 'checkbox' : 'radio';
+        var inputType = type == 2 ? 'checkbox' : 'radio';
         div.innerHTML = '<input type="' + inputType + '" name="correctOption" value="' + label + '"/>' +
             '<span class="w-6 text-sm text-gray-500 font-bold">' + label + '</span>' +
             '<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" placeholder="选项内容"/>' +
@@ -520,6 +522,7 @@
 
     function editQuestion(id) {
         apiGet('/teacher/questions', { pageSize: 200 }).then(function(data) {
+            data = data.data || data;
             var list = data.records || data.list || [];
             var q = null;
             for (var i = 0; i < list.length; i++) {

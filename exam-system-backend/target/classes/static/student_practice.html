@@ -151,6 +151,7 @@ var submittedCount = 0;
 // Load courses on page load
 function loadCourses() {
     apiGet('/courses').then(function(data) {
+        data = data.data || data;
         var select = document.getElementById('courseSelect');
         var courses = Array.isArray(data) ? data : (data && data.list ? data.list : []);
         select.innerHTML = '';
@@ -211,6 +212,7 @@ function startPractice() {
     btn.textContent = '正在生成题目...';
 
     apiPost('/student/practice/generate', params).then(function(data) {
+        data = data.data || data;
         btn.disabled = false;
         btn.textContent = '开始练习';
 
@@ -313,6 +315,7 @@ function selectAnswer(label) {
     // Submit answer to backend
     var q = questions[currentIndex];
     apiPost('/student/practice/submit', { questionId: q.id || q.questionId, studentAnswer: label }).then(function(result) {
+        result = result.data || result;
         if (result != null) {
             answerResults[currentIndex] = result;
             if (answers[currentIndex] != null && answerResults[currentIndex] == null) {
