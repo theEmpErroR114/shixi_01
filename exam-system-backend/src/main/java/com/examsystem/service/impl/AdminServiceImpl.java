@@ -1,11 +1,11 @@
 package com.examsystem.service.impl;
 
 import com.examsystem.dto.DashboardStatsVO;
+import com.examsystem.entity.Course;
 import com.examsystem.entity.Student;
 import com.examsystem.entity.Teacher;
 import com.examsystem.exception.BusinessException;
-import com.examsystem.mapper.StudentMapper;
-import com.examsystem.mapper.TeacherMapper;
+import com.examsystem.mapper.*;
 import com.examsystem.service.AdminService;
 import com.examsystem.util.PasswordUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private StudentMapper studentMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
+
+    @Autowired
+    private QuestionMapper questionMapper;
+
+    @Autowired
+    private PaperMapper paperMapper;
 
     private static final String DEFAULT_PASSWORD = "123456";
 
@@ -123,5 +132,47 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void resetStudentPassword(Long studentId) {
         studentMapper.updatePassword(studentId, PasswordUtil.encode(DEFAULT_PASSWORD));
+    }
+
+    // === Course Management ===
+
+    @Override
+    public List<Course> listCourses(String keyword, Integer page, Integer pageSize) {
+        int offset = (page - 1) * pageSize;
+        return courseMapper.findByKeyword(keyword, offset, pageSize);
+    }
+
+    @Override
+    public Long countCourses(String keyword) {
+        return courseMapper.countByKeyword(keyword);
+    }
+
+    @Override
+    public Course getCourseById(Long id) {
+        return courseMapper.selectById(id);
+    }
+
+    @Override
+    public void createCourse(Course course) {
+        course.setCreateTime(LocalDateTime.now());
+        courseMapper.insert(course);
+    }
+
+    @Override
+    public void updateCourse(Course course) {
+        courseMapper.update(course);
+    }
+
+    @Override
+    public void deleteCourse(Long courseId) {
+        Long questionCount = questionMapper.countByFilters(null, courseId, null, null, null);
+        if (questionCount > 0) {
+            throw new BusinessException("该课程下还有 " + questionCount + " 道题目，无法删除");
+        }
+        Long paperCount = paperMapper.countByFilters(null, null, courseId);
+        if (paperCount > 0) {
+            throw new BusinessException("该课程下还有 " + paperCount + " 份试卷，无法删除");
+        }
+        courseMapper.deleteById(courseId);
     }
 }

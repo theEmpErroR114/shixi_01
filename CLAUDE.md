@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 课程习题测验系统 (Course Exercise Quiz System) — a Spring Boot + MyBatis + MySQL web application with three user roles: Admin, Teacher, Student. The frontend is 12 static HTML pages served from the same Spring Boot server (port 8080):
 - Login: `login.html`
-- Admin (3): `admin_dashboard.html`, `admin_teachers.html`, `admin_students.html`
+- Admin (4): `admin_dashboard.html`, `admin_teachers.html`, `admin_students.html`, `admin_courses.html`
 - Teacher (4): `teacher_dashboard.html`, `teacher_questions.html`, `teacher_exams.html`, `teacher_students.html`
 - Student (4): `student_dashboard.html`, `student_practice.html`, `student_exam.html`, `student_results.html`
 
@@ -256,6 +256,7 @@ document.getElementById('qDifficulty').value = '1';  // 易
 
 Different endpoints return different `data` shapes:
 - `GET /api/courses` → `res.data` is the array directly (NOT `res.data.list`)
+- `GET /api/admin/courses` → `res.data.list` is the array (PageResult wrapper)
 - `GET /api/teacher/papers` → `res.data.list` is the array (PageResult wrapper)
 - `GET /api/teacher/questions` → `res.data.list` is the array (PageResult wrapper)
 - `GET /api/teacher/papers/{id}` → `res.data` is the single Paper object

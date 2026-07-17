@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>学生账号管理 - 课程习题测验系统</title>
+<title>课程管理 - 课程习题测验系统</title>
 <script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
 <script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
 <style>
@@ -18,6 +18,7 @@
         .user-dropdown.show { display: block; }
         .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
         .user-dropdown a:hover { background: #f5f5f5; }
+        .modal { transition: opacity 0.3s ease-out; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -36,17 +37,15 @@
 <iconify-icon class="mr-3 text-lg" icon="mdi:account-tie"></iconify-icon>
                 老师账号管理
             </a>
-<a class="sidebar-item active flex items-center px-6 py-4" href="admin_students.html">
+<a class="sidebar-item flex items-center px-6 py-4" href="admin_students.html">
 <iconify-icon class="mr-3 text-lg" icon="mdi:school"></iconify-icon>
                 学生账号管理
             </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="admin_courses.html">
+<a class="sidebar-item active flex items-center px-6 py-4" href="admin_courses.html">
 <iconify-icon class="mr-3 text-lg" icon="mdi:book-education"></iconify-icon>
                 课程管理
             </a>
 </nav>
-
-
 </div>
 <!-- 主内容区 -->
 <div class="flex-1 flex flex-col overflow-hidden">
@@ -57,7 +56,7 @@
 <div class="flex items-center space-x-2 text-sm">
 <span>管理中心</span>
 <span class="text-gray-300">/</span>
-<span class="text-gray-900 font-medium">学生账号管理</span>
+<span class="text-gray-900 font-medium">课程管理</span>
 </div>
 </div>
 <div class="relative">
@@ -83,19 +82,14 @@
 <div class="p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
 <div class="flex items-center space-x-4">
 <div class="relative">
-<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索学号/姓名/班级" type="text" id="searchKeyword"/>
+<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索课程名称" type="text" id="searchKeyword"/>
 <iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
 </div>
-<select class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1890FF]" id="searchStatus">
-<option value="">全部状态</option>
-<option value="1">启用</option>
-<option value="0">禁用</option>
-</select>
 </div>
 <button class="bg-[#1890FF] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="openModal('add')">
 <iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>
-                            新增学生
-                        </button>
+                        新增课程
+                    </button>
 </div>
 <!-- 表格 -->
 <div class="overflow-x-auto">
@@ -103,17 +97,13 @@
 <thead>
 <tr class="bg-gray-50 text-gray-500 text-sm">
 <th class="px-6 py-4 font-medium">序号</th>
-<th class="px-6 py-4 font-medium">学号</th>
-<th class="px-6 py-4 font-medium">姓名</th>
-<th class="px-6 py-4 font-medium">性别</th>
-<th class="px-6 py-4 font-medium">班级</th>
-<th class="px-6 py-4 font-medium">手机号</th>
-<th class="px-6 py-4 font-medium">状态</th>
+<th class="px-6 py-4 font-medium">课程名称</th>
+<th class="px-6 py-4 font-medium">课程描述</th>
 <th class="px-6 py-4 font-medium">创建时间</th>
 <th class="px-6 py-4 font-medium text-center">操作</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-gray-100 text-sm" id="studentTableBody">
+<tbody class="divide-y divide-gray-100 text-sm" id="courseTableBody">
 </tbody>
 </table>
 </div>
@@ -131,40 +121,21 @@
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-<h3 class="text-lg font-bold text-gray-800" id="modalTitle">新增学生</h3>
+<h3 class="text-lg font-bold text-gray-800" id="modalTitle">新增课程</h3>
 <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
 <iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
 </button>
 </div>
 <div class="p-6">
-<form class="space-y-4" id="studentForm" onsubmit="submitForm(event)">
+<form class="space-y-4" id="courseForm" onsubmit="submitForm(event)">
 <input type="hidden" id="editId"/>
 <div>
-<label class="block text-sm font-medium text-gray-700 mb-1">学号 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="s_username" type="text" required/>
+<label class="block text-sm font-medium text-gray-700 mb-1">课程名称 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_courseName" type="text" required/>
 </div>
 <div>
-<label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="s_realName" type="text" required/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-1">性别 <span class="text-red-500">*</span></label>
-<select class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="s_gender">
-<option value="1">男</option>
-<option value="0">女</option>
-</select>
-</div>
-<div id="passwordField">
-<label class="block text-sm font-medium text-gray-700 mb-1">初始密码</label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" placeholder="不填则默认为 123456" id="s_password" type="password"/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-1">班级 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="s_className" type="text" required placeholder="例如：2024级1班"/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="s_phone" type="text"/>
+<label class="block text-sm font-medium text-gray-700 mb-1">课程描述</label>
+<textarea class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_description" rows="3"></textarea>
 </div>
 <div class="pt-4 flex justify-end space-x-3">
 <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closeModal()" type="button">取消</button>
@@ -199,6 +170,13 @@
         });
     }
 
+    function apiDelete(url) {
+        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+            return res.json();
+        });
+    }
+
     var currentPage = 1;
     var pageSize = 10;
     var totalPages = 1;
@@ -215,65 +193,54 @@
         }).catch(function() {});
     }
 
-    // 加载学生列表
-    function loadStudents() {
+    // 加载课程列表
+    function loadCourses() {
         var keyword = document.getElementById('searchKeyword').value;
-        var status = document.getElementById('searchStatus').value;
         var params = { page: currentPage, pageSize: pageSize };
         if (keyword) params.keyword = keyword;
-        if (status !== '') params.status = status;
 
-        apiGet('/admin/students', params).then(function(res) {
-            var data = res.data || res;
-            var list = data.records || data.list || data || [];
+        apiGet('/admin/courses', params).then(function(res) {
+            if (res.code !== 200) {
+                alert('加载失败：' + (res.message || '未知错误'));
+                return;
+            }
+            var data = res.data || {};
+            var list = data.list || [];
             var total = data.total || 0;
             totalPages = Math.ceil(total / pageSize) || 1;
             renderTable(list);
             renderPagination(total);
         }).catch(function(err) {
-            console.error('加载学生列表失败:', err);
-            document.getElementById('studentTableBody').innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+            console.error('加载课程列表失败:', err);
+            document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
         });
     }
 
     // 渲染表格
     function renderTable(list) {
-        var tbody = document.getElementById('studentTableBody');
+        var tbody = document.getElementById('courseTableBody');
         if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">暂无数据</td></tr>';
             return;
         }
         var html = '';
         for (var i = 0; i < list.length; i++) {
-            var s = list[i];
-            var isActive = s.status === 1 || s.status === '1';
-            var statusClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            var statusText = isActive ? '启用' : '禁用';
-            var toggleText = isActive ? '禁用' : '启用';
-            var toggleClass = isActive ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700';
-            var genderText = s.gender === 'M' ? '男' : (s.gender === 'F' ? '女' : (s.gender || '--'));
+            var c = list[i];
             var rowClass = (i % 2 === 1) ? ' class="bg-gray-50/30"' : '';
-            var createTime = s.createTime || s.createdAt || '';
+            var createTime = c.createTime || '';
             if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
                 createTime = createTime.replace('T', ' ');
             }
 
             html += '<tr' + rowClass + '>';
             html += '<td class="px-6 py-4">' + ((currentPage - 1) * pageSize + i + 1) + '</td>';
-            html += '<td class="px-6 py-4 text-[#1890FF] font-medium">' + escapeHtml(s.username) + '</td>';
-            html += '<td class="px-6 py-4">' + escapeHtml(s.realName) + '</td>';
-            html += '<td class="px-6 py-4">' + escapeHtml(genderText) + '</td>';
-            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(s.className || '--') + '</td>';
-            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(s.phone || '--') + '</td>';
-            html += '<td class="px-6 py-4">';
-            html += '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + statusClass + '">' + statusText + '</span>';
-            html += '</td>';
+            html += '<td class="px-6 py-4 font-medium text-gray-800">' + escapeHtml(c.courseName) + '</td>';
+            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.description || '--') + '</td>';
             html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
             html += '<td class="px-6 py-4 text-center">';
             html += '<div class="flex items-center justify-center space-x-3">';
-            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + s.studentId + ')">编辑</button>';
-            html += '<button class="text-orange-500 hover:text-orange-700" onclick="resetPassword(' + s.studentId + ')">重置密码</button>';
-            html += '<button class="' + toggleClass + '" onclick="toggleStatus(' + s.studentId + ', ' + (isActive ? 0 : 1) + ')">' + toggleText + '</button>';
+            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + c.courseId + ')">编辑</button>';
+            html += '<button class="text-red-500 hover:text-red-700" onclick="deleteCourse(' + c.courseId + ')">删除</button>';
             html += '</div>';
             html += '</td>';
             html += '</tr>';
@@ -322,7 +289,7 @@
     function goToPage(page) {
         if (page < 1 || page > totalPages) return;
         currentPage = page;
-        loadStudents();
+        loadCourses();
     }
 
     function escapeHtml(str) {
@@ -352,19 +319,14 @@
         });
 
         loadAdminName();
-        loadStudents();
+        loadCourses();
 
         document.getElementById('searchKeyword').addEventListener('input', function() {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(function() {
                 currentPage = 1;
-                loadStudents();
+                loadCourses();
             }, 400);
-        });
-
-        document.getElementById('searchStatus').addEventListener('change', function() {
-            currentPage = 1;
-            loadStudents();
         });
     });
 
@@ -372,36 +334,28 @@
     function openModal(type) {
         editingId = null;
         document.getElementById('editId').value = '';
-        document.getElementById('modalTitle').innerText = '新增学生';
-        document.getElementById('passwordField').classList.remove('hidden');
-        document.getElementById('s_username').value = '';
-        document.getElementById('s_realName').value = '';
-        document.getElementById('s_gender').value = '1';
-        document.getElementById('s_password').value = '';
-        document.getElementById('s_className').value = '';
-        document.getElementById('s_phone').value = '';
-        document.getElementById('s_username').disabled = false;
+        document.getElementById('modalTitle').innerText = '新增课程';
+        document.getElementById('c_courseName').value = '';
+        document.getElementById('c_description').value = '';
         document.getElementById('modal').classList.remove('hidden');
     }
 
     // 打开编辑模态框
     function openEditModal(id) {
         editingId = id;
-        apiGet('/admin/students/' + id).then(function(res) {
-            var s = res.data || res;
-            document.getElementById('editId').value = s.studentId;
-            document.getElementById('modalTitle').innerText = '编辑学生信息';
-            document.getElementById('passwordField').classList.add('hidden');
-            document.getElementById('s_username').value = s.username;
-            document.getElementById('s_username').disabled = true;
-            document.getElementById('s_realName').value = s.realName || '';
-            document.getElementById('s_gender').value = (s.gender === 'M' ? 'M' : 'F');
-            document.getElementById('s_password').value = '';
-            document.getElementById('s_className').value = s.className || '';
-            document.getElementById('s_phone').value = s.phone || '';
+        apiGet('/admin/courses/' + id).then(function(res) {
+            if (res.code !== 200) {
+                alert('获取课程信息失败：' + (res.message || '未知错误'));
+                return;
+            }
+            var c = res.data || {};
+            document.getElementById('editId').value = c.courseId;
+            document.getElementById('modalTitle').innerText = '编辑课程';
+            document.getElementById('c_courseName').value = c.courseName || '';
+            document.getElementById('c_description').value = c.description || '';
             document.getElementById('modal').classList.remove('hidden');
         }).catch(function(err) {
-            alert('获取学生信息失败');
+            alert('获取课程信息失败');
         });
     }
 
@@ -413,30 +367,34 @@
     function submitForm(e) {
         e.preventDefault();
         var data = {
-            username: document.getElementById('s_username').value.trim(),
-            realName: document.getElementById('s_realName').value.trim(),
-            gender: document.getElementById('s_gender').value,
-            className: document.getElementById('s_className').value.trim(),
-            phone: document.getElementById('s_phone').value.trim()
+            courseName: document.getElementById('c_courseName').value.trim(),
+            description: document.getElementById('c_description').value.trim()
         };
 
-        var password = document.getElementById('s_password').value.trim();
-        if (password) {
-            data.password = password;
+        if (!data.courseName) {
+            alert('请输入课程名称');
+            return;
         }
 
         if (editingId) {
-            delete data.username;
-            apiPut('/admin/students/' + editingId, data).then(function() {
+            apiPut('/admin/courses/' + editingId, data).then(function(res) {
+                if (res.code !== 200) {
+                    alert('更新失败：' + (res.message || '未知错误'));
+                    return;
+                }
                 closeModal();
-                loadStudents();
+                loadCourses();
             }).catch(function(err) {
                 alert('更新失败，请稍后重试');
             });
         } else {
-            apiPost('/admin/students', data).then(function() {
+            apiPost('/admin/courses', data).then(function(res) {
+                if (res.code !== 200) {
+                    alert('创建失败：' + (res.message || '未知错误'));
+                    return;
+                }
                 closeModal();
-                loadStudents();
+                loadCourses();
             }).catch(function(err) {
                 alert('创建失败，请稍后重试');
             });
@@ -444,23 +402,17 @@
         return false;
     }
 
-    // 切换状态
-    function toggleStatus(id, newStatus) {
-        if (!confirm('确定要' + (newStatus === 1 ? '启用' : '禁用') + '该学生账号吗？')) return;
-        apiPut('/admin/students/' + id + '/status', { status: newStatus }).then(function() {
-            loadStudents();
+    // 删除课程
+    function deleteCourse(id) {
+        if (!confirm('确定要删除该课程吗？删除后无法恢复。')) return;
+        apiDelete('/admin/courses/' + id).then(function(res) {
+            if (res.code !== 200) {
+                alert('删除失败：' + (res.message || '未知错误'));
+                return;
+            }
+            loadCourses();
         }).catch(function(err) {
-            alert('操作失败，请稍后重试');
-        });
-    }
-
-    // 重置密码
-    function resetPassword(id) {
-        if (!confirm('确定要重置该学生的密码吗？重置后密码将恢复为默认密码。')) return;
-        apiPut('/admin/students/' + id + '/reset-password').then(function() {
-            alert('密码重置成功');
-        }).catch(function(err) {
-            alert('重置失败，请稍后重试');
+            alert('删除失败，请稍后重试');
         });
     }
 </script>

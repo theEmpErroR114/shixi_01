@@ -1,6 +1,7 @@
 package com.examsystem.service;
 
 import com.examsystem.dto.DashboardStatsVO;
+import com.examsystem.entity.Course;
 import com.examsystem.entity.Student;
 import com.examsystem.entity.Teacher;
 
@@ -26,4 +27,12 @@ public interface AdminService {
     void updateStudent(Student student);
     void updateStudentStatus(Long studentId, Integer status);
     void resetStudentPassword(Long studentId);
+
+    // Course management
+    List<Course> listCourses(String keyword, Integer page, Integer pageSize);
+    Long countCourses(String keyword);
+    Course getCourseById(Long id);
+    void createCourse(Course course);
+    void updateCourse(Course course);
+    void deleteCourse(Long courseId);
 }

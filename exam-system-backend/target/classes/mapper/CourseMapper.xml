@@ -17,9 +17,42 @@
         SELECT * FROM t_course WHERE course_id = #{courseId}
     </select>
 
+    <select id="findByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM t_course
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND course_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByKeyword" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_course
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND course_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="courseId">
         INSERT INTO t_course (course_name, description, create_time)
         VALUES (#{courseName}, #{description}, #{createTime})
     </insert>
+
+    <update id="update">
+        UPDATE t_course
+        <set>
+            <if test="courseName != null">course_name = #{courseName},</if>
+            <if test="description != null">description = #{description},</if>
+        </set>
+        WHERE course_id = #{courseId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_course WHERE course_id = #{courseId}
+    </delete>
 
 </mapper>

@@ -45,6 +45,7 @@ com/examsystem/service/PracticeService.class
 com/examsystem/dto/StudentDetailVO$ExamScoreItem.class
 com/examsystem/service/AuthService.class
 com/examsystem/mapper/StudentMapper.class
+com/examsystem/controller/admin/AdminCourseController.class
 com/examsystem/ExamSystemApplication.class
 com/examsystem/controller/teacher/TeacherStudentController.class
 com/examsystem/exception/BusinessException.class

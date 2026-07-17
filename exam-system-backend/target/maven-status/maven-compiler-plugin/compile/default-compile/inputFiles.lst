@@ -3,6 +3,7 @@
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/config/WebMvcConfig.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/AuthController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/CourseController.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminCourseController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminDashboardController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminStudentController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminTeacherController.java
