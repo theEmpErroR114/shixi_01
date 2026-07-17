@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,10 +39,21 @@ public class ExamServiceImpl implements ExamService {
     @Autowired
     private ExamAnswerMapper examAnswerMapper;
 
+    @Autowired
+    private StudentCourseMapper studentCourseMapper;
+
     @Override
     public List<Paper> getAvailableExams(Long studentId) {
+        // 只返回学生关联课程的已发布试卷
+        List<Long> enrolledCourseIds = studentCourseMapper.selectCourseIdsByStudentId(studentId);
+        if (enrolledCourseIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<Paper> papers = paperMapper.findByFilters(null, 1, null, null, null);
         return papers.stream().filter(p -> {
+            if (!enrolledCourseIds.contains(p.getCourseId())) {
+                return false;
+            }
             List<ExamRecord> records = examRecordMapper.selectByStudentIdAndPaperId(studentId, p.getPaperId(), 1);
             return records.isEmpty();
         }).collect(Collectors.toList());

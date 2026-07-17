@@ -32,6 +32,12 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private PaperMapper paperMapper;
 
+    @Autowired
+    private TeacherCourseMapper teacherCourseMapper;
+
+    @Autowired
+    private StudentCourseMapper studentCourseMapper;
+
     private static final String DEFAULT_PASSWORD = "123456";
 
     @Override
@@ -174,5 +180,39 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("该课程下还有 " + paperCount + " 份试卷，无法删除");
         }
         courseMapper.deleteById(courseId);
+    }
+
+    // === Teacher-Course Assignment ===
+
+    @Override
+    public List<Course> getTeacherCourses(Long teacherId) {
+        return teacherCourseMapper.selectCoursesByTeacherId(teacherId);
+    }
+
+    @Override
+    public void assignCoursesToTeacher(Long teacherId, List<Long> courseIds) {
+        teacherCourseMapper.deleteByTeacherId(teacherId);
+        if (courseIds != null) {
+            for (Long courseId : courseIds) {
+                teacherCourseMapper.insert(teacherId, courseId);
+            }
+        }
+    }
+
+    // === Student-Course Assignment ===
+
+    @Override
+    public List<Course> getStudentCourses(Long studentId) {
+        return studentCourseMapper.selectCoursesByStudentId(studentId);
+    }
+
+    @Override
+    public void assignCoursesToStudent(Long studentId, List<Long> courseIds) {
+        studentCourseMapper.deleteByStudentId(studentId);
+        if (courseIds != null) {
+            for (Long courseId : courseIds) {
+                studentCourseMapper.insert(studentId, courseId);
+            }
+        }
     }
 }

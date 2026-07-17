@@ -4,14 +4,17 @@ com/examsystem/mapper/CourseMapper.class
 com/examsystem/entity/Course.class
 com/examsystem/dto/PracticeSubmitRequest.class
 com/examsystem/dto/ExamSubmitRequest.class
+com/examsystem/entity/TeacherCourse.class
 com/examsystem/service/impl/QuestionServiceImpl.class
 com/examsystem/entity/PracticeRecord.class
 com/examsystem/dto/QuestionDTO.class
 com/examsystem/mapper/ExamRecordMapper.class
+com/examsystem/entity/StudentCourse.class
 com/examsystem/dto/PracticeResultVO.class
 com/examsystem/util/PasswordUtil.class
 com/examsystem/controller/admin/AdminTeacherController.class
 com/examsystem/config/WebMvcConfig.class
+com/examsystem/mapper/TeacherCourseMapper.class
 com/examsystem/interceptor/RoleInterceptor.class
 com/examsystem/dto/DashboardStatsVO.class
 com/examsystem/dto/LoginUserVO.class
@@ -32,6 +35,7 @@ com/examsystem/dto/PageResult.class
 com/examsystem/service/impl/AdminServiceImpl.class
 com/examsystem/controller/student/StudentResultController.class
 com/examsystem/dto/PracticeConfigRequest.class
+com/examsystem/controller/teacher/TeacherCourseController.class
 com/examsystem/service/impl/PracticeServiceImpl.class
 com/examsystem/controller/teacher/TeacherQuestionController.class
 com/examsystem/service/ExamService.class
@@ -48,6 +52,7 @@ com/examsystem/mapper/StudentMapper.class
 com/examsystem/controller/admin/AdminCourseController.class
 com/examsystem/ExamSystemApplication.class
 com/examsystem/controller/teacher/TeacherStudentController.class
+com/examsystem/controller/student/StudentCourseController.class
 com/examsystem/exception/BusinessException.class
 com/examsystem/controller/admin/AdminStudentController.class
 com/examsystem/entity/Admin.class
@@ -63,6 +68,7 @@ com/examsystem/mapper/QuestionOptionMapper.class
 com/examsystem/dto/LoginRequest.class
 com/examsystem/config/DataInitializer.class
 com/examsystem/mapper/PaperQuestionMapper.class
+com/examsystem/mapper/StudentCourseMapper.class
 com/examsystem/entity/Student.class
 com/examsystem/dto/StudentDetailVO.class
 com/examsystem/service/impl/AuthServiceImpl.class

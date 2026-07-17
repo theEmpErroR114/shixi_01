@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-课程习题测验系统 (Course Exercise Quiz System) — a Spring Boot + MyBatis + MySQL web application with three user roles: Admin, Teacher, Student. The frontend is 12 static HTML pages served from the same Spring Boot server (port 8080):
+课程习题测验系统 (Course Exercise Quiz System) — a Spring Boot + MyBatis + MySQL web application with three user roles: Admin, Teacher, Student. The frontend is 13 static HTML pages served from the same Spring Boot server (port 8080):
 - Login: `login.html`
 - Admin (4): `admin_dashboard.html`, `admin_teachers.html`, `admin_students.html`, `admin_courses.html`
 - Teacher (4): `teacher_dashboard.html`, `teacher_questions.html`, `teacher_exams.html`, `teacher_students.html`
@@ -45,28 +45,39 @@ exam-system-backend/src/main/java/com/examsystem/
 ├── interceptor/     LoginInterceptor (session check), RoleInterceptor (role check)
 ├── controller/      AuthController, CourseController + admin/, teacher/, student/ subdirs
 ├── service/         Interfaces + impl/ subdir — business logic
-├── mapper/          11 MyBatis mapper interfaces
-├── entity/          11 entity classes, 1:1 mapping to DB tables
+├── mapper/          13 MyBatis mapper interfaces (includes TeacherCourseMapper, StudentCourseMapper)
+├── entity/          13 entity classes, 1:1 mapping to DB tables
 ├── dto/             Request/response DTOs: Result, PageResult, LoginRequest, etc.
 ├── enums/           RoleEnum, QuestionTypeEnum, PaperStatusEnum, DifficultyEnum
 ├── exception/       BusinessException, GlobalExceptionHandler
 └── util/            PasswordUtil (BCrypt), SessionUtil (session key constants)
 
 resources/
-├── static/          12 HTML pages (served from Spring Boot)
-├── db/schema.sql    11 table DDL (CREATE IF NOT EXISTS)
-└── mapper/          11 MyBatis XML mapping files
+├── static/          13 HTML pages (served from Spring Boot)
+├── db/schema.sql    13 table DDL (CREATE IF NOT EXISTS)
+└── mapper/          13 MyBatis XML mapping files
 ```
 
 ## Database
 
-11 tables: `t_admin`, `t_teacher`, `t_student`, `t_course`, `t_question`, `t_question_option`, `t_paper`, `t_paper_question`, `t_practice_record`, `t_exam_record`, `t_exam_answer`. Full DDL + seed data in `02_数据库设计.md` and `resources/db/schema.sql`. All PKs use BIGINT AUTO_INCREMENT. FK relationships documented in the design doc. Seed data is inserted by `DataInitializer.java` on first run (checks if admin exists).
+13 tables: `t_admin`, `t_teacher`, `t_student`, `t_course`, `t_question`, `t_question_option`, `t_paper`, `t_paper_question`, `t_practice_record`, `t_exam_record`, `t_exam_answer`, `t_teacher_course`, `t_student_course`. Full DDL + seed data in `02_数据库设计.md` and `resources/db/schema.sql`. All PKs use BIGINT AUTO_INCREMENT. FK relationships documented in the design doc. Seed data is inserted by `DataInitializer.java` on first run (checks if admin exists).
+
+**Course assignment tables** (many-to-many): `t_teacher_course` links teachers to courses they teach; `t_student_course` links students to courses they take. These drive permission filtering: teachers only see/manage their assigned courses, students only practice/take exams for their enrolled courses.
 
 ## API Pattern
 
 Every response: `{"code":200,"data":{...},"message":"success"}`. Error codes: 400/401/403/500.
 
 Auth: `POST /api/auth/login` with `{role, username, password}` → sets session. All other `/api/**` require login (LoginInterceptor). Role paths (`/api/admin/**`, `/api/teacher/**`, `/api/student/**`) are checked by RoleInterceptor.
+
+**Course-aware endpoints:**
+- `GET /api/courses` — all courses (public, used by admin)
+- `GET /api/teacher/courses` — courses assigned to logged-in teacher
+- `GET /api/student/courses` — courses enrolled by logged-in student
+- `GET /api/admin/teachers/{id}/courses` — get teacher's assigned courses
+- `PUT /api/admin/teachers/{id}/courses` — assign courses to teacher `{courseIds: [1,2]}`
+- `GET /api/admin/students/{id}/courses` — get student's enrolled courses
+- `PUT /api/admin/students/{id}/courses` — assign courses to student `{courseIds: [1,2]}`
 
 Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 0=未发布, 1=已发布, 2=已回收. Difficulty: 1=易, 2=中, 3=难. Gender: `M`/`F`.
 
@@ -256,7 +267,11 @@ document.getElementById('qDifficulty').value = '1';  // 易
 
 Different endpoints return different `data` shapes:
 - `GET /api/courses` → `res.data` is the array directly (NOT `res.data.list`)
+- `GET /api/teacher/courses` → `res.data` is the array directly
+- `GET /api/student/courses` → `res.data` is the array directly
 - `GET /api/admin/courses` → `res.data.list` is the array (PageResult wrapper)
+- `GET /api/admin/teachers/{id}/courses` → `res.data` is the array directly
+- `GET /api/admin/students/{id}/courses` → `res.data` is the array directly
 - `GET /api/teacher/papers` → `res.data.list` is the array (PageResult wrapper)
 - `GET /api/teacher/questions` → `res.data.list` is the array (PageResult wrapper)
 - `GET /api/teacher/papers/{id}` → `res.data` is the single Paper object
@@ -266,9 +281,13 @@ Always verify: `res.data.list` for paginated endpoints, `res.data` for single-en
 
 ## Key Constraints
 
-- Teachers only see their own questions/papers (filtered by `teacher_id` from session).
-- Students only see their own practice/exam records.
-- Admin manages accounts but has no access to teaching content.
+- **Course assignment is required**: Teachers must be assigned courses via `t_teacher_course` before they can create questions/papers. Students must be enrolled in courses via `t_student_course` before they can practice/take exams.
+- Teachers only see questions/papers for their assigned courses (filtered via `t_teacher_course`).
+- Teachers only see students enrolled in their assigned courses (filtered via `t_student_course` JOIN `t_teacher_course`).
+- Students only see practice/exam content for their enrolled courses.
+- Students only see available exams from their enrolled courses.
+- Admin manages accounts and course assignments but has no access to teaching content.
 - Paper editing only allowed when `status=0` (draft).
 - Practice returns questions WITHOUT answers (`answer` and `analysis` are null).
 - Auto-grading: single-choice and true/false use exact match; multi-choice sorts both strings before comparing; fill-blank/short-answer return reference answer for self-evaluation.
+- Deleting a course is blocked if it has associated questions or papers.

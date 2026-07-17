@@ -149,3 +149,25 @@ CREATE TABLE IF NOT EXISTS t_exam_answer (
     CONSTRAINT fk_answer_exam     FOREIGN KEY (exam_record_id) REFERENCES t_exam_record (exam_record_id),
     CONSTRAINT fk_answer_question FOREIGN KEY (question_id)     REFERENCES t_question (question_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生测验答题明细表';
+
+-- ==================== 课程关联 (2张表) ====================
+
+-- 12. 教师-课程关联表
+CREATE TABLE IF NOT EXISTS t_teacher_course (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id BIGINT NOT NULL,
+    course_id  BIGINT NOT NULL,
+    UNIQUE KEY uk_teacher_course (teacher_id, course_id),
+    CONSTRAINT fk_tc_teacher FOREIGN KEY (teacher_id) REFERENCES t_teacher (teacher_id),
+    CONSTRAINT fk_tc_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师-课程关联表';
+
+-- 13. 学生-课程关联表
+CREATE TABLE IF NOT EXISTS t_student_course (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    course_id  BIGINT NOT NULL,
+    UNIQUE KEY uk_student_course (student_id, course_id),
+    CONSTRAINT fk_sc_student FOREIGN KEY (student_id) REFERENCES t_student (student_id),
+    CONSTRAINT fk_sc_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生-课程关联表';

@@ -127,4 +127,54 @@
         GROUP BY s.student_id, s.real_name, s.class_name
     </select>
 
+    <select id="selectStudentStatsByCourseIds" resultType="java.util.HashMap">
+        SELECT
+            s.student_id,
+            s.real_name,
+            s.class_name,
+            COUNT(DISTINCT pr.record_id) AS practice_count,
+            ROUND(AVG(CASE WHEN pr.is_correct IS NOT NULL THEN pr.is_correct ELSE NULL END) * 100, 1) AS practice_correct_rate,
+            COUNT(DISTINCT er.exam_record_id) AS exam_count,
+            ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score
+        FROM t_student s
+        INNER JOIN t_student_course sc ON s.student_id = sc.student_id
+        LEFT JOIN t_practice_record pr ON s.student_id = pr.student_id
+        LEFT JOIN t_exam_record er ON s.student_id = er.student_id
+        <where>
+            <if test="courseIds != null">
+                sc.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (s.real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR s.username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        GROUP BY s.student_id, s.real_name, s.class_name
+        ORDER BY s.create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByCourseIds" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT s.student_id)
+        FROM t_student s
+        INNER JOIN t_student_course sc ON s.student_id = sc.student_id
+        <where>
+            <if test="courseIds != null">
+                sc.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (s.real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR s.username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
 </mapper>

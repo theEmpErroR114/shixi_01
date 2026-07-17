@@ -32,6 +32,14 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    public PageResult<Question> listQuestions(Long teacherId, Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize, List<Long> courseIds) {
+        int offset = (page - 1) * pageSize;
+        List<Question> list = questionMapper.findByFiltersAndCourseIds(teacherId, courseId, questionType, difficulty, keyword, offset, pageSize, courseIds);
+        Long total = questionMapper.countByFiltersAndCourseIds(teacherId, courseId, questionType, difficulty, keyword, courseIds);
+        return PageResult.of(total, page, pageSize, list);
+    }
+
+    @Override
     public Question getQuestionDetail(Long questionId) {
         Question question = questionMapper.selectById(questionId);
         if (question != null) {

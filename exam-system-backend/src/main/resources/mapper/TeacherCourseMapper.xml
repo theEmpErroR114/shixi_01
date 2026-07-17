@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.examsystem.mapper.TeacherCourseMapper">
+
+    <select id="selectCoursesByTeacherId" resultType="com.examsystem.entity.Course">
+        SELECT c.course_id, c.course_name, c.description, c.create_time
+        FROM t_course c
+        INNER JOIN t_teacher_course tc ON c.course_id = tc.course_id
+        WHERE tc.teacher_id = #{teacherId}
+        ORDER BY c.course_name
+    </select>
+
+    <select id="selectCourseIdsByTeacherId" resultType="java.lang.Long">
+        SELECT course_id FROM t_teacher_course WHERE teacher_id = #{teacherId}
+    </select>
+
+    <delete id="deleteByTeacherId">
+        DELETE FROM t_teacher_course WHERE teacher_id = #{teacherId}
+    </delete>
+
+    <insert id="insert">
+        INSERT INTO t_teacher_course (teacher_id, course_id) VALUES (#{teacherId}, #{courseId})
+    </insert>
+
+</mapper>

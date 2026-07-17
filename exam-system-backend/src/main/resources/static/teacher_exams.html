@@ -5,8 +5,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>试卷管理 - 课程习题测验系统</title>
-<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
-<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
 <style>
         body { background-color: #F0F2F5; }
         .sidebar { background-color: #001529; }
@@ -446,7 +446,7 @@
         document.getElementById('paperDuration').value = '60';
         document.getElementById('paperTotalScore').value = '100';
         // 加载课程列表到下拉框
-        apiGet('/courses').then(function(res) {
+        apiGet('/teacher/courses').then(function(res) {
             var courses = res.data || [];
             var optionsHtml = '<option value="">请选择课程</option>';
             for (var i = 0; i < courses.length; i++) {
@@ -469,7 +469,7 @@
             document.getElementById('paperDuration').value = paper.duration || 60;
             document.getElementById('paperTotalScore').value = paper.totalScore || 100;
             // Load courses and set selected
-            apiGet('/courses').then(function(res2) {
+            apiGet('/teacher/courses').then(function(res2) {
                 var courses = res2.data || [];
                 var optionsHtml = '<option value="">请选择课程</option>';
                 for (var i = 0; i < courses.length; i++) {

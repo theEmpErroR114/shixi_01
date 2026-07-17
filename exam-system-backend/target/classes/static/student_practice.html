@@ -5,8 +5,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>抽题练习 - 课程习题测验系统</title>
-<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
-<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
 <style>
         body { background-color: #F0F2F5; }
         .option-btn:hover { border-color: #1890FF; background-color: #f0f9ff; }
@@ -150,7 +150,7 @@ var submittedCount = 0;
 
 // Load courses on page load
 function loadCourses() {
-    apiGet('/courses').then(function(data) {
+    apiGet('/student/courses').then(function(data) {
         data = data.data || data;
         var select = document.getElementById('courseSelect');
         var courses = Array.isArray(data) ? data : (data && data.list ? data.list : []);
@@ -161,7 +161,7 @@ function loadCourses() {
         }
         for (var i = 0; i < courses.length; i++) {
             var c = courses[i];
-            select.innerHTML += '<option value="' + c.id + '">' + (c.name || c.courseName || '') + '</option>';
+            select.innerHTML += '<option value="' + c.courseId + '">' + (c.courseName || '') + '</option>';
         }
     }).catch(function(err) {
         console.error('Failed to load courses:', err);

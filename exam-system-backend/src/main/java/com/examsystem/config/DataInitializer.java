@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -24,6 +25,8 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private CourseMapper courseMapper;
     @Autowired private QuestionMapper questionMapper;
     @Autowired private QuestionOptionMapper questionOptionMapper;
+    @Autowired private TeacherCourseMapper teacherCourseMapper;
+    @Autowired private StudentCourseMapper studentCourseMapper;
 
     @Override
     public void run(String... args) {
@@ -93,6 +96,18 @@ public class DataInitializer implements CommandLineRunner {
         questionMapper.insert(q3);
         insertOptions(q3.getQuestionId(), new String[][]{{"A", "外键", "0"}, {"B", "主键", "1"}, {"C", "索引", "0"}, {"D", "视图", "0"}});
         log.info("Created 3 questions");
+
+        // 6. Teacher-Course assignments
+        teacherCourseMapper.insert(t1.getTeacherId(), c1.getCourseId()); // 王老师 -> Java程序设计
+        teacherCourseMapper.insert(t2.getTeacherId(), c2.getCourseId()); // 李老师 -> 数据库原理
+        log.info("Assigned courses to teachers");
+
+        // 7. Student-Course assignments
+        studentCourseMapper.insert(s1.getStudentId(), c1.getCourseId()); // 张三 -> Java程序设计
+        studentCourseMapper.insert(s1.getStudentId(), c2.getCourseId()); // 张三 -> 数据库原理
+        studentCourseMapper.insert(s2.getStudentId(), c1.getCourseId()); // 刘芳 -> Java程序设计
+        studentCourseMapper.insert(s3.getStudentId(), c2.getCourseId()); // 陈明 -> 数据库原理
+        log.info("Assigned courses to students");
     }
 
     private Student createStudent(String username, String realName, String gender, String className, String phone, Long createBy) {

@@ -6,6 +6,7 @@ import com.examsystem.entity.Student;
 import com.examsystem.entity.Teacher;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AdminService {
     DashboardStatsVO getDashboardStats();
@@ -35,4 +36,12 @@ public interface AdminService {
     void createCourse(Course course);
     void updateCourse(Course course);
     void deleteCourse(Long courseId);
+
+    // Teacher-Course assignment
+    List<Course> getTeacherCourses(Long teacherId);
+    void assignCoursesToTeacher(Long teacherId, List<Long> courseIds);
+
+    // Student-Course assignment
+    List<Course> getStudentCourses(Long studentId);
+    void assignCoursesToStudent(Long studentId, List<Long> courseIds);
 }

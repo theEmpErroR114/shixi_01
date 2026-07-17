@@ -6,6 +6,9 @@ import com.examsystem.dto.StudentDetailVO;
 import com.examsystem.dto.StudentStatsVO;
 import com.examsystem.mapper.ExamRecordMapper;
 import com.examsystem.mapper.StudentMapper;
+import com.examsystem.mapper.TeacherCourseMapper;
+import com.examsystem.util.SessionUtil;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +26,27 @@ public class TeacherStudentController {
     @Autowired
     private ExamRecordMapper examRecordMapper;
 
+    @Autowired
+    private TeacherCourseMapper teacherCourseMapper;
+
     @GetMapping("/students/stats")
     public Result<PageResult<StudentStatsVO>> listStudentStats(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            HttpSession session) {
         int offset = (page - 1) * pageSize;
-        List<Map<String, Object>> rawList = studentMapper.selectStudentStats(keyword, offset, pageSize);
-        Long total = studentMapper.countByKeyword(keyword, null, null);
+        Long teacherId = (Long) session.getAttribute(SessionUtil.SESSION_USER_ID);
+        List<Long> courseIds = teacherCourseMapper.selectCourseIdsByTeacherId(teacherId);
+        List<Map<String, Object>> rawList;
+        Long total;
+        if (courseIds.isEmpty()) {
+            rawList = java.util.Collections.emptyList();
+            total = 0L;
+        } else {
+            rawList = studentMapper.selectStudentStatsByCourseIds(keyword, courseIds, offset, pageSize);
+            total = studentMapper.countByCourseIds(keyword, courseIds);
+        }
 
         List<StudentStatsVO> list = new ArrayList<>();
         for (Map<String, Object> row : rawList) {

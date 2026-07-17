@@ -2,6 +2,7 @@ package com.examsystem.controller.admin;
 
 import com.examsystem.dto.PageResult;
 import com.examsystem.dto.Result;
+import com.examsystem.entity.Course;
 import com.examsystem.entity.Teacher;
 import com.examsystem.service.AdminService;
 import com.examsystem.util.SessionUtil;
@@ -59,6 +60,17 @@ public class AdminTeacherController {
     @PutMapping("/{id}/reset-password")
     public Result<?> resetPassword(@PathVariable Long id) {
         adminService.resetTeacherPassword(id);
+        return Result.success();
+    }
+
+    @GetMapping("/{id}/courses")
+    public Result<List<Course>> getTeacherCourses(@PathVariable Long id) {
+        return Result.success(adminService.getTeacherCourses(id));
+    }
+
+    @PutMapping("/{id}/courses")
+    public Result<?> assignCourses(@PathVariable Long id, @RequestBody Map<String, List<Long>> body) {
+        adminService.assignCoursesToTeacher(id, body.get("courseIds"));
         return Result.success();
     }
 }

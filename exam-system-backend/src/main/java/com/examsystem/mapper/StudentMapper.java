@@ -31,4 +31,11 @@ public interface StudentMapper {
                                                             @Param("limit") Integer limit);
 
     List<java.util.Map<String, Object>> selectStudentStatsByStudentId(@Param("studentId") Long studentId);
+
+    List<java.util.Map<String, Object>> selectStudentStatsByCourseIds(@Param("keyword") String keyword,
+                                                                       @Param("courseIds") List<Long> courseIds,
+                                                                       @Param("offset") Integer offset,
+                                                                       @Param("limit") Integer limit);
+
+    Long countByCourseIds(@Param("keyword") String keyword, @Param("courseIds") List<Long> courseIds);
 }

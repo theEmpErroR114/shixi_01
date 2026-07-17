@@ -16,6 +16,15 @@ public interface QuestionMapper {
                         @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
                         @Param("keyword") String keyword);
 
+    List<Question> findByFiltersAndCourseIds(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+                                             @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
+                                             @Param("keyword") String keyword, @Param("offset") Integer offset,
+                                             @Param("limit") Integer limit, @Param("courseIds") List<Long> courseIds);
+
+    Long countByFiltersAndCourseIds(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+                                     @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
+                                     @Param("keyword") String keyword, @Param("courseIds") List<Long> courseIds);
+
     List<Question> findRandom(@Param("courseId") Long courseId, @Param("questionType") Integer questionType,
                               @Param("difficulty") Integer difficulty, @Param("count") Integer count);
 

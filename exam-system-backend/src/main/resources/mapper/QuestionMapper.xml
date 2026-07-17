@@ -62,6 +62,64 @@
         </where>
     </select>
 
+    <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
+        SELECT * FROM t_question
+        <where>
+            <if test="teacherId != null">
+                AND teacher_id = #{teacherId}
+            </if>
+            <if test="courseId != null">
+                AND course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="questionType != null">
+                AND question_type = #{questionType}
+            </if>
+            <if test="difficulty != null">
+                AND difficulty = #{difficulty}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND content LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_question
+        <where>
+            <if test="teacherId != null">
+                AND teacher_id = #{teacherId}
+            </if>
+            <if test="courseId != null">
+                AND course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="questionType != null">
+                AND question_type = #{questionType}
+            </if>
+            <if test="difficulty != null">
+                AND difficulty = #{difficulty}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND content LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
     <select id="findRandom" resultMap="BaseResultMap">
         SELECT * FROM t_question
         WHERE course_id = #{courseId}

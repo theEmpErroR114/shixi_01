@@ -5,9 +5,11 @@ import com.examsystem.dto.PracticeResultVO;
 import com.examsystem.entity.PracticeRecord;
 import com.examsystem.entity.Question;
 import com.examsystem.entity.QuestionOption;
+import com.examsystem.exception.BusinessException;
 import com.examsystem.mapper.PracticeRecordMapper;
 import com.examsystem.mapper.QuestionMapper;
 import com.examsystem.mapper.QuestionOptionMapper;
+import com.examsystem.mapper.StudentCourseMapper;
 import com.examsystem.service.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,8 +30,16 @@ public class PracticeServiceImpl implements PracticeService {
     @Autowired
     private PracticeRecordMapper practiceRecordMapper;
 
+    @Autowired
+    private StudentCourseMapper studentCourseMapper;
+
     @Override
     public List<Question> generatePractice(Long studentId, PracticeConfigRequest config) {
+        // 校验学生是否选了该课程
+        List<Long> enrolledCourseIds = studentCourseMapper.selectCourseIdsByStudentId(studentId);
+        if (config.getCourseId() != null && !enrolledCourseIds.contains(config.getCourseId())) {
+            throw new BusinessException("您没有选修该课程");
+        }
         int count = config.getCount() != null ? config.getCount() : 10;
         List<Question> questions = questionMapper.findRandom(
                 config.getCourseId(), config.getQuestionType(),

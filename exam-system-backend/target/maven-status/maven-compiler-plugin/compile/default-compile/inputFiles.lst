@@ -7,10 +7,12 @@
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminDashboardController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminStudentController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/admin/AdminTeacherController.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/student/StudentCourseController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/student/StudentDashboardController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/student/StudentExamController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/student/StudentPracticeController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/student/StudentResultController.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/teacher/TeacherCourseController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/teacher/TeacherDashboardController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/teacher/TeacherPaperController.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/controller/teacher/TeacherQuestionController.java
@@ -39,7 +41,9 @@
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/Question.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/QuestionOption.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/Student.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/StudentCourse.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/Teacher.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/entity/TeacherCourse.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/enums/DifficultyEnum.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/enums/PaperStatusEnum.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/enums/QuestionTypeEnum.java
@@ -57,7 +61,9 @@
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/PracticeRecordMapper.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/QuestionMapper.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/QuestionOptionMapper.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/StudentCourseMapper.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/StudentMapper.java
+/Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/TeacherCourseMapper.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/mapper/TeacherMapper.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/service/AdminService.java
 /Users/emperror/Desktop/实习/shixi_01/exam-system-backend/src/main/java/com/examsystem/service/AuthService.java
