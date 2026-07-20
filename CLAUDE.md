@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run
 
+### macOS / Linux
+
 ```bash
 # Build (from exam-system-backend/)
 mvn clean package -DskipTests
@@ -33,7 +35,27 @@ curl -s -X POST 'http://localhost:8080/api/auth/login' \
 # Open http://localhost:8080/login.html
 ```
 
-**Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS frontend (CDN: `cdn.tailwindcss.com` + `cdn.jsdelivr.net/npm/iconify-icon@2`).
+### Windows
+
+```cmd
+:: 一键构建+启动（推荐）
+cd exam-system-backend
+build-and-run.bat
+
+:: 停止服务
+stop.bat
+
+:: 或手动执行：
+::   构建：  mvnw clean package -DskipTests
+::   启动：  start java -jar target\exam-system-backend-1.0.0.jar
+::   停止：  netstat -ano | findstr ":8080"  然后  taskkill /F /PID <PID>
+```
+
+> 🟡 **Windows 组员配置**：如果 Maven 无法解析依赖，复制项目根目录的 `maven-settings-template.xml` 到 `%USERPROFILE%\.m2\settings.xml`。国内阿里云镜像可能未缓存 `mybatis-spring-boot-starter:4.0.1` 等最新版本。
+
+**Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS + Iconify Icon frontend.
+
+**Frontend CDN:** `cdn.tailwindcss.com` (Tailwind CSS via CDN). Iconify Icon is **self-hosted** (`iconify-icon.min.js` in `static/`) because `cdn.jsdelivr.net` is blocked in China.
 
 > 🔴 **Windows team members**: If Maven can't resolve `mybatis-spring-boot-starter:4.0.1` or other recent dependencies, copy `maven-settings-template.xml` to `%USERPROFILE%\.m2\settings.xml`. The Aliyun mirror commonly used in China may not have cached the latest versions. Also ensure JDK 26 is installed.
 
@@ -102,7 +124,7 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 4. Gender is `M`/`F` string, NOT `1`/`0`.
 5. Question type, difficulty, and paper status are integers, NOT enum strings.
 6. Every API response is `{code, data, message}`. See Common Bugs section for how to unwrap `data` (it differs by endpoint) and always check `res.code !== 200`.
-7. CDN sources (do NOT change unless broken): `cdn.tailwindcss.com` and `cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js`.
+7. CDN: `cdn.tailwindcss.com` (do NOT change unless broken). Iconify Icon is served locally from `iconify-icon.min.js` — do NOT revert to jsdelivr CDN (blocked in China).
 
 ## ⚠️ HTML Editing — Tag Balancing (CRITICAL)
 
