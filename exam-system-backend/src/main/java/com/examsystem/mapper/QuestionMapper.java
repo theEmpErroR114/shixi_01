@@ -7,21 +7,21 @@ import java.util.List;
 
 public interface QuestionMapper {
 
-    List<Question> findByFilters(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+    List<Question> findByFilters(@Param("courseId") Long courseId,
                                  @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
                                  @Param("keyword") String keyword, @Param("offset") Integer offset,
                                  @Param("limit") Integer limit);
 
-    Long countByFilters(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+    Long countByFilters(@Param("courseId") Long courseId,
                         @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
                         @Param("keyword") String keyword);
 
-    List<Question> findByFiltersAndCourseIds(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+    List<Question> findByFiltersAndCourseIds(@Param("courseId") Long courseId,
                                              @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
                                              @Param("keyword") String keyword, @Param("offset") Integer offset,
                                              @Param("limit") Integer limit, @Param("courseIds") List<Long> courseIds);
 
-    Long countByFiltersAndCourseIds(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId,
+    Long countByFiltersAndCourseIds(@Param("courseId") Long courseId,
                                      @Param("questionType") Integer questionType, @Param("difficulty") Integer difficulty,
                                      @Param("keyword") String keyword, @Param("courseIds") List<Long> courseIds);
 

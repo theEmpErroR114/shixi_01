@@ -12,4 +12,6 @@ public interface AdminMapper {
     int insert(Admin admin);
 
     int update(Admin admin);
+
+    int updatePassword(@Param("adminId") Long adminId, @Param("password") String password);
 }

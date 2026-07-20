@@ -177,4 +177,8 @@
         </where>
     </select>
 
+    <delete id="deleteById">
+        DELETE FROM t_student WHERE student_id = #{studentId}
+    </delete>
+
 </mapper>

@@ -32,7 +32,14 @@ public class TeacherPaperController {
             @RequestParam(defaultValue = "10") Integer pageSize,
             HttpSession session) {
         Long teacherId = (Long) session.getAttribute(SessionUtil.SESSION_USER_ID);
-        return Result.success(paperService.listPapers(teacherId, status, courseId, page, pageSize));
+        List<Long> courseIds = null;
+        if (courseId == null) {
+            courseIds = teacherCourseMapper.selectCourseIdsByTeacherId(teacherId);
+            if (courseIds.isEmpty()) {
+                return Result.success(PageResult.of(0L, page, pageSize, java.util.Collections.emptyList()));
+            }
+        }
+        return Result.success(paperService.listPapers(status, courseId, page, pageSize, courseIds));
     }
 
     @GetMapping("/{id}")

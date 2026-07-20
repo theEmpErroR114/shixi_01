@@ -8,413 +8,669 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
 <style>
-        body { background-color: #F0F2F5; }
-        .sidebar { background-color: #001529; }
-        .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
-        .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
-        .sidebar-item.active { color: #fff; background-color: #1890FF; }
-        .sidebar.collapsed { display: none; }
-        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
-        .user-dropdown.show { display: block; }
-        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
-        .user-dropdown a:hover { background: #f5f5f5; }
-        .modal { transition: opacity 0.3s ease-out; }
-    </style>
+	body { background-color: #F0F2F5; }
+	.sidebar { background-color: #001529; }
+	.sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
+	.sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
+	.sidebar-item.active { color: #fff; background-color: #1890FF; }
+	.sidebar.collapsed { display: none; }
+	.user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+	.user-dropdown.show { display: block; }
+	.user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+	.user-dropdown a:hover { background: #f5f5f5; }
+	.modal { transition: opacity 0.3s ease-out; }
+	.course-row { cursor: pointer; transition: background 0.15s; }
+	.course-row:hover { background-color: #E6F7FF !important; }
+	.course-row.selected { background-color: #E6F7FF !important; }
+</style>
 </head>
 <body class="flex h-screen overflow-hidden">
 <!-- 侧边栏 -->
 <div id="sidebar" class="sidebar w-60 flex-none flex flex-col">
-<div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
-<iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
-            管理中心
-        </div>
-<nav class="flex-1 py-4 overflow-y-auto">
-<a class="sidebar-item flex items-center px-6 py-4" href="admin_dashboard.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:view-dashboard"></iconify-icon>
-                仪表盘
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="admin_teachers.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:account-tie"></iconify-icon>
-                老师账号管理
-            </a>
-<a class="sidebar-item flex items-center px-6 py-4" href="admin_students.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:school"></iconify-icon>
-                学生账号管理
-            </a>
-<a class="sidebar-item active flex items-center px-6 py-4" href="admin_courses.html">
-<iconify-icon class="mr-3 text-lg" icon="mdi:book-education"></iconify-icon>
-                课程管理
-            </a>
-</nav>
+	<div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
+		<iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
+		管理中心
+	</div>
+	<nav class="flex-1 py-4 overflow-y-auto">
+		<a class="sidebar-item flex items-center px-6 py-4" href="admin_dashboard.html">
+			<iconify-icon class="mr-3 text-lg" icon="mdi:view-dashboard"></iconify-icon>
+			仪表盘
+		</a>
+		<a class="sidebar-item flex items-center px-6 py-4" href="admin_teachers.html">
+			<iconify-icon class="mr-3 text-lg" icon="mdi:account-tie"></iconify-icon>
+			老师账号管理
+		</a>
+		<a class="sidebar-item flex items-center px-6 py-4" href="admin_students.html">
+			<iconify-icon class="mr-3 text-lg" icon="mdi:school"></iconify-icon>
+			学生账号管理
+		</a>
+		<a class="sidebar-item active flex items-center px-6 py-4" href="admin_courses.html">
+			<iconify-icon class="mr-3 text-lg" icon="mdi:book-education"></iconify-icon>
+			课程管理
+		</a>
+	</nav>
 </div>
 <!-- 主内容区 -->
 <div class="flex-1 flex flex-col overflow-hidden">
-<!-- 顶部导航 -->
-<header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-<div class="flex items-center text-gray-500">
-<iconify-icon id="menuToggle" class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
-<div class="flex items-center space-x-2 text-sm">
-<span>管理中心</span>
-<span class="text-gray-300">/</span>
-<span class="text-gray-900 font-medium">课程管理</span>
-</div>
-</div>
-<div class="relative">
-<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
-<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-<iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
-</div>
-<span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
-<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
-</div>
-<div class="user-dropdown" id="userDropdown">
-<a href="login.html">
-<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
-                                    退出登录
-                                </a>
-</div>
-</div>
-</header>
-<!-- 内容区域 -->
-<main class="flex-1 overflow-y-auto p-8">
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-<!-- 顶部操作栏 -->
-<div class="p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
-<div class="flex items-center space-x-4">
-<div class="relative">
-<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索课程名称" type="text" id="searchKeyword"/>
-<iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
-</div>
-</div>
-<button class="bg-[#1890FF] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="openModal('add')">
-<iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>
-                        新增课程
-                    </button>
-</div>
-<!-- 表格 -->
-<div class="overflow-x-auto">
-<table class="w-full text-left">
-<thead>
-<tr class="bg-gray-50 text-gray-500 text-sm">
-<th class="px-6 py-4 font-medium">序号</th>
-<th class="px-6 py-4 font-medium">课程名称</th>
-<th class="px-6 py-4 font-medium">课程描述</th>
-<th class="px-6 py-4 font-medium">创建时间</th>
-<th class="px-6 py-4 font-medium text-center">操作</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-gray-100 text-sm" id="courseTableBody">
-</tbody>
-</table>
-</div>
-<!-- 分页 -->
-<div class="p-6 border-t border-gray-100 flex items-center justify-between text-sm" id="paginationArea">
-<span class="text-gray-500" id="paginationInfo">加载中...</span>
-<div class="flex items-center space-x-2" id="paginationButtons">
-</div>
-</div>
-</div>
-</main>
+	<!-- 顶部导航 -->
+	<header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
+		<div class="flex items-center text-gray-500">
+			<iconify-icon id="menuToggle" class="text-xl cursor-pointer mr-4" icon="mdi:menu"></iconify-icon>
+			<div class="flex items-center space-x-2 text-sm">
+				<span>管理中心</span>
+				<span class="text-gray-300">/</span>
+				<span class="text-gray-900 font-medium">课程管理</span>
+			</div>
+		</div>
+		<div class="relative">
+			<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
+				<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+					<iconify-icon class="text-2xl text-[#1890FF]" icon="mdi:account-circle"></iconify-icon>
+				</div>
+				<span class="text-sm font-medium text-gray-700" id="adminName">管理员</span>
+				<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+			</div>
+			<div class="user-dropdown" id="userDropdown">
+				<a href="login.html">
+					<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+					退出登录
+				</a>
+			</div>
+		</div>
+	</header>
+	<!-- 内容区域 -->
+	<main class="flex-1 overflow-y-auto p-8">
+		<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+			<!-- 顶部操作栏 -->
+			<div class="p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+				<div class="flex items-center space-x-4">
+					<div class="relative">
+						<input class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#1890FF] w-64 text-sm" placeholder="搜索课程名称" type="text" id="searchKeyword"/>
+						<iconify-icon class="absolute left-3 top-2.5 text-gray-400" icon="mdi:magnify"></iconify-icon>
+					</div>
+				</div>
+				<button class="bg-[#1890FF] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-blue-600 transition-colors" onclick="openModal('add')">
+					<iconify-icon class="mr-1" icon="mdi:plus"></iconify-icon>
+					新增课程
+				</button>
+			</div>
+			<!-- 表格 -->
+			<div class="overflow-x-auto">
+				<table class="w-full text-left">
+					<thead>
+						<tr class="bg-gray-50 text-gray-500 text-sm">
+							<th class="px-6 py-4 font-medium">序号</th>
+							<th class="px-6 py-4 font-medium">课程名称</th>
+							<th class="px-6 py-4 font-medium">课程描述</th>
+							<th class="px-6 py-4 font-medium">创建时间</th>
+							<th class="px-6 py-4 font-medium text-center">操作</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100 text-sm" id="courseTableBody">
+					</tbody>
+				</table>
+			</div>
+			<!-- 分页 -->
+			<div class="p-6 border-t border-gray-100 flex items-center justify-between text-sm" id="paginationArea">
+				<span class="text-gray-500" id="paginationInfo">加载中...</span>
+				<div class="flex items-center space-x-2" id="paginationButtons">
+				</div>
+			</div>
+		</div>
+		<!-- 课程详情面板（题目/试卷） -->
+		<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6 hidden" id="courseDetailPanel">
+			<div class="p-6 border-b border-gray-100 flex items-center justify-between">
+				<div>
+					<h3 class="text-lg font-bold text-gray-800" id="detailCourseName">课程详情</h3>
+					<p class="text-sm text-gray-400 mt-1" id="detailCourseDesc"></p>
+				</div>
+				<button class="text-gray-400 hover:text-gray-600" onclick="closeDetailPanel()">
+					<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+				</button>
+			</div>
+			<!-- 标签页切换 -->
+			<div class="border-b border-gray-100 px-6 flex space-x-6">
+				<button class="py-3 text-sm font-medium border-b-2 border-[#1890FF] text-[#1890FF]" id="tabQuestions" onclick="switchTab('questions')">题目列表</button>
+				<button class="py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" id="tabPapers" onclick="switchTab('papers')">试卷列表</button>
+			</div>
+			<!-- 题目列表 -->
+			<div id="questionsTab">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left">
+						<thead>
+							<tr class="bg-gray-50 text-gray-500 text-sm">
+								<th class="px-6 py-3 font-medium w-16">序号</th>
+								<th class="px-6 py-3 font-medium">题干</th>
+								<th class="px-6 py-3 font-medium w-20">题型</th>
+								<th class="px-6 py-3 font-medium w-16">难度</th>
+								<th class="px-6 py-3 font-medium w-24">出题人</th>
+								<th class="px-6 py-3 font-medium w-40">创建时间</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100 text-sm" id="questionTableBody">
+						</tbody>
+					</table>
+				</div>
+				<div class="p-4 border-t border-gray-100 flex items-center justify-between text-sm" id="questionPaginationArea">
+					<span class="text-gray-500" id="questionPaginationInfo"></span>
+					<div class="flex items-center space-x-2" id="questionPaginationButtons"></div>
+				</div>
+			</div>
+			<!-- 试卷列表 -->
+			<div id="papersTab" class="hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left">
+						<thead>
+							<tr class="bg-gray-50 text-gray-500 text-sm">
+								<th class="px-6 py-3 font-medium w-16">序号</th>
+								<th class="px-6 py-3 font-medium">试卷名称</th>
+								<th class="px-6 py-3 font-medium w-20">总分</th>
+								<th class="px-6 py-3 font-medium w-20">时长(分)</th>
+								<th class="px-6 py-3 font-medium w-20">状态</th>
+								<th class="px-6 py-3 font-medium w-24">组卷人</th>
+								<th class="px-6 py-3 font-medium w-40">创建时间</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100 text-sm" id="paperTableBody">
+						</tbody>
+					</table>
+				</div>
+				<div class="p-4 border-t border-gray-100 flex items-center justify-between text-sm" id="paperPaginationArea">
+					<span class="text-gray-500" id="paperPaginationInfo"></span>
+					<div class="flex items-center space-x-2" id="paperPaginationButtons"></div>
+				</div>
+			</div>
+		</div>
+	</main>
 </div>
 <!-- 模态框 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="modal">
-<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
-<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
-<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-<h3 class="text-lg font-bold text-gray-800" id="modalTitle">新增课程</h3>
-<button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
-<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
-</button>
-</div>
-<div class="p-6">
-<form class="space-y-4" id="courseForm" onsubmit="submitForm(event)">
-<input type="hidden" id="editId"/>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-1">课程名称 <span class="text-red-500">*</span></label>
-<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_courseName" type="text" required/>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-1">课程描述</label>
-<textarea class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_description" rows="3"></textarea>
-</div>
-<div class="pt-4 flex justify-end space-x-3">
-<button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closeModal()" type="button">取消</button>
-<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" type="submit">确定</button>
-</div>
-</form>
-</div>
-</div>
+	<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+	<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
+		<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+			<h3 class="text-lg font-bold text-gray-800" id="modalTitle">新增课程</h3>
+			<button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
+				<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+			</button>
+		</div>
+		<div class="p-6">
+			<form class="space-y-4" id="courseForm" onsubmit="submitForm(event)">
+				<input type="hidden" id="editId"/>
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">课程名称 <span class="text-red-500">*</span></label>
+					<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_courseName" type="text" required/>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">课程描述</label>
+					<textarea class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="c_description" rows="3"></textarea>
+				</div>
+				<div class="pt-4 flex justify-end space-x-3">
+					<button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closeModal()" type="button">取消</button>
+					<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" type="submit">确定</button>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>
 <script>
-    var API_BASE = '/api';
+	var API_BASE = '/api';
 
-    function apiGet(url, params) {
-        var query = params ? '?' + new URLSearchParams(params).toString() : '';
-        return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
-            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
-            return res.json();
-        });
-    }
+	function apiGet(url, params) {
+		var query = params ? '?' + new URLSearchParams(params).toString() : '';
+		return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
+			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+			return res.json();
+		});
+	}
 
-    function apiPost(url, data) {
-        return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
-            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
-            return res.json();
-        });
-    }
+	function apiPost(url, data) {
+		return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+			return res.json();
+		});
+	}
 
-    function apiPut(url, data) {
-        return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
-            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
-            return res.json();
-        });
-    }
+	function apiPut(url, data) {
+		return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
+			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+			return res.json();
+		});
+	}
 
-    function apiDelete(url) {
-        return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
-            if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
-            return res.json();
-        });
-    }
+	function apiDelete(url) {
+		return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
+			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
+			return res.json();
+		});
+	}
 
-    var currentPage = 1;
-    var pageSize = 10;
-    var totalPages = 1;
-    var editingId = null;
+	var currentPage = 1;
+	var pageSize = 10;
+	var totalPages = 1;
+	var editingId = null;
 
-    // 加载管理员姓名
-    function loadAdminName() {
-        apiGet('/auth/current-user').then(function(user) {
-            var data = user.data || user;
-            var name = data.realName || data.username;
-            if (name) {
-                document.getElementById('adminName').textContent = name;
-            }
-        }).catch(function() {});
-    }
+	// 课程详情面板状态
+	var selectedCourseId = null;
+	var selectedCourseName = '';
+	var selectedCourseDesc = '';
+	var currentTab = 'questions';
+	var questionPage = 1;
+	var questionTotalPages = 1;
+	var paperPage = 1;
+	var paperTotalPages = 1;
 
-    // 加载课程列表
-    function loadCourses() {
-        var keyword = document.getElementById('searchKeyword').value;
-        var params = { page: currentPage, pageSize: pageSize };
-        if (keyword) params.keyword = keyword;
+	// 加载管理员姓名
+	function loadAdminName() {
+		apiGet('/auth/current-user').then(function(user) {
+			var data = user.data || user;
+			var name = data.realName || data.username;
+			if (name) {
+				document.getElementById('adminName').textContent = name;
+			}
+		}).catch(function() {});
+	}
 
-        apiGet('/admin/courses', params).then(function(res) {
-            if (res.code !== 200) {
-                alert('加载失败：' + (res.message || '未知错误'));
-                return;
-            }
-            var data = res.data || {};
-            var list = data.list || [];
-            var total = data.total || 0;
-            totalPages = Math.ceil(total / pageSize) || 1;
-            renderTable(list);
-            renderPagination(total);
-        }).catch(function(err) {
-            console.error('加载课程列表失败:', err);
-            document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
-        });
-    }
+	// 加载课程列表
+	function loadCourses() {
+		var keyword = document.getElementById('searchKeyword').value;
+		var params = { page: currentPage, pageSize: pageSize };
+		if (keyword) params.keyword = keyword;
 
-    // 渲染表格
-    function renderTable(list) {
-        var tbody = document.getElementById('courseTableBody');
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">暂无数据</td></tr>';
-            return;
-        }
-        var html = '';
-        for (var i = 0; i < list.length; i++) {
-            var c = list[i];
-            var rowClass = (i % 2 === 1) ? ' class="bg-gray-50/30"' : '';
-            var createTime = c.createTime || '';
-            if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
-                createTime = createTime.replace('T', ' ');
-            }
+		apiGet('/admin/courses', params).then(function(res) {
+			if (res.code !== 200) {
+				alert('加载失败：' + (res.message || '未知错误'));
+				return;
+			}
+			var data = res.data || {};
+			var list = data.list || [];
+			var total = data.total || 0;
+			totalPages = Math.ceil(total / pageSize) || 1;
+			renderTable(list);
+			renderPagination(total);
+		}).catch(function(err) {
+			console.error('加载课程列表失败:', err);
+			document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+		});
+	}
 
-            html += '<tr' + rowClass + '>';
-            html += '<td class="px-6 py-4">' + ((currentPage - 1) * pageSize + i + 1) + '</td>';
-            html += '<td class="px-6 py-4 font-medium text-gray-800">' + escapeHtml(c.courseName) + '</td>';
-            html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.description || '--') + '</td>';
-            html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
-            html += '<td class="px-6 py-4 text-center">';
-            html += '<div class="flex items-center justify-center space-x-3">';
-            html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + c.courseId + ')">编辑</button>';
-            html += '<button class="text-red-500 hover:text-red-700" onclick="deleteCourse(' + c.courseId + ')">删除</button>';
-            html += '</div>';
-            html += '</td>';
-            html += '</tr>';
-        }
-        tbody.innerHTML = html;
-    }
+	// 渲染表格
+	function renderTable(list) {
+		var tbody = document.getElementById('courseTableBody');
+		if (!list || list.length === 0) {
+			tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">暂无数据</td></tr>';
+			return;
+		}
+		var html = '';
+		for (var i = 0; i < list.length; i++) {
+			var c = list[i];
+			var isSelected = selectedCourseId === c.courseId;
+			var rowClass = isSelected ? ' course-row selected' : ' course-row';
+			if (i % 2 === 1 && !isSelected) rowClass += ' bg-gray-50/30';
+			var createTime = c.createTime || '';
+			if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
+				createTime = createTime.replace('T', ' ');
+			}
 
-    // 渲染分页
-    function renderPagination(total) {
-        document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条记录，每页 ' + pageSize + ' 条';
-        var buttonsHtml = '';
+			html += '<tr class="' + rowClass + '" data-course-id="' + c.courseId + '" onclick="viewCourseDetail(' + c.courseId + ', \'' + escapeHtmlAttr(c.courseName) + '\', \'' + escapeHtmlAttr(c.description || '') + '\')">';
+			html += '<td class="px-6 py-4">' + ((currentPage - 1) * pageSize + i + 1) + '</td>';
+			html += '<td class="px-6 py-4 font-medium text-blue-600">' + escapeHtml(c.courseName) + '</td>';
+			html += '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.description || '--') + '</td>';
+			html += '<td class="px-6 py-4 text-gray-500 text-xs">' + escapeHtml(createTime || '--') + '</td>';
+			html += '<td class="px-6 py-4 text-center" onclick="event.stopPropagation()">';
+			html += '<div class="flex items-center justify-center space-x-3">';
+			html += '<button class="text-blue-500 hover:text-blue-700" onclick="openEditModal(' + c.courseId + ')">编辑</button>';
+			html += '<button class="text-red-500 hover:text-red-700" onclick="deleteCourse(' + c.courseId + ')">删除</button>';
+			html += '</div>';
+			html += '</td>';
+			html += '</tr>';
+		}
+		tbody.innerHTML = html;
+	}
 
-        buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>';
-        buttonsHtml += '<iconify-icon icon="mdi:chevron-left"></iconify-icon>';
-        buttonsHtml += '</button>';
+	// 渲染分页
+	function renderPagination(total) {
+		document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条记录，每页 ' + pageSize + ' 条';
+		var buttonsHtml = '';
 
-        var startPage = Math.max(1, currentPage - 2);
-        var endPage = Math.min(totalPages, currentPage + 2);
-        if (startPage > 1) {
-            buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(1)">1</button>';
-            if (startPage > 2) {
-                buttonsHtml += '<span class="px-2">...</span>';
-            }
-        }
-        for (var p = startPage; p <= endPage; p++) {
-            if (p === currentPage) {
-                buttonsHtml += '<button class="px-3 py-1 bg-[#1890FF] text-white rounded">' + p + '</button>';
-            } else {
-                buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + p + ')">' + p + '</button>';
-            }
-        }
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                buttonsHtml += '<span class="px-2">...</span>';
-            }
-            buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + totalPages + ')">' + totalPages + '</button>';
-        }
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-left"></iconify-icon>';
+		buttonsHtml += '</button>';
 
-        buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>';
-        buttonsHtml += '<iconify-icon icon="mdi:chevron-right"></iconify-icon>';
-        buttonsHtml += '</button>';
+		var startPage = Math.max(1, currentPage - 2);
+		var endPage = Math.min(totalPages, currentPage + 2);
+		if (startPage > 1) {
+			buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(1)">1</button>';
+			if (startPage > 2) {
+				buttonsHtml += '<span class="px-2">...</span>';
+			}
+		}
+		for (var p = startPage; p <= endPage; p++) {
+			if (p === currentPage) {
+				buttonsHtml += '<button class="px-3 py-1 bg-[#1890FF] text-white rounded">' + p + '</button>';
+			} else {
+				buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + p + ')">' + p + '</button>';
+			}
+		}
+		if (endPage < totalPages) {
+			if (endPage < totalPages - 1) {
+				buttonsHtml += '<span class="px-2">...</span>';
+			}
+			buttonsHtml += '<button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + totalPages + ')">' + totalPages + '</button>';
+		}
 
-        document.getElementById('paginationButtons').innerHTML = buttonsHtml;
-    }
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-right"></iconify-icon>';
+		buttonsHtml += '</button>';
 
-    function goToPage(page) {
-        if (page < 1 || page > totalPages) return;
-        currentPage = page;
-        loadCourses();
-    }
+		document.getElementById('paginationButtons').innerHTML = buttonsHtml;
+	}
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-    }
+	function goToPage(page) {
+		if (page < 1 || page > totalPages) return;
+		currentPage = page;
+		loadCourses();
+	}
 
-    // 搜索功能
-    var searchTimer = null;
-    document.addEventListener('DOMContentLoaded', function() {
-        // 侧边栏切换
-        document.getElementById('menuToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        });
+	function escapeHtml(str) {
+		if (!str) return '';
+		var div = document.createElement('div');
+		div.appendChild(document.createTextNode(str));
+		return div.innerHTML;
+	}
 
-        // 用户下拉菜单切换
-        var userMenuTrigger = document.getElementById('userMenuTrigger');
-        var userDropdown = document.getElementById('userDropdown');
-        userMenuTrigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            userDropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', function() {
-            userDropdown.classList.remove('show');
-        });
+	function escapeHtmlAttr(str) {
+		if (!str) return '';
+		return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	}
 
-        loadAdminName();
-        loadCourses();
+	// === 课程详情面板 ===
 
-        document.getElementById('searchKeyword').addEventListener('input', function() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(function() {
-                currentPage = 1;
-                loadCourses();
-            }, 400);
-        });
-    });
+	function viewCourseDetail(courseId, courseName, description) {
+		selectedCourseId = courseId;
+		selectedCourseName = courseName;
+		selectedCourseDesc = description;
+		document.getElementById('detailCourseName').textContent = courseName;
+		document.getElementById('detailCourseDesc').textContent = description || '';
+		document.getElementById('courseDetailPanel').classList.remove('hidden');
+		// 重新渲染课程表格行高亮
+		loadCourses();
+		// 默认加载题目
+		switchTab('questions');
+		// 滚动到详情面板
+		document.getElementById('courseDetailPanel').scrollIntoView({ behavior: 'smooth' });
+	}
 
-    // 打开新增模态框
-    function openModal(type) {
-        editingId = null;
-        document.getElementById('editId').value = '';
-        document.getElementById('modalTitle').innerText = '新增课程';
-        document.getElementById('c_courseName').value = '';
-        document.getElementById('c_description').value = '';
-        document.getElementById('modal').classList.remove('hidden');
-    }
+	function closeDetailPanel() {
+		selectedCourseId = null;
+		document.getElementById('courseDetailPanel').classList.add('hidden');
+		loadCourses();
+	}
 
-    // 打开编辑模态框
-    function openEditModal(id) {
-        editingId = id;
-        apiGet('/admin/courses/' + id).then(function(res) {
-            if (res.code !== 200) {
-                alert('获取课程信息失败：' + (res.message || '未知错误'));
-                return;
-            }
-            var c = res.data || {};
-            document.getElementById('editId').value = c.courseId;
-            document.getElementById('modalTitle').innerText = '编辑课程';
-            document.getElementById('c_courseName').value = c.courseName || '';
-            document.getElementById('c_description').value = c.description || '';
-            document.getElementById('modal').classList.remove('hidden');
-        }).catch(function(err) {
-            alert('获取课程信息失败');
-        });
-    }
+	function switchTab(tab) {
+		currentTab = tab;
+		var tabQ = document.getElementById('tabQuestions');
+		var tabP = document.getElementById('tabPapers');
+		var panelQ = document.getElementById('questionsTab');
+		var panelP = document.getElementById('papersTab');
 
-    function closeModal() {
-        document.getElementById('modal').classList.add('hidden');
-    }
+		if (tab === 'questions') {
+			tabQ.className = 'py-3 text-sm font-medium border-b-2 border-[#1890FF] text-[#1890FF]';
+			tabP.className = 'py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700';
+			panelQ.classList.remove('hidden');
+			panelP.classList.add('hidden');
+			loadCourseQuestions();
+		} else {
+			tabP.className = 'py-3 text-sm font-medium border-b-2 border-[#1890FF] text-[#1890FF]';
+			tabQ.className = 'py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700';
+			panelP.classList.remove('hidden');
+			panelQ.classList.add('hidden');
+			loadCoursePapers();
+		}
+	}
 
-    // 提交表单
-    function submitForm(e) {
-        e.preventDefault();
-        var data = {
-            courseName: document.getElementById('c_courseName').value.trim(),
-            description: document.getElementById('c_description').value.trim()
-        };
+	// 加载课程题目
+	function loadCourseQuestions() {
+		if (!selectedCourseId) return;
+		apiGet('/admin/courses/' + selectedCourseId + '/questions', { page: questionPage, pageSize: pageSize }).then(function(res) {
+			if (res.code !== 200) {
+				document.getElementById('questionTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">加载失败</td></tr>';
+				return;
+			}
+			var data = res.data || {};
+			var list = data.list || data.records || [];
+			var total = data.total || 0;
+			questionTotalPages = Math.ceil(total / pageSize) || 1;
+			renderQuestionTable(list);
+			renderQuestionPagination(total);
+		}).catch(function() {
+			document.getElementById('questionTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+		});
+	}
 
-        if (!data.courseName) {
-            alert('请输入课程名称');
-            return;
-        }
+	function renderQuestionTable(list) {
+		var tbody = document.getElementById('questionTableBody');
+		if (!list || list.length === 0) {
+			tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">暂无题目</td></tr>';
+			return;
+		}
+		var typeMap = {1: '单选', 2: '多选', 3: '判断', 4: '填空', 5: '简答'};
+		var diffMap = {1: '易', 2: '中', 3: '难'};
+		var html = '';
+		for (var i = 0; i < list.length; i++) {
+			var q = list[i];
+			var createTime = q.createTime || '';
+			if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
+				createTime = createTime.replace('T', ' ');
+			}
+			html += '<tr>';
+			html += '<td class="px-6 py-3 text-gray-500">' + ((questionPage - 1) * pageSize + i + 1) + '</td>';
+			html += '<td class="px-6 py-3 text-gray-800">' + escapeHtml(q.content || '') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + (typeMap[q.questionType] || '未知') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + (diffMap[q.difficulty] || '--') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + escapeHtml(q.teacherName || '--') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-400 text-xs">' + escapeHtml(createTime || '--') + '</td>';
+			html += '</tr>';
+		}
+		tbody.innerHTML = html;
+	}
 
-        if (editingId) {
-            apiPut('/admin/courses/' + editingId, data).then(function(res) {
-                if (res.code !== 200) {
-                    alert('更新失败：' + (res.message || '未知错误'));
-                    return;
-                }
-                closeModal();
-                loadCourses();
-            }).catch(function(err) {
-                alert('更新失败，请稍后重试');
-            });
-        } else {
-            apiPost('/admin/courses', data).then(function(res) {
-                if (res.code !== 200) {
-                    alert('创建失败：' + (res.message || '未知错误'));
-                    return;
-                }
-                closeModal();
-                loadCourses();
-            }).catch(function(err) {
-                alert('创建失败，请稍后重试');
-            });
-        }
-        return false;
-    }
+	function renderQuestionPagination(total) {
+		document.getElementById('questionPaginationInfo').textContent = '共 ' + total + ' 条';
+		var buttonsHtml = '';
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm" onclick="questionGoToPage(' + (questionPage - 1) + ')" ' + (questionPage <= 1 ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-left"></iconify-icon></button>';
+		buttonsHtml += '<span class="px-2 text-gray-500 text-sm">' + questionPage + ' / ' + questionTotalPages + '</span>';
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm" onclick="questionGoToPage(' + (questionPage + 1) + ')" ' + (questionPage >= questionTotalPages ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-right"></iconify-icon></button>';
+		document.getElementById('questionPaginationButtons').innerHTML = buttonsHtml;
+	}
 
-    // 删除课程
-    function deleteCourse(id) {
-        if (!confirm('确定要删除该课程吗？删除后无法恢复。')) return;
-        apiDelete('/admin/courses/' + id).then(function(res) {
-            if (res.code !== 200) {
-                alert('删除失败：' + (res.message || '未知错误'));
-                return;
-            }
-            loadCourses();
-        }).catch(function(err) {
-            alert('删除失败，请稍后重试');
-        });
-    }
+	function questionGoToPage(page) {
+		if (page < 1 || page > questionTotalPages) return;
+		questionPage = page;
+		loadCourseQuestions();
+	}
+
+	// 加载课程试卷
+	function loadCoursePapers() {
+		if (!selectedCourseId) return;
+		apiGet('/admin/courses/' + selectedCourseId + '/papers', { page: paperPage, pageSize: pageSize }).then(function(res) {
+			if (res.code !== 200) {
+				document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">加载失败</td></tr>';
+				return;
+			}
+			var data = res.data || {};
+			var list = data.list || data.records || [];
+			var total = data.total || 0;
+			paperTotalPages = Math.ceil(total / pageSize) || 1;
+			renderPaperTable(list);
+			renderPaperPagination(total);
+		}).catch(function() {
+			document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+		});
+	}
+
+	function renderPaperTable(list) {
+		var tbody = document.getElementById('paperTableBody');
+		if (!list || list.length === 0) {
+			tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">暂无试卷</td></tr>';
+			return;
+		}
+		var statusMap = {0: '未发布', 1: '已发布', 2: '已回收'};
+		var statusClass = {0: 'bg-yellow-100 text-yellow-800', 1: 'bg-green-100 text-green-800', 2: 'bg-gray-100 text-gray-600'};
+		var html = '';
+		for (var i = 0; i < list.length; i++) {
+			var p = list[i];
+			var createTime = p.createTime || '';
+			if (createTime && typeof createTime === 'string' && createTime.indexOf('T') !== -1) {
+				createTime = createTime.replace('T', ' ');
+			}
+			html += '<tr>';
+			html += '<td class="px-6 py-3 text-gray-500">' + ((paperPage - 1) * pageSize + i + 1) + '</td>';
+			html += '<td class="px-6 py-3 text-blue-600 font-medium">' + escapeHtml(p.paperName || '') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + (p.totalScore || 0) + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + (p.duration || 0) + '</td>';
+			html += '<td class="px-6 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (statusClass[p.status] || '') + '">' + (statusMap[p.status] || '未知') + '</span></td>';
+			html += '<td class="px-6 py-3 text-gray-500">' + escapeHtml(p.teacherName || '--') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-400 text-xs">' + escapeHtml(createTime || '--') + '</td>';
+			html += '</tr>';
+		}
+		tbody.innerHTML = html;
+	}
+
+	function renderPaperPagination(total) {
+		document.getElementById('paperPaginationInfo').textContent = '共 ' + total + ' 条';
+		var buttonsHtml = '';
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm" onclick="paperGoToPage(' + (paperPage - 1) + ')" ' + (paperPage <= 1 ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-left"></iconify-icon></button>';
+		buttonsHtml += '<span class="px-2 text-gray-500 text-sm">' + paperPage + ' / ' + paperTotalPages + '</span>';
+		buttonsHtml += '<button class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm" onclick="paperGoToPage(' + (paperPage + 1) + ')" ' + (paperPage >= paperTotalPages ? 'disabled' : '') + '>';
+		buttonsHtml += '<iconify-icon icon="mdi:chevron-right"></iconify-icon></button>';
+		document.getElementById('paperPaginationButtons').innerHTML = buttonsHtml;
+	}
+
+	function paperGoToPage(page) {
+		if (page < 1 || page > paperTotalPages) return;
+		paperPage = page;
+		loadCoursePapers();
+	}
+
+	// 搜索功能
+	var searchTimer = null;
+	document.addEventListener('DOMContentLoaded', function() {
+		// 侧边栏切换
+		document.getElementById('menuToggle').addEventListener('click', function() {
+			document.getElementById('sidebar').classList.toggle('collapsed');
+		});
+
+		// 用户下拉菜单切换
+		var userMenuTrigger = document.getElementById('userMenuTrigger');
+		var userDropdown = document.getElementById('userDropdown');
+		userMenuTrigger.addEventListener('click', function(e) {
+			e.stopPropagation();
+			userDropdown.classList.toggle('show');
+		});
+		document.addEventListener('click', function() {
+			userDropdown.classList.remove('show');
+		});
+
+		loadAdminName();
+		loadCourses();
+
+		document.getElementById('searchKeyword').addEventListener('input', function() {
+			clearTimeout(searchTimer);
+			searchTimer = setTimeout(function() {
+				currentPage = 1;
+				loadCourses();
+			}, 400);
+		});
+	});
+
+	// 打开新增模态框
+	function openModal(type) {
+		editingId = null;
+		document.getElementById('editId').value = '';
+		document.getElementById('modalTitle').innerText = '新增课程';
+		document.getElementById('c_courseName').value = '';
+		document.getElementById('c_description').value = '';
+		document.getElementById('modal').classList.remove('hidden');
+	}
+
+	// 打开编辑模态框
+	function openEditModal(id) {
+		editingId = id;
+		apiGet('/admin/courses/' + id).then(function(res) {
+			if (res.code !== 200) {
+				alert('获取课程信息失败：' + (res.message || '未知错误'));
+				return;
+			}
+			var c = res.data || {};
+			document.getElementById('editId').value = c.courseId;
+			document.getElementById('modalTitle').innerText = '编辑课程';
+			document.getElementById('c_courseName').value = c.courseName || '';
+			document.getElementById('c_description').value = c.description || '';
+			document.getElementById('modal').classList.remove('hidden');
+		}).catch(function(err) {
+			alert('获取课程信息失败');
+		});
+	}
+
+	function closeModal() {
+		document.getElementById('modal').classList.add('hidden');
+	}
+
+	// 提交表单
+	function submitForm(e) {
+		e.preventDefault();
+		var data = {
+			courseName: document.getElementById('c_courseName').value.trim(),
+			description: document.getElementById('c_description').value.trim()
+		};
+
+		if (!data.courseName) {
+			alert('请输入课程名称');
+			return;
+		}
+
+		if (editingId) {
+			apiPut('/admin/courses/' + editingId, data).then(function(res) {
+				if (res.code !== 200) {
+					alert('更新失败：' + (res.message || '未知错误'));
+					return;
+				}
+				closeModal();
+				loadCourses();
+			}).catch(function(err) {
+				alert('更新失败，请稍后重试');
+			});
+		} else {
+			apiPost('/admin/courses', data).then(function(res) {
+				if (res.code !== 200) {
+					alert('创建失败：' + (res.message || '未知错误'));
+					return;
+				}
+				closeModal();
+				loadCourses();
+			}).catch(function(err) {
+				alert('创建失败，请稍后重试');
+			});
+		}
+		return false;
+	}
+
+	// 删除课程
+	function deleteCourse(id) {
+		if (!confirm('确定要删除该课程吗？删除后无法恢复。')) return;
+		apiDelete('/admin/courses/' + id).then(function(res) {
+			if (res.code !== 200) {
+				alert('删除失败：' + (res.message || '未知错误'));
+				return;
+			}
+			loadCourses();
+		}).catch(function(err) {
+			alert('删除失败，请稍后重试');
+		});
+	}
 </script>
 </body>
 </html>

@@ -19,9 +19,6 @@
     <select id="findByFilters" resultMap="BaseResultMap">
         SELECT * FROM t_question
         <where>
-            <if test="teacherId != null">
-                AND teacher_id = #{teacherId}
-            </if>
             <if test="courseId != null">
                 AND course_id = #{courseId}
             </if>
@@ -44,9 +41,6 @@
     <select id="countByFilters" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_question
         <where>
-            <if test="teacherId != null">
-                AND teacher_id = #{teacherId}
-            </if>
             <if test="courseId != null">
                 AND course_id = #{courseId}
             </if>
@@ -65,9 +59,6 @@
     <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
         SELECT * FROM t_question
         <where>
-            <if test="teacherId != null">
-                AND teacher_id = #{teacherId}
-            </if>
             <if test="courseId != null">
                 AND course_id = #{courseId}
             </if>
@@ -96,9 +87,6 @@
     <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_question
         <where>
-            <if test="teacherId != null">
-                AND teacher_id = #{teacherId}
-            </if>
             <if test="courseId != null">
                 AND course_id = #{courseId}
             </if>

@@ -33,9 +33,11 @@ curl -s -X POST 'http://localhost:8080/api/auth/login' \
 # Open http://localhost:8080/login.html
 ```
 
-**Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS frontend.
+**Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS frontend (CDN: `cdn.tailwindcss.com` + `cdn.jsdelivr.net/npm/iconify-icon@2`).
 
 **Default accounts (password: `123456`):** `admin`, `teacher_wang`, `teacher_li`, `stu_zhang`, `stu_liu`, `stu_chen`
+
+> 🔴 **NEVER create test/temporary accounts.** Do not insert test teachers, students, or any other test data into the database. Only the 6 default accounts above should exist. Use these default accounts for all testing and verification.
 
 ## Architecture
 
@@ -64,11 +66,16 @@ resources/
 
 **Course assignment tables** (many-to-many): `t_teacher_course` links teachers to courses they teach; `t_student_course` links students to courses they take. These drive permission filtering: teachers only see/manage their assigned courses, students only practice/take exams for their enrolled courses.
 
+> ⚠️ `schema.sql` only executes on first run (when DataInitializer detects no admin exists). If new tables OR schema changes are needed after the database has been initialized, they must be created manually via MySQL. Example: adding `ON DELETE SET NULL` to foreign keys requires `ALTER TABLE`. Always check if the DB schema matches `schema.sql`.
+
 ## API Pattern
 
 Every response: `{"code":200,"data":{...},"message":"success"}`. Error codes: 400/401/403/500.
 
 Auth: `POST /api/auth/login` with `{role, username, password}` → sets session. All other `/api/**` require login (LoginInterceptor). Role paths (`/api/admin/**`, `/api/teacher/**`, `/api/student/**`) are checked by RoleInterceptor.
+- `PUT /api/auth/change-password` — change own password `{oldPassword, newPassword}` (all roles)
+- `DELETE /api/admin/teachers/{id}` — delete teacher (removes course links; teaching data preserved via ON DELETE SET NULL)
+- `DELETE /api/admin/students/{id}` — delete student (removes course links; practice/exam records preserved via ON DELETE SET NULL)
 
 **Course-aware endpoints:**
 - `GET /api/courses` — all courses (public, used by admin)
@@ -89,6 +96,7 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 4. Gender is `M`/`F` string, NOT `1`/`0`.
 5. Question type, difficulty, and paper status are integers, NOT enum strings.
 6. Every API response is `{code, data, message}`. See Common Bugs section for how to unwrap `data` (it differs by endpoint) and always check `res.code !== 200`.
+7. CDN sources (do NOT change unless broken): `cdn.tailwindcss.com` and `cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js`.
 
 ## ⚠️ HTML Editing — Tag Balancing (CRITICAL)
 
@@ -109,7 +117,9 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 
 These patterns are used across admin AND teacher pages. Keep them consistent.
 
-**User dropdown (all admin + teacher pages):** The top-right header area has a clickable user menu (`id="userMenuTrigger"`) with avatar + name + chevron-down icon, and a dropdown (`id="userDropdown"` with class `user-dropdown`). CSS: `.user-dropdown { display: none; position: absolute; ... }` and `.user-dropdown.show { display: block; }`. JS: click on trigger toggles `.show`; document-level click listener removes it. The logout link (`href="login.html"`) is inside the dropdown. The sidebar logout link has been removed from teacher pages — logout is ONLY through the dropdown.
+**User dropdown (all admin + teacher pages):** The top-right header area has a clickable user menu (`id="userMenuTrigger"`) with avatar + name + chevron-down icon, and a dropdown (`id="userDropdown"` with class `user-dropdown`). CSS: `.user-dropdown { display: none; position: absolute; ... }` and `.user-dropdown.show { display: block; }`. JS: click on trigger toggles `.show`; document-level click listener removes it. On teacher pages, the dropdown contains "设置" → opens settings menu → "修改密码" → opens `id="passwordModal"`. The logout link (`href="login.html"`) is at the bottom of the dropdown.
+
+**Admin teacher/student edit modal:** The edit modal now integrates course assignment (checkboxes) and password reset (button at bottom), replacing the separate "分配课程" and "重置密码" buttons that were previously in the table operations column. Operation column is: 编辑 | 启用/禁用 | 删除.
 
 **Sidebar toggle (admin pages only):** Each admin page has `id="sidebar"` on the sidebar `<div>`, `id="menuToggle"` on the hamburger icon, and CSS `.sidebar.collapsed { display: none; }`. The toggle JS switches the `collapsed` class.
 
@@ -279,6 +289,58 @@ Different endpoints return different `data` shapes:
 
 Always verify: `res.data.list` for paginated endpoints, `res.data` for single-entity and list endpoints.
 
+### 🟡 Frontend: `console.log` Errors — Always Check Browser Console
+
+After every HTML/JS edit, ask yourself: "Will this actually parse?" Use the JS syntax checker:
+```bash
+node -e "const fs=require('fs');const h=fs.readFileSync('file.html','utf-8');const re=/<script[^>]*>([\\s\\S]*?)<\\/script>/g;let m,s=[];while((m=re.exec(h))!==null)s.push(m[1]);const js=s[s.length-1];try{new Function(js);console.log('JS OK')}catch(e){console.log('JS ERROR:',e.message)}"
+```
+A single misplaced `});` or `)` will break ALL JavaScript on the page — all buttons become unresponsive.
+
+### 🟡 Promise Chain Validation — Don't Let `return;` Fall Through
+
+When validating inside a `.then()` and returning early on failure, the promise chain still continues:
+```javascript
+// WRONG — validation fails, returns undefined, next .then() runs with undefined res
+apiGet(...).then(function(paper) {
+    if (invalid) { alert('error'); return; }  // returns undefined → next then
+    return apiPut(...);                         // returns promise
+}).then(function(res) {
+    res.code !== 200  // TypeError if res is undefined from validation failure!
+}).catch(function() { alert('网络错误'); });
+
+// RIGHT — nest the API call's then/catch inside the validation branch
+apiGet(...).then(function(paper) {
+    if (invalid) { alert('error'); return; }
+    return apiPut(...).then(function(res) {
+        // handle success
+    }).catch(function() {
+        // handle error
+    });
+});
+```
+This caused the "保存失败，请检查网络连接" appearing after the score validation alert.
+
+### 🟡 Paper Edit Must Not Clear Existing Questions
+
+The `savePaper()` function edits paper metadata (name, course, duration, score). It must NOT include `questions: []` in the request body — doing so clears all previously assigned questions. Questions are managed separately via `savePaperQuestions()`.
+
+### 🟡 Paper Publish/Recall Needs Visible Feedback
+
+Always show a success `alert()` after publishing or recalling a paper. Silent success leaves the user uncertain. Also enhance the `confirm()` message to explain consequences (e.g., "发布后学生即可参加测验" / "回收后学生将无法继续参加").
+
+### 🟡 Python Script Edits on HTML — Watch for CDN `<script>` Tags
+
+When using Python `str.replace('</script>', ...)` or regex to insert JS, always target the LAST `</script>` (use `content.rfind('</script>')`). Script tags from CDN `<script src="...tailwindcss.js"></script>` also end with `</script>` — replacing the first one injects functions into the CDN script tag where they won't execute. This happened to all 4 teacher pages and required a full rewrite.
+
+### 🟡 Question Options Must Have Content
+
+Single-choice and multi-choice options must have non-empty content. Validate both frontend (in `saveQuestion()`) and backend (in `QuestionServiceImpl.createQuestion/updateQuestion`).
+
+### 🟡 No Unused Mapper Methods
+
+After refactoring, always check for orphaned mapper methods (Java interface + XML). Methods like `deleteByQuestionIds`, `deleteAllByTeacherId`, `deleteByStudentId`, `deleteByExamRecordId` were left behind after changing the delete strategy and caused no issues at compile time but are dead code that misleads future developers.
+
 ## Key Constraints
 
 - **Course assignment is required**: Teachers must be assigned courses via `t_teacher_course` before they can create questions/papers. Students must be enrolled in courses via `t_student_course` before they can practice/take exams.
@@ -291,3 +353,6 @@ Always verify: `res.data.list` for paginated endpoints, `res.data` for single-en
 - Practice returns questions WITHOUT answers (`answer` and `analysis` are null).
 - Auto-grading: single-choice and true/false use exact match; multi-choice sorts both strings before comparing; fill-blank/short-answer return reference answer for self-evaluation.
 - Deleting a course is blocked if it has associated questions or papers.
+- Single-choice and multi-choice questions must have at least 2 options with non-empty content (validated both frontend and backend).
+- **Deleting a teacher/student does NOT cascade**: `t_question.teacher_id`, `t_paper.teacher_id`, `t_practice_record.student_id`, `t_exam_record.student_id` use `ON DELETE SET NULL`. Teaching data is preserved.
+- 🔴 **NEVER create test/temporary accounts.** Only the 6 default accounts should exist. Use them for all testing.

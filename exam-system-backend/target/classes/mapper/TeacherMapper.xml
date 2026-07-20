@@ -48,6 +48,10 @@
         UPDATE t_teacher SET password = #{password} WHERE teacher_id = #{teacherId}
     </update>
 
+    <delete id="deleteById">
+        DELETE FROM t_teacher WHERE teacher_id = #{teacherId}
+    </delete>
+
     <select id="findByKeyword" resultMap="BaseResultMap">
         SELECT * FROM t_teacher
         <where>

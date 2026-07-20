@@ -26,10 +26,18 @@ public class PaperServiceImpl implements PaperService {
     private PaperQuestionMapper paperQuestionMapper;
 
     @Override
-    public PageResult<Paper> listPapers(Long teacherId, Integer status, Long courseId, Integer page, Integer pageSize) {
+    public PageResult<Paper> listPapers(Integer status, Long courseId, Integer page, Integer pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Paper> list = paperMapper.findByFilters(teacherId, status, courseId, offset, pageSize);
-        Long total = paperMapper.countByFilters(teacherId, status, courseId);
+        List<Paper> list = paperMapper.findByFilters(status, courseId, offset, pageSize);
+        Long total = paperMapper.countByFilters(status, courseId);
+        return PageResult.of(total, page, pageSize, list);
+    }
+
+    @Override
+    public PageResult<Paper> listPapers(Integer status, Long courseId, Integer page, Integer pageSize, List<Long> courseIds) {
+        int offset = (page - 1) * pageSize;
+        List<Paper> list = paperMapper.findByFiltersAndCourseIds(status, courseId, offset, pageSize, courseIds);
+        Long total = paperMapper.countByFiltersAndCourseIds(status, courseId, courseIds);
         return PageResult.of(total, page, pageSize, list);
     }
 

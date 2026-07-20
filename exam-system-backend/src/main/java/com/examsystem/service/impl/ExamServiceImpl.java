@@ -49,7 +49,7 @@ public class ExamServiceImpl implements ExamService {
         if (enrolledCourseIds.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Paper> papers = paperMapper.findByFilters(null, 1, null, null, null);
+        List<Paper> papers = paperMapper.findByFilters(1, null, null, null);
         return papers.stream().filter(p -> {
             if (!enrolledCourseIds.contains(p.getCourseId())) {
                 return false;

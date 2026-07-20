@@ -38,4 +38,6 @@ public interface StudentMapper {
                                                                        @Param("limit") Integer limit);
 
     Long countByCourseIds(@Param("keyword") String keyword, @Param("courseIds") List<Long> courseIds);
+
+    int deleteById(@Param("studentId") Long studentId);
 }

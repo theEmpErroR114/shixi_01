@@ -23,4 +23,6 @@ public interface TeacherMapper {
                                 @Param("offset") Integer offset, @Param("limit") Integer limit);
 
     Long countByKeyword(@Param("keyword") String keyword, @Param("status") Integer status);
+
+    int deleteById(@Param("teacherId") Long teacherId);
 }

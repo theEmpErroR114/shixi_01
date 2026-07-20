@@ -72,4 +72,34 @@ public class AuthServiceImpl implements AuthService {
         }
         return new LoginUserVO(student.getStudentId(), student.getUsername(), student.getRealName(), "student");
     }
+
+    @Override
+    public void changePassword(String role, Long userId, String oldPassword, String newPassword) {
+        String encodedNew = PasswordUtil.encode(newPassword);
+        switch (role) {
+            case "admin":
+                Admin admin = adminMapper.selectById(userId);
+                if (admin == null || !PasswordUtil.matches(oldPassword, admin.getPassword())) {
+                    throw new BusinessException("原密码错误");
+                }
+                adminMapper.updatePassword(userId, encodedNew);
+                break;
+            case "teacher":
+                Teacher teacher = teacherMapper.selectById(userId);
+                if (teacher == null || !PasswordUtil.matches(oldPassword, teacher.getPassword())) {
+                    throw new BusinessException("原密码错误");
+                }
+                teacherMapper.updatePassword(userId, encodedNew);
+                break;
+            case "student":
+                Student student = studentMapper.selectById(userId);
+                if (student == null || !PasswordUtil.matches(oldPassword, student.getPassword())) {
+                    throw new BusinessException("原密码错误");
+                }
+                studentMapper.updatePassword(userId, encodedNew);
+                break;
+            default:
+                throw new BusinessException("未知的角色类型");
+        }
+    }
 }

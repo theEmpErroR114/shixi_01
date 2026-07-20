@@ -45,10 +45,14 @@
 <iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
 </div>
 <div class="user-dropdown" id="userDropdown">
+<a href="#" onclick="openSettingsModal(event)">
+<iconify-icon class="mr-2" icon="mdi:cog"></iconify-icon>
+                                    设置
+                                </a>
 <a href="login.html">
 <iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
-退出登录
-</a>
+                                    退出登录
+                                </a>
 </div>
 </div>
 </header>
@@ -65,6 +69,12 @@
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="paperGrid"><div class="text-center text-gray-400 py-12 col-span-full">加载中...</div></div>
 </main>
+
+
+
+
+
+
 </div>
 <!-- 创建试卷模态框 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="paperModal">
@@ -151,6 +161,58 @@
 </div>
 
 
+<!-- 设置菜单 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="settingsModal">
+<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-xs overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<h3 class="text-lg font-bold text-gray-800">设置</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeSettingsModal()">
+<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+<div class="p-2">
+<a href="#" onclick="openPasswordModal(event)" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+<iconify-icon class="mr-3 text-lg text-gray-400" icon="mdi:lock-reset"></iconify-icon>
+修改密码
+<iconify-icon class="ml-auto text-gray-300" icon="mdi:chevron-right"></iconify-icon>
+</a>
+</div>
+</div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="passwordModal">
+<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<h3 class="text-lg font-bold text-gray-800">修改密码</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closePasswordModal()">
+<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+<div class="p-6">
+<form class="space-y-4" id="settingsForm" onsubmit="savePassword(event)">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">原密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_oldPassword" type="password" required/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">新密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_newPassword" type="password" required minlength="4"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">确认新密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_confirmPassword" type="password" required/>
+</div>
+<div class="pt-4 flex justify-end space-x-3">
+<button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closePasswordModal()" type="button">取消</button>
+<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" type="submit">确认修改</button>
+</div>
+</form>
+</div>
+</div>
+</div>
 <script>
     var API_BASE = '/api';
     var currentStatus = '';
@@ -361,7 +423,7 @@
             var paper = res.data || res;
             if (questionTotal > (paper.totalScore || 100)) {
                 alert('题目分值合计 ' + questionTotal + ' 分，超过试卷总分 ' + (paper.totalScore || 100) + ' 分，请调整！');
-                return;
+                return; // 跳过保存，不执行后续 then
             }
             return apiPut('/teacher/papers/' + qePaperId, {
                 paperName: paper.paperName,
@@ -369,17 +431,17 @@
                 duration: paper.duration,
                 totalScore: paper.totalScore,
                 questions: questions
+            }).then(function(res) {
+                if (res.code !== 200) {
+                    alert('保存失败：' + (res.message || '未知错误'));
+                    return;
+                }
+                closeQuestionEditor();
+                alert('组卷成功！');
+                loadPapers();
+            }).catch(function() {
+                alert('保存失败，请检查网络连接');
             });
-        }).then(function(res) {
-            if (res.code !== 200) {
-                alert('保存失败：' + (res.message || '未知错误'));
-                return;
-            }
-            closeQuestionEditor();
-            alert('组卷成功！');
-            loadPapers();
-        }).catch(function() {
-            alert('保存失败，请检查网络连接');
         });
     }
 
@@ -500,8 +562,7 @@
             paperName: name,
             courseId: parseInt(courseId),
             duration: duration,
-            totalScore: totalScore,
-            questions: []
+            totalScore: totalScore
         };
 
         var promise;
@@ -539,13 +600,19 @@
                 alert('题目分值合计 ' + questionTotal + ' 分，试卷总分 ' + totalScore + ' 分，分值不匹配，无法发布！');
                 return;
             }
-            if (!confirm('确定要发布该试卷吗？')) return;
-            apiPut('/teacher/papers/' + id + '/publish').then(function() { loadPapers(); }).catch(function() { alert('发布失败'); });
+            if (!confirm('确定要发布该试卷吗？发布后学生即可参加测验。')) return;
+            apiPut('/teacher/papers/' + id + '/publish').then(function() {
+                alert('试卷发布成功！学生现在可以参加该测验。');
+                loadPapers();
+            }).catch(function() { alert('发布失败'); });
         }).catch(function() { alert('获取试卷信息失败'); });
     }
     function recallPaper(id) {
-        if (!confirm('确定要回收该试卷吗？')) return;
-        apiPut('/teacher/papers/' + id + '/recall').then(function() { loadPapers(); }).catch(function() { alert('回收失败'); });
+        if (!confirm('确定要回收该试卷吗？回收后学生将无法继续参加该测验。')) return;
+        apiPut('/teacher/papers/' + id + '/recall').then(function() {
+            alert('试卷已回收。');
+            loadPapers();
+        }).catch(function() { alert('回收失败'); });
     }
     function deletePaper(id) {
         if (!confirm('确定要删除该试卷吗？')) return;
@@ -576,6 +643,46 @@
     document.addEventListener('click', function() {
         userDropdown.classList.remove('show');
     });
+
+    // 设置菜单
+    function openSettingsModal(event) {
+        if (event) event.preventDefault();
+        document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    }
+    // 修改密码
+    function openPasswordModal(event) {
+        if (event) event.preventDefault();
+        closeSettingsModal();
+        document.getElementById('passwordModal').classList.remove('hidden');
+    }
+    function closePasswordModal() {
+        document.getElementById('passwordModal').classList.add('hidden');
+        document.getElementById('settingsForm').reset();
+    }
+    function savePassword(event) {
+        event.preventDefault();
+        var oldPwd = document.getElementById('sp_oldPassword').value.trim();
+        var newPwd = document.getElementById('sp_newPassword').value.trim();
+        var confirmPwd = document.getElementById('sp_confirmPassword').value.trim();
+        if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
+        if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
+        if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+        fetch(API_BASE + '/auth/change-password', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
+        }).then(function(res) { return res.json(); }).then(function(res) {
+            if (res.code !== 200) { alert('修改失败：' + (res.message || '未知错误')); return; }
+            alert('密码修改成功，请重新登录');
+            window.location.href = 'login.html';
+        }).catch(function() { alert('修改失败，请稍后重试'); });
+        return false;
+    }
+
 </script>
 </body>
 </html>

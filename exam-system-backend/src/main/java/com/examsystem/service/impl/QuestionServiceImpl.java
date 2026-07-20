@@ -4,6 +4,7 @@ import com.examsystem.dto.PageResult;
 import com.examsystem.dto.QuestionDTO;
 import com.examsystem.entity.Question;
 import com.examsystem.entity.QuestionOption;
+import com.examsystem.exception.BusinessException;
 import com.examsystem.mapper.QuestionMapper;
 import com.examsystem.mapper.QuestionOptionMapper;
 import com.examsystem.service.QuestionService;
@@ -24,18 +25,18 @@ public class QuestionServiceImpl implements QuestionService {
     private QuestionOptionMapper questionOptionMapper;
 
     @Override
-    public PageResult<Question> listQuestions(Long teacherId, Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize) {
+    public PageResult<Question> listQuestions(Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Question> list = questionMapper.findByFilters(teacherId, courseId, questionType, difficulty, keyword, offset, pageSize);
-        Long total = questionMapper.countByFilters(teacherId, courseId, questionType, difficulty, keyword);
+        List<Question> list = questionMapper.findByFilters(courseId, questionType, difficulty, keyword, offset, pageSize);
+        Long total = questionMapper.countByFilters(courseId, questionType, difficulty, keyword);
         return PageResult.of(total, page, pageSize, list);
     }
 
     @Override
-    public PageResult<Question> listQuestions(Long teacherId, Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize, List<Long> courseIds) {
+    public PageResult<Question> listQuestions(Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize, List<Long> courseIds) {
         int offset = (page - 1) * pageSize;
-        List<Question> list = questionMapper.findByFiltersAndCourseIds(teacherId, courseId, questionType, difficulty, keyword, offset, pageSize, courseIds);
-        Long total = questionMapper.countByFiltersAndCourseIds(teacherId, courseId, questionType, difficulty, keyword, courseIds);
+        List<Question> list = questionMapper.findByFiltersAndCourseIds(courseId, questionType, difficulty, keyword, offset, pageSize, courseIds);
+        Long total = questionMapper.countByFiltersAndCourseIds(courseId, questionType, difficulty, keyword, courseIds);
         return PageResult.of(total, page, pageSize, list);
     }
 
@@ -63,6 +64,17 @@ public class QuestionServiceImpl implements QuestionService {
         question.setCreateTime(LocalDateTime.now());
         questionMapper.insert(question);
 
+        // 单选/多选必须至少有两个选项，且选项内容不能为空
+        if (dto.getQuestionType() == 1 || dto.getQuestionType() == 2) {
+            if (dto.getOptions() == null || dto.getOptions().size() < 2) {
+                throw new BusinessException("单选题和多选题至少需要两个选项");
+            }
+            for (com.examsystem.entity.QuestionOption opt : dto.getOptions()) {
+                if (opt.getOptionContent() == null || opt.getOptionContent().trim().isEmpty()) {
+                    throw new BusinessException("选项内容不能为空");
+                }
+            }
+        }
         if (dto.getOptions() != null && !dto.getOptions().isEmpty()) {
             for (QuestionOption option : dto.getOptions()) {
                 option.setQuestionId(question.getQuestionId());
@@ -74,6 +86,17 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void updateQuestion(Long questionId, QuestionDTO dto) {
+        // 单选/多选必须至少有两个选项，且选项内容不能为空
+        if (dto.getQuestionType() == 1 || dto.getQuestionType() == 2) {
+            if (dto.getOptions() == null || dto.getOptions().size() < 2) {
+                throw new BusinessException("单选题和多选题至少需要两个选项");
+            }
+            for (com.examsystem.entity.QuestionOption opt : dto.getOptions()) {
+                if (opt.getOptionContent() == null || opt.getOptionContent().trim().isEmpty()) {
+                    throw new BusinessException("选项内容不能为空");
+                }
+            }
+        }
         Question question = new Question();
         question.setQuestionId(questionId);
         question.setCourseId(dto.getCourseId());

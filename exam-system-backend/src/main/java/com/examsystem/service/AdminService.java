@@ -19,6 +19,7 @@ public interface AdminService {
     void updateTeacher(Teacher teacher);
     void updateTeacherStatus(Long teacherId, Integer status);
     void resetTeacherPassword(Long teacherId);
+    void deleteTeacher(Long teacherId);
 
     // Student management
     List<Student> listStudents(String keyword, String className, Integer status, Integer page, Integer pageSize);
@@ -28,6 +29,7 @@ public interface AdminService {
     void updateStudent(Student student);
     void updateStudentStatus(Long studentId, Integer status);
     void resetStudentPassword(Long studentId);
+    void deleteStudent(Long studentId);
 
     // Course management
     List<Course> listCourses(String keyword, Integer page, Integer pageSize);

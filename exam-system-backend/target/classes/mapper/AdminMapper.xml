@@ -35,4 +35,8 @@
         WHERE admin_id = #{adminId}
     </update>
 
+    <update id="updatePassword">
+        UPDATE t_admin SET password = #{password} WHERE admin_id = #{adminId}
+    </update>
+
 </mapper>

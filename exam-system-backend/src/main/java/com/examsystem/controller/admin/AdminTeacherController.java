@@ -73,4 +73,10 @@ public class AdminTeacherController {
         adminService.assignCoursesToTeacher(id, body.get("courseIds"));
         return Result.success();
     }
+
+    @DeleteMapping("/{id}")
+    public Result<?> delete(@PathVariable Long id) {
+        adminService.deleteTeacher(id);
+        return Result.success();
+    }
 }

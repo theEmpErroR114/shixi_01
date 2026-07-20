@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -44,5 +46,21 @@ public class AuthController {
         user.setRealName((String) session.getAttribute(SessionUtil.SESSION_USER_NAME));
         user.setUsername((String) session.getAttribute(SessionUtil.SESSION_USERNAME));
         return Result.success(user);
+    }
+
+    @PutMapping("/change-password")
+    public Result<?> changePassword(@RequestBody Map<String, String> body, HttpSession session) {
+        String role = (String) session.getAttribute(SessionUtil.SESSION_USER_ROLE);
+        Long userId = (Long) session.getAttribute(SessionUtil.SESSION_USER_ID);
+        String oldPassword = body.get("oldPassword");
+        String newPassword = body.get("newPassword");
+        if (oldPassword == null || newPassword == null || oldPassword.isEmpty() || newPassword.isEmpty()) {
+            return Result.error(400, "密码不能为空");
+        }
+        if (newPassword.length() < 4) {
+            return Result.error(400, "新密码长度至少4位");
+        }
+        authService.changePassword(role, userId, oldPassword, newPassword);
+        return Result.success();
     }
 }

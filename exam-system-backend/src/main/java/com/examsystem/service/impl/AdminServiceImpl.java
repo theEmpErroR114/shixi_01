@@ -95,6 +95,15 @@ public class AdminServiceImpl implements AdminService {
         teacherMapper.updatePassword(teacherId, PasswordUtil.encode(DEFAULT_PASSWORD));
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteTeacher(Long teacherId) {
+        // 清理教师-课程关联
+        teacherCourseMapper.deleteByTeacherId(teacherId);
+        // 删除教师（题目和试卷的 teacher_id 会由数据库 ON DELETE SET NULL 自动置空）
+        teacherMapper.deleteById(teacherId);
+    }
+
     // === Student Management ===
 
     @Override
@@ -140,6 +149,15 @@ public class AdminServiceImpl implements AdminService {
         studentMapper.updatePassword(studentId, PasswordUtil.encode(DEFAULT_PASSWORD));
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteStudent(Long studentId) {
+        // 清理学生-课程关联
+        studentCourseMapper.deleteByStudentId(studentId);
+        // 删除学生（练习记录和考试记录的 student_id 会由数据库 ON DELETE SET NULL 自动置空）
+        studentMapper.deleteById(studentId);
+    }
+
     // === Course Management ===
 
     @Override
@@ -171,11 +189,11 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void deleteCourse(Long courseId) {
-        Long questionCount = questionMapper.countByFilters(null, courseId, null, null, null);
+        Long questionCount = questionMapper.countByFilters(courseId, null, null, null);
         if (questionCount > 0) {
             throw new BusinessException("该课程下还有 " + questionCount + " 道题目，无法删除");
         }
-        Long paperCount = paperMapper.countByFilters(null, null, courseId);
+        Long paperCount = paperMapper.countByFilters(null, courseId);
         if (paperCount > 0) {
             throw new BusinessException("该课程下还有 " + paperCount + " 份试卷，无法删除");
         }

@@ -7,12 +7,19 @@ import java.util.List;
 
 public interface PaperMapper {
 
-    List<Paper> findByFilters(@Param("teacherId") Long teacherId, @Param("status") Integer status,
+    List<Paper> findByFilters(@Param("status") Integer status,
                               @Param("courseId") Long courseId, @Param("offset") Integer offset,
                               @Param("limit") Integer limit);
 
-    Long countByFilters(@Param("teacherId") Long teacherId, @Param("status") Integer status,
+    Long countByFilters(@Param("status") Integer status,
                         @Param("courseId") Long courseId);
+
+    List<Paper> findByFiltersAndCourseIds(@Param("status") Integer status,
+                                          @Param("courseId") Long courseId, @Param("offset") Integer offset,
+                                          @Param("limit") Integer limit, @Param("courseIds") List<Long> courseIds);
+
+    Long countByFiltersAndCourseIds(@Param("status") Integer status,
+                                     @Param("courseId") Long courseId, @Param("courseIds") List<Long> courseIds);
 
     Paper selectById(@Param("paperId") Long paperId);
 

@@ -42,7 +42,7 @@ public class TeacherQuestionController {
                 return Result.success(PageResult.of(0L, page, pageSize, java.util.Collections.emptyList()));
             }
         }
-        return Result.success(questionService.listQuestions(teacherId, courseId, questionType, difficulty, keyword, page, pageSize, courseIds));
+        return Result.success(questionService.listQuestions(courseId, questionType, difficulty, keyword, page, pageSize, courseIds));
     }
 
     @GetMapping("/{id}")

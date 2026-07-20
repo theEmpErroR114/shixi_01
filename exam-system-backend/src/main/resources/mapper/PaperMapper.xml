@@ -21,9 +21,6 @@
         LEFT JOIN t_course c ON p.course_id = c.course_id
         LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
         <where>
-            <if test="teacherId != null">
-                AND p.teacher_id = #{teacherId}
-            </if>
             <if test="status != null">
                 AND p.status = #{status}
             </if>
@@ -40,14 +37,54 @@
     <select id="countByFilters" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_paper p
         <where>
-            <if test="teacherId != null">
-                AND p.teacher_id = #{teacherId}
-            </if>
             <if test="status != null">
                 AND p.status = #{status}
             </if>
             <if test="courseId != null">
                 AND p.course_id = #{courseId}
+            </if>
+        </where>
+    </select>
+
+    <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND p.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_paper p
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND p.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
             </if>
         </where>
     </select>

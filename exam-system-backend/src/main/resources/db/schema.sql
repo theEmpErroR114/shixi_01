@@ -70,10 +70,9 @@ CREATE TABLE IF NOT EXISTS t_question (
     answer        VARCHAR(255) COMMENT '参考答案',
     analysis      TEXT        COMMENT '答案解析',
     difficulty    TINYINT DEFAULT 1 COMMENT '难度：1易 2中 3难',
-    teacher_id    BIGINT      COMMENT '出题老师ID',
+    teacher_id    BIGINT      NULL COMMENT '出题老师ID（仅展示，不作为权限过滤）',
     create_time   DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    CONSTRAINT fk_question_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id),
-    CONSTRAINT fk_question_teacher FOREIGN KEY (teacher_id) REFERENCES t_teacher (teacher_id)
+    CONSTRAINT fk_question_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='习题表';
 
 -- 6. 习题选项表
@@ -91,13 +90,12 @@ CREATE TABLE IF NOT EXISTS t_paper (
     paper_id    BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '试卷ID',
     paper_name  VARCHAR(100) NOT NULL COMMENT '试卷名称',
     course_id   BIGINT       NOT NULL COMMENT '所属课程ID',
-    teacher_id  BIGINT       NOT NULL COMMENT '组卷老师ID',
+    teacher_id  BIGINT       NULL COMMENT '组卷老师ID（仅展示，不作为权限过滤）',
     total_score INT DEFAULT 100 COMMENT '试卷总分',
     duration    INT DEFAULT 60 COMMENT '考试时长（分钟）',
     status      TINYINT DEFAULT 0 COMMENT '状态：0未发布 1已发布 2已回收',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    CONSTRAINT fk_paper_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id),
-    CONSTRAINT fk_paper_teacher FOREIGN KEY (teacher_id) REFERENCES t_teacher (teacher_id)
+    CONSTRAINT fk_paper_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试卷表';
 
 -- 8. 试卷-习题关联表
@@ -116,25 +114,25 @@ CREATE TABLE IF NOT EXISTS t_paper_question (
 -- 9. 学生练习记录表
 CREATE TABLE IF NOT EXISTS t_practice_record (
     record_id      BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '记录ID',
-    student_id     BIGINT NOT NULL COMMENT '学生ID',
+    student_id     BIGINT NULL COMMENT '学生ID',
     question_id    BIGINT NOT NULL COMMENT '习题ID',
     student_answer VARCHAR(255) COMMENT '学生作答内容',
     is_correct     TINYINT COMMENT '是否正确：1正确 0错误',
     practice_time  DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '练习时间',
-    CONSTRAINT fk_practice_student  FOREIGN KEY (student_id)  REFERENCES t_student (student_id),
+    CONSTRAINT fk_practice_student  FOREIGN KEY (student_id)  REFERENCES t_student (student_id) ON DELETE SET NULL,
     CONSTRAINT fk_practice_question FOREIGN KEY (question_id) REFERENCES t_question (question_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生练习记录表';
 
 -- 10. 学生测验记录表（主表）
 CREATE TABLE IF NOT EXISTS t_exam_record (
     exam_record_id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '测验记录ID',
-    student_id     BIGINT NOT NULL COMMENT '学生ID',
+    student_id     BIGINT NULL COMMENT '学生ID',
     paper_id       BIGINT NOT NULL COMMENT '试卷ID',
     total_score    DECIMAL(5,1) COMMENT '本次测验实际得分',
     start_time     DATETIME COMMENT '开始时间',
     submit_time    DATETIME COMMENT '交卷时间',
     status         TINYINT DEFAULT 0 COMMENT '状态：0进行中 1已交卷',
-    CONSTRAINT fk_exam_student FOREIGN KEY (student_id) REFERENCES t_student (student_id),
+    CONSTRAINT fk_exam_student FOREIGN KEY (student_id) REFERENCES t_student (student_id) ON DELETE SET NULL,
     CONSTRAINT fk_exam_paper   FOREIGN KEY (paper_id)   REFERENCES t_paper (paper_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生测验记录表（主表）';
 
