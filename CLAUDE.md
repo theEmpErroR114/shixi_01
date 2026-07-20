@@ -46,7 +46,7 @@ build-and-run.bat
 stop.bat
 
 :: 或手动执行：
-::   构建：  mvnw clean package -DskipTests
+::   构建：  mvn clean package -DskipTests
 ::   启动：  start java -jar target\exam-system-backend-1.0.0.jar
 ::   停止：  netstat -ano | findstr ":8080"  然后  taskkill /F /PID <PID>
 ```
@@ -56,8 +56,6 @@ stop.bat
 **Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS + Iconify Icon frontend.
 
 **Frontend CDN:** `cdn.tailwindcss.com` (Tailwind CSS via CDN). Iconify Icon is **self-hosted** (`iconify-icon.min.js` in `static/`) because `cdn.jsdelivr.net` is blocked in China.
-
-> 🔴 **Windows team members**: If Maven can't resolve `mybatis-spring-boot-starter:4.0.1` or other recent dependencies, copy `maven-settings-template.xml` to `%USERPROFILE%\.m2\settings.xml`. The Aliyun mirror commonly used in China may not have cached the latest versions. Also ensure JDK 26 is installed.
 
 **Default accounts (password: `123456`):** `admin`, `teacher_wang`, `teacher_li`, `stu_zhang`, `stu_liu`, `stu_chen`
 
