@@ -35,6 +35,8 @@ curl -s -X POST 'http://localhost:8080/api/auth/login' \
 
 **Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS frontend (CDN: `cdn.tailwindcss.com` + `cdn.jsdelivr.net/npm/iconify-icon@2`).
 
+> 🔴 **Windows team members**: If Maven can't resolve `mybatis-spring-boot-starter:4.0.1` or other recent dependencies, copy `maven-settings-template.xml` to `%USERPROFILE%\.m2\settings.xml`. The Aliyun mirror commonly used in China may not have cached the latest versions. Also ensure JDK 26 is installed.
+
 **Default accounts (password: `123456`):** `admin`, `teacher_wang`, `teacher_li`, `stu_zhang`, `stu_liu`, `stu_chen`
 
 > 🔴 **NEVER create test/temporary accounts.** Do not insert test teachers, students, or any other test data into the database. Only the 6 default accounts above should exist. Use these default accounts for all testing and verification.
@@ -62,11 +64,13 @@ resources/
 
 ## Database
 
-13 tables: `t_admin`, `t_teacher`, `t_student`, `t_course`, `t_question`, `t_question_option`, `t_paper`, `t_paper_question`, `t_practice_record`, `t_exam_record`, `t_exam_answer`, `t_teacher_course`, `t_student_course`. Full DDL + seed data in `02_数据库设计.md` and `resources/db/schema.sql`. All PKs use BIGINT AUTO_INCREMENT. FK relationships documented in the design doc. Seed data is inserted by `DataInitializer.java` on first run (checks if admin exists).
+13 tables: `t_admin`, `t_teacher`, `t_student`, `t_course`, `t_question`, `t_question_option`, `t_paper`, `t_paper_question`, `t_practice_record`, `t_exam_record`, `t_exam_answer`, `t_teacher_course`, `t_student_course`. Full DDL + seed data in `02_数据库设计.md` and `resources/db/schema.sql`. All PKs use BIGINT AUTO_INCREMENT. Seed data is inserted by `DataInitializer.java` on first run (checks if admin exists).
 
 **Course assignment tables** (many-to-many): `t_teacher_course` links teachers to courses they teach; `t_student_course` links students to courses they take. These drive permission filtering: teachers only see/manage their assigned courses, students only practice/take exams for their enrolled courses.
 
-> ⚠️ `schema.sql` only executes on first run (when DataInitializer detects no admin exists). If new tables OR schema changes are needed after the database has been initialized, they must be created manually via MySQL. Example: adding `ON DELETE SET NULL` to foreign keys requires `ALTER TABLE`. Always check if the DB schema matches `schema.sql`.
+**Questions and papers are course-bound, not teacher-bound.** `t_question.teacher_id` and `t_paper.teacher_id` are display-only fields (recording who created the content) with NO foreign key constraint. All query filtering is done by `course_id` + `t_teacher_course`, not by `teacher_id`. Deleting a teacher does NOT affect their questions/papers.
+
+> ⚠️ `schema.sql` only executes on first run (when DataInitializer detects no admin exists). Any schema changes needed after the database has been initialized require manual `ALTER TABLE` statements. Always check if the DB schema matches `schema.sql`.
 
 ## API Pattern
 
@@ -74,8 +78,8 @@ Every response: `{"code":200,"data":{...},"message":"success"}`. Error codes: 40
 
 Auth: `POST /api/auth/login` with `{role, username, password}` → sets session. All other `/api/**` require login (LoginInterceptor). Role paths (`/api/admin/**`, `/api/teacher/**`, `/api/student/**`) are checked by RoleInterceptor.
 - `PUT /api/auth/change-password` — change own password `{oldPassword, newPassword}` (all roles)
-- `DELETE /api/admin/teachers/{id}` — delete teacher (removes course links; teaching data preserved via ON DELETE SET NULL)
-- `DELETE /api/admin/students/{id}` — delete student (removes course links; practice/exam records preserved via ON DELETE SET NULL)
+- `DELETE /api/admin/teachers/{id}` — delete teacher (removes course links; questions and papers preserved — `teacher_id` has no FK constraint)
+- `DELETE /api/admin/students/{id}` — delete student (removes course links; practice/exam records preserved — `student_id` has no FK constraint)
 
 **Course-aware endpoints:**
 - `GET /api/courses` — all courses (public, used by admin)
@@ -85,6 +89,8 @@ Auth: `POST /api/auth/login` with `{role, username, password}` → sets session.
 - `PUT /api/admin/teachers/{id}/courses` — assign courses to teacher `{courseIds: [1,2]}`
 - `GET /api/admin/students/{id}/courses` — get student's enrolled courses
 - `PUT /api/admin/students/{id}/courses` — assign courses to student `{courseIds: [1,2]}`
+- `GET /api/admin/courses/{courseId}/questions` — admin: list questions in a course (supports type/difficulty/keyword/pagination)
+- `GET /api/admin/courses/{courseId}/papers` — admin: list papers in a course (supports status/pagination)
 
 Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 0=未发布, 1=已发布, 2=已回收. Difficulty: 1=易, 2=中, 3=难. Gender: `M`/`F`.
 
@@ -354,5 +360,6 @@ After refactoring, always check for orphaned mapper methods (Java interface + XM
 - Auto-grading: single-choice and true/false use exact match; multi-choice sorts both strings before comparing; fill-blank/short-answer return reference answer for self-evaluation.
 - Deleting a course is blocked if it has associated questions or papers.
 - Single-choice and multi-choice questions must have at least 2 options with non-empty content (validated both frontend and backend).
-- **Deleting a teacher/student does NOT cascade**: `t_question.teacher_id`, `t_paper.teacher_id`, `t_practice_record.student_id`, `t_exam_record.student_id` use `ON DELETE SET NULL`. Teaching data is preserved.
+- **Deleting a teacher does NOT affect questions/papers**: `teacher_id` has no FK constraint — it's a plain display-only field. Questions/papers remain accessible to other teachers of the same course via `course_id` + `t_teacher_course`.
+- **Deleting a student preserves records**: `t_practice_record.student_id` and `t_exam_record.student_id` are plain fields with no FK constraint. Practice and exam records are preserved.
 - 🔴 **NEVER create test/temporary accounts.** Only the 6 default accounts should exist. Use them for all testing.
