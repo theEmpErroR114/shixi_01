@@ -367,6 +367,127 @@ Single-choice and multi-choice options must have non-empty content. Validate bot
 
 After refactoring, always check for orphaned mapper methods (Java interface + XML). Methods like `deleteByQuestionIds`, `deleteAllByTeacherId`, `deleteByStudentId`, `deleteByExamRecordId` were left behind after changing the delete strategy and caused no issues at compile time but are dead code that misleads future developers.
 
+### 🔴 CRITICAL: Delete Question — Must Delete FK References First
+
+`t_question` is referenced by FOREIGN KEY from **4 tables**: `t_paper_question`, `t_practice_record`, `t_exam_answer`, `t_question_option`. Before deleting a question, you MUST delete rows from ALL these tables in the correct order, or MySQL will reject the DELETE with a FK constraint error:
+
+```java
+// Correct order in QuestionServiceImpl.deleteQuestion():
+paperQuestionMapper.deleteByQuestionId(questionId);   // 1. 试卷关联
+practiceRecordMapper.deleteByQuestionId(questionId);   // 2. 练习记录
+examAnswerMapper.deleteByQuestionId(questionId);       // 3. 考试答案
+questionOptionMapper.deleteByQuestionId(questionId);   // 4. 选项
+questionMapper.deleteById(questionId);                 // 5. 题目本身
+```
+
+Each of these requires a mapper interface method + XML `<delete>` statement. Also, **frontend `deleteQuestion()` must check `res.code` and show feedback** — without it, FK errors are silently ignored and the question appears to not be deleted.
+
+### 🔴 CRITICAL: Frontend Field Names Must Match Backend JSON Exactly
+
+Backend entity fields use camelCase. For `QuestionOption`: the JSON fields are `optionLabel` and `optionContent`. The frontend must read these exact names:
+
+```javascript
+// WRONG — these will always be undefined, option content will be blank
+var label = opt.label;
+var content = opt.content;
+
+// RIGHT — match the backend entity field names
+var label = opt.optionLabel;
+var content = opt.optionContent;
+```
+
+This bug caused ALL option content to render as empty strings across the student practice page.
+
+### 🔴 CRITICAL: Boolean Fields — Jackson Serializes `Boolean isCorrect` as `isCorrect`
+
+Lombok generates `getIsCorrect()` for `Boolean isCorrect`. Jackson preserves the "is" prefix, producing `{"isCorrect": true}` not `{"correct": true}`. Frontend must read BOTH:
+
+```javascript
+// Check both — backend may send either depending on the DTO
+var isCorrect = result.isCorrect || result.correct;
+```
+
+This affected `finishPractice()` and `reviewWrongQuestions()` — `result.correct` was undefined, causing correctCount to always be 0.
+
+### 🔴 CRITICAL: True/False Questions — Auto-Generate Default Options
+
+True/false questions (type=3) typically have NO options stored in `t_question_option`. The practice service (`PracticeServiceImpl.generatePractice()`) must auto-generate two default options when the DB returns empty:
+
+```java
+// In generatePractice(), after loading options:
+if ((options == null || options.isEmpty()) && q.getQuestionType() == 3) {
+    options = new ArrayList<>();
+    // optionLabel "A"/"B", optionContent "对"/"错"
+    // Content must match what teacher form stores: 对/错 NOT 正确/错误
+}
+```
+
+Also, when submitting a true/false answer, send the **optionContent** ("对"/"错") not optionLabel ("A"/"B"), because the DB answer field stores "对"/"错".
+
+### 🔴 CRITICAL: Multi-Choice Must Have ≥2 Correct Options
+
+Validate in both frontend AND backend that type=2 questions have at least 2 options marked as correct:
+
+```javascript
+// Frontend (teacher_questions.html saveQuestion)
+if (questionType == 2 && correctLabels.length < 2) {
+    alert('多选题必须至少选择两个正确答案'); return;
+}
+```
+```java
+// Backend (QuestionServiceImpl.createQuestion/updateQuestion)
+if (dto.getQuestionType() == 2) {
+    long correctCount = dto.getOptions().stream()
+        .filter(opt -> opt.getIsCorrect() != null && opt.getIsCorrect() == 1).count();
+    if (correctCount < 2) throw new BusinessException("多选题必须至少选择两个正确答案");
+}
+```
+
+### 🟡 Student Practice — Text Input Required for Fill-Blank / Short-Answer
+
+Question types 4 (fill-blank) and 5 (short-answer) have NO options in the database. `renderQuestion()` must render a `<textarea>` for these types, not just option buttons. Without this, the student sees the question but has no way to input an answer.
+
+### 🟡 Student Practice — Confirm-Then-Next Answer Flow
+
+The practice page must follow a **two-step per-question** flow, not immediate submission:
+
+1. Student selects/types answer → bottom button shows **"确认答案"**
+2. Student clicks "确认答案" → answer submitted to backend → feedback displayed (✓/✗, correct answer, analysis) → bottom button changes to **"下一题"** (or "完成练习" for last question)
+3. Student clicks "下一题" → navigate to next question
+
+Bottom button state machine:
+```
+未确认 → [上一题] [确认答案]
+已确认 → [上一题] [下一题]  or  [上一题] [完成练习]
+```
+
+**Never** immediately submit on option click. Options/input should be `disabled` after confirmation.
+
+### 🟡 Student Practice — Multi-Choice Toggle Behavior
+
+Multi-choice (type=2) options must toggle on/off independently (not single-select). Store comma-separated labels in `answers[index]` (e.g., `"A,C"`). Sort before submitting to match backend's `sortChars()` comparison. Require ≥2 before confirming.
+
+### 🟡 Student Practice — Review Mode (查看错题解析)
+
+When entering review mode from results page:
+- **Do NOT call `startTimer()`** — this makes it feel like re-taking the test
+- Show "复习模式" label instead of timer
+- Answer card: 🟢 green = correct, 🔴 red = wrong, ⬜ gray = unanswered
+- Each question shows: student answer, correct answer, analysis
+- All answer inputs/buttons are disabled (read-only)
+- Bottom button becomes "返回结果" to go back to results page
+- `renderAnswerCard()` must use `answerResults[i].isCorrect || answerResults[i].correct` for color coding
+
+### 🟡 Async API + Button State — Always Re-enable After Response
+
+When a button triggers an async API call and is disabled to prevent double-clicks, the `renderQuestion()` that runs after the response MUST explicitly set `disabled = false`. Forgetting this leaves the button visually normal but unclickable — user sees "下一题" but clicking does nothing:
+
+```javascript
+// In renderQuestion(), always re-enable the button:
+var nextBtn = document.getElementById('nextBtn');
+nextBtn.disabled = false;  // ← REQUIRED, otherwise button stays disabled from "提交中..." state
+```
+
 ## Key Constraints
 
 - **Course assignment is required**: Teachers must be assigned courses via `t_teacher_course` before they can create questions/papers. Students must be enrolled in courses via `t_student_course` before they can practice/take exams.
@@ -380,6 +501,10 @@ After refactoring, always check for orphaned mapper methods (Java interface + XM
 - Auto-grading: single-choice and true/false use exact match; multi-choice sorts both strings before comparing; fill-blank/short-answer return reference answer for self-evaluation.
 - Deleting a course is blocked if it has associated questions or papers.
 - Single-choice and multi-choice questions must have at least 2 options with non-empty content (validated both frontend and backend).
+- **Multi-choice questions (type=2) must have at least 2 correct options** (validated both frontend and backend).
+- **Deleting a question requires deleting FK-referenced rows first**: `t_paper_question` → `t_practice_record` → `t_exam_answer` → `t_question_option` → `t_question`. Must add `deleteByQuestionId` to all relevant mappers.
+- **True/false questions (type=3) may have no options in DB**. Practice service must auto-generate default options with content "对"/"错" (matching the teacher form dropdown values, NOT "正确"/"错误").
+- **Student practice flow is confirm-then-next**: select answer → "确认答案" → see feedback → "下一题". Never submit immediately on option click.
 - **Deleting a teacher does NOT affect questions/papers**: `teacher_id` has no FK constraint — it's a plain display-only field. Questions/papers remain accessible to other teachers of the same course via `course_id` + `t_teacher_course`.
 - **Deleting a student preserves records**: `t_practice_record.student_id` and `t_exam_record.student_id` are plain fields with no FK constraint. Practice and exam records are preserved.
 - 🔴 **NEVER create test/temporary accounts.** Only the 6 default accounts should exist. Use them for all testing.

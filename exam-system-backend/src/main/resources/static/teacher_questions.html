@@ -601,6 +601,10 @@
                 alert('请勾选正确答案');
                 return;
             }
+            if (questionType == 2 && correctLabels.length < 2) {
+                alert('多选题必须至少选择两个正确答案');
+                return;
+            }
             body.answer = correctLabels.join(',');
         }
 
@@ -672,12 +676,17 @@
     }
 
     function deleteQuestion(id) {
-        if (!confirm('确定要删除该题目吗？')) return;
+        if (!confirm('确定要删除该题目吗？此操作不可恢复。')) return;
         apiDelete('/teacher/questions/' + id).then(function(res) {
+            if (res.code !== 200) {
+                alert('删除失败：' + (res.message || '未知错误'));
+                return;
+            }
+            alert('删除成功');
             loadQuestions();
         }).catch(function(err) {
             console.error('Delete failed:', err);
-            alert('删除失败');
+            alert('删除失败，请检查网络连接');
         });
     }
 

@@ -35,6 +35,10 @@
         </if>
     </select>
 
+    <delete id="deleteByQuestionId">
+        DELETE FROM t_practice_record WHERE question_id = #{questionId}
+    </delete>
+
     <select id="countByStudentId" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_practice_record pr
         LEFT JOIN t_question q ON pr.question_id = q.question_id

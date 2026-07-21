@@ -5,6 +5,9 @@ import com.examsystem.dto.QuestionDTO;
 import com.examsystem.entity.Question;
 import com.examsystem.entity.QuestionOption;
 import com.examsystem.exception.BusinessException;
+import com.examsystem.mapper.ExamAnswerMapper;
+import com.examsystem.mapper.PaperQuestionMapper;
+import com.examsystem.mapper.PracticeRecordMapper;
 import com.examsystem.mapper.QuestionMapper;
 import com.examsystem.mapper.QuestionOptionMapper;
 import com.examsystem.service.QuestionService;
@@ -23,6 +26,15 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Autowired
     private QuestionOptionMapper questionOptionMapper;
+
+    @Autowired
+    private PaperQuestionMapper paperQuestionMapper;
+
+    @Autowired
+    private PracticeRecordMapper practiceRecordMapper;
+
+    @Autowired
+    private ExamAnswerMapper examAnswerMapper;
 
     @Override
     public PageResult<Question> listQuestions(Long courseId, Integer questionType, Integer difficulty, String keyword, Integer page, Integer pageSize) {
@@ -74,6 +86,15 @@ public class QuestionServiceImpl implements QuestionService {
                     throw new BusinessException("选项内容不能为空");
                 }
             }
+            // 多选题必须至少有两个正确选项
+            if (dto.getQuestionType() == 2) {
+                long correctCount = dto.getOptions().stream()
+                        .filter(opt -> opt.getIsCorrect() != null && opt.getIsCorrect() == 1)
+                        .count();
+                if (correctCount < 2) {
+                    throw new BusinessException("多选题必须至少选择两个正确答案");
+                }
+            }
         }
         if (dto.getOptions() != null && !dto.getOptions().isEmpty()) {
             for (QuestionOption option : dto.getOptions()) {
@@ -94,6 +115,15 @@ public class QuestionServiceImpl implements QuestionService {
             for (com.examsystem.entity.QuestionOption opt : dto.getOptions()) {
                 if (opt.getOptionContent() == null || opt.getOptionContent().trim().isEmpty()) {
                     throw new BusinessException("选项内容不能为空");
+                }
+            }
+            // 多选题必须至少有两个正确选项
+            if (dto.getQuestionType() == 2) {
+                long correctCount = dto.getOptions().stream()
+                        .filter(opt -> opt.getIsCorrect() != null && opt.getIsCorrect() == 1)
+                        .count();
+                if (correctCount < 2) {
+                    throw new BusinessException("多选题必须至少选择两个正确答案");
                 }
             }
         }
@@ -119,6 +149,10 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void deleteQuestion(Long questionId) {
+        // 删除该题目的关联数据（试卷关联、练习记录、考试答案、选项）
+        paperQuestionMapper.deleteByQuestionId(questionId);
+        practiceRecordMapper.deleteByQuestionId(questionId);
+        examAnswerMapper.deleteByQuestionId(questionId);
         questionOptionMapper.deleteByQuestionId(questionId);
         questionMapper.deleteById(questionId);
     }

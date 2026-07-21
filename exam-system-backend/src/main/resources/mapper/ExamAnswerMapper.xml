@@ -27,6 +27,10 @@
         </foreach>
     </insert>
 
+    <delete id="deleteByQuestionId">
+        DELETE FROM t_exam_answer WHERE question_id = #{questionId}
+    </delete>
+
     <select id="selectByExamRecordId" resultMap="BaseResultMap">
         SELECT ea.*, q.content AS question_content, q.answer AS correct_answer, q.analysis, q.question_type
         FROM t_exam_answer ea

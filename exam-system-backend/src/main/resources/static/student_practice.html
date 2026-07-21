@@ -44,9 +44,11 @@
 <label class="block text-sm font-medium text-gray-700 mb-2">题型筛选</label>
 <select id="questionTypeSelect" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]">
 <option value="">混合题型</option>
-<option value="SINGLE_CHOICE">单选题</option>
-<option value="MULTIPLE_CHOICE">多选题</option>
-<option value="TRUE_FALSE">判断题</option>
+<option value="1">单选题</option>
+<option value="2">多选题</option>
+<option value="3">判断题</option>
+<option value="4">填空题</option>
+<option value="5">简答题</option>
 </select>
 </div>
 <div class="grid grid-cols-2 gap-4">
@@ -58,9 +60,9 @@
 <label class="block text-sm font-medium text-gray-700 mb-2">难度</label>
 <select id="difficultySelect" class="w-full border rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-[#1890FF]">
 <option value="">不限</option>
-<option value="EASY">简单</option>
-<option value="MEDIUM">中等</option>
-<option value="HARD">困难</option>
+<option value="1">简单</option>
+<option value="2">中等</option>
+<option value="3">困难</option>
 </select>
 </div>
 </div>
@@ -147,6 +149,7 @@ var currentIndex = 0;
 var timerInterval = null;
 var timerSeconds = 0;
 var submittedCount = 0;
+var reviewMode = false; // 是否处于错题复习模式
 
 // Load courses on page load
 function loadCourses() {
@@ -181,10 +184,12 @@ function getOptionLabel(index) {
 }
 
 function getTypeName(type) {
-    if (type === 'SINGLE_CHOICE' || type === 'SINGLE') return '单选题';
-    if (type === 'MULTIPLE_CHOICE' || type === 'MULTIPLE') return '多选题';
-    if (type === 'TRUE_FALSE' || type === 'TRUE_FALSE') return '判断题';
-    return '单选题';
+    if (type == 1) return '单选题';
+    if (type == 2) return '多选题';
+    if (type == 3) return '判断题';
+    if (type == 4) return '填空题';
+    if (type == 5) return '简答题';
+    return '未知题型';
 }
 
 function startPractice() {
@@ -203,8 +208,8 @@ function startPractice() {
     }
 
     var params = { courseId: courseId, count: count };
-    if (questionType) params.questionType = questionType;
-    if (difficulty) params.difficulty = difficulty;
+    if (questionType) params.questionType = parseInt(questionType);
+    if (difficulty) params.difficulty = parseInt(difficulty);
 
     // Show loading state
     var btn = document.querySelector('#setupArea button');
@@ -250,12 +255,19 @@ function startPractice() {
 
 function renderAnswerCard() {
     var grid = document.getElementById('answerCardGrid');
-    document.getElementById('answerCardTitle').textContent = '答题卡 (' + (submittedCount) + '/' + questions.length + ')';
+    document.getElementById('answerCardTitle').textContent = reviewMode ? '复习模式' : ('答题卡 (' + submittedCount + '/' + questions.length + ')');
     var html = '';
     for (var i = 0; i < questions.length; i++) {
         var cls = 'w-8 h-8 rounded border flex items-center justify-center text-xs cursor-pointer ';
         if (i === currentIndex) {
             cls += 'bg-blue-500 text-white border-blue-500';
+        } else if (reviewMode && answerResults[i]) {
+            // 复习模式：绿色正确、红色错误
+            if (answerResults[i].correct || answerResults[i].isCorrect) {
+                cls += 'bg-green-500 text-white border-green-500';
+            } else {
+                cls += 'bg-red-500 text-white border-red-500';
+            }
         } else if (answers[i] != null) {
             cls += 'bg-green-500 text-white border-green-500';
         } else {
@@ -270,63 +282,195 @@ function renderQuestion() {
     var q = questions[currentIndex];
     if (!q) return;
 
-    document.getElementById('questionTypeLabel').textContent = getTypeName(q.questionType || q.type);
+    var qtype = q.questionType || q.type;
+    var options = q.options || [];
+    var selectedAnswer = answers[currentIndex];
+    var isConfirmed = answerResults[currentIndex] != null;
+    var result = answerResults[currentIndex];
+
+    document.getElementById('questionTypeLabel').textContent = getTypeName(qtype);
     document.getElementById('questionScore').textContent = '分值：' + (q.score || 10) + '分';
     document.getElementById('questionContent').textContent = (currentIndex + 1) + '. ' + (q.content || q.title || '');
 
-    // Update buttons
+    // 底部按钮
     document.getElementById('prevBtn').style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
-    var nextText = currentIndex === questions.length - 1 ? '完成练习' : '下一题';
-    document.getElementById('nextBtn').textContent = nextText;
+    var nextBtn = document.getElementById('nextBtn');
+    nextBtn.disabled = false;
+    if (reviewMode) {
+        nextBtn.textContent = '返回结果';
+        nextBtn.onclick = backToResult;
+    } else if (isConfirmed) {
+        var nextText = currentIndex === questions.length - 1 ? '完成练习' : '下一题';
+        nextBtn.textContent = nextText;
+        nextBtn.onclick = goNext;
+    } else {
+        nextBtn.textContent = '确认答案';
+        nextBtn.onclick = confirmAnswer;
+    }
+    document.getElementById('practiceTimer').textContent = reviewMode ? '复习模式' : document.getElementById('practiceTimer').textContent;
 
-    // Render options
-    var options = q.options || [];
+    // 渲染内容区
     var container = document.getElementById('optionsContainer');
     var html = '';
-    var selectedAnswer = answers[currentIndex];
 
-    for (var i = 0; i < options.length; i++) {
-        var opt = options[i];
-        var label = opt.label || getOptionLabel(i);
-        var content = opt.content || opt.text || opt.label || '';
-        var isSelected = (selectedAnswer === label || selectedAnswer === opt.id);
-        var cls = 'option-btn w-full text-left p-5 border-2 rounded-xl transition-all flex items-center';
-        if (isSelected) cls += ' active';
+    // === 选择题和判断题：渲染选项按钮 ===
+    if (qtype == 1 || qtype == 2 || qtype == 3) {
+        var multiSelected = qtype == 2 ? (selectedAnswer || '').split(',') : [];
+        var disabled = isConfirmed || reviewMode ? ' disabled' : '';
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var label = opt.optionLabel || getOptionLabel(i);
+            var content = opt.optionContent || '';
+            var isSelected;
+            if (qtype == 2) {
+                isSelected = multiSelected.indexOf(label) >= 0;
+            } else {
+                isSelected = (selectedAnswer === label);
+                if (!isSelected && qtype == 3 && (selectedAnswer === content)) {
+                    isSelected = true;
+                }
+            }
+            var cls = 'option-btn w-full text-left p-5 border-2 rounded-xl transition-all flex items-center';
+            if (isSelected) cls += ' active';
+            if (isConfirmed && result) {
+                // 确认后高亮正确答案
+                var correctAnswer = result.correctAnswer || '';
+                var labels = correctAnswer.split(',');
+                if (labels.indexOf(label) >= 0) {
+                    cls += ' border-green-400 bg-green-50';
+                } else if (isSelected && !(result.correct || result.isCorrect)) {
+                    cls += ' border-red-400 bg-red-50';
+                }
+            }
 
-        var labelCls = 'w-8 h-8 rounded-full border flex items-center justify-center mr-4 font-bold';
-        if (isSelected) {
-            labelCls += ' border-[#1890FF] bg-[#1890FF] text-white';
-        } else {
-            labelCls += ' border-gray-200';
+            var labelCls = 'w-8 h-8 rounded-full border flex items-center justify-center mr-4 font-bold';
+            if (isSelected && !isConfirmed) {
+                labelCls += ' border-[#1890FF] bg-[#1890FF] text-white';
+            } else {
+                labelCls += ' border-gray-200';
+            }
+
+            var clickHandler = qtype == 2 ? 'toggleMultiChoice' : 'selectOption';
+            html += '<button class="' + cls + '" onclick="' + clickHandler + '(\'' + label + '\')"' + disabled + '>';
+            html += '<span class="' + labelCls + '">' + label + '</span>';
+            html += content;
+            html += '</button>';
         }
-
-        html += '<button class="' + cls + '" onclick="selectAnswer(\'' + label + '\')">';
-        html += '<span class="' + labelCls + '">' + label + '</span>';
-        html += content;
-        html += '</button>';
     }
-    container.innerHTML = html;
 
+    // === 填空题和简答题：文本输入 ===
+    if (qtype == 4 || qtype == 5) {
+        if (isConfirmed || reviewMode) {
+            // 已确认：显示答案而非输入框
+            html += '<div class="p-4 border-2 border-gray-200 rounded-xl text-lg">' + (selectedAnswer || '(未作答)') + '</div>';
+        } else {
+            html += '<textarea id="textAnswerInput" class="w-full border-2 border-gray-200 rounded-xl p-4 text-lg outline-none focus:border-[#1890FF] transition-colors"';
+            html += ' placeholder="请输入你的答案..." rows="' + (qtype == 5 ? 4 : 2) + '">';
+            html += (selectedAnswer || '');
+            html += '</textarea>';
+        }
+    }
+
+    // === 显示反馈（确认后或复习模式） ===
+    if (isConfirmed && result) {
+        var isCorrect = result.correct || result.isCorrect;
+        html += '<div class="mt-4 p-4 rounded-lg ' + (isCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200') + '">';
+        html += '<p class="font-bold">' + (isCorrect ? '✓ 回答正确' : '✗ 回答错误') + '</p>';
+        html += '<p class="text-sm mt-1">你的答案：' + (result.studentAnswer || '') + '</p>';
+        html += '<p class="text-sm mt-1">正确答案：' + (result.correctAnswer || '') + '</p>';
+        if (result.analysis) html += '<p class="text-sm mt-1">解析：' + result.analysis + '</p>';
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
     renderAnswerCard();
 }
 
-function selectAnswer(label) {
+// === 作答交互 ===
+
+// 单选/判断：选中选项
+function selectOption(label) {
+    if (reviewMode || answerResults[currentIndex]) return;
     answers[currentIndex] = label;
-    // Submit answer to backend
+    renderQuestion();
+}
+
+// 多选：切换选项
+function toggleMultiChoice(label) {
+    if (reviewMode || answerResults[currentIndex]) return;
+    var current = answers[currentIndex] || '';
+    var selected = current ? current.split(',') : [];
+    var idx = selected.indexOf(label);
+    if (idx >= 0) {
+        selected.splice(idx, 1);
+    } else {
+        selected.push(label);
+    }
+    answers[currentIndex] = selected.filter(Boolean).join(',');
+    renderQuestion();
+}
+
+// === 确认答案（统一入口） ===
+function confirmAnswer() {
     var q = questions[currentIndex];
-    apiPost('/student/practice/submit', { questionId: q.id || q.questionId, studentAnswer: label }).then(function(result) {
-        result = result.data || result;
-        if (result != null) {
-            answerResults[currentIndex] = result;
-            if (answers[currentIndex] != null && answerResults[currentIndex] == null) {
-                submittedCount++;
+    var qtype = q.questionType || q.type;
+
+    // 收集答案
+    var answerToSubmit;
+    if (qtype == 4 || qtype == 5) {
+        var input = document.getElementById('textAnswerInput');
+        if (!input || !input.value.trim()) { alert('请输入答案'); return; }
+        answerToSubmit = input.value.trim();
+        answers[currentIndex] = answerToSubmit;
+    } else if (qtype == 2) {
+        var selected = (answers[currentIndex] || '').split(',').filter(Boolean);
+        if (selected.length < 2) { alert('多选题必须至少选择两个选项'); return; }
+        answerToSubmit = selected.sort().join(',');
+        answers[currentIndex] = answerToSubmit;
+    } else if (qtype == 3) {
+        if (!answers[currentIndex]) { alert('请选择答案'); return; }
+        // 判断题：发送optionContent（对/错）而非optionLabel（A/B）
+        var opts = q.options || [];
+        for (var j = 0; j < opts.length; j++) {
+            if (opts[j].optionLabel === answers[currentIndex]) {
+                answerToSubmit = opts[j].optionContent;
+                break;
             }
+        }
+        if (!answerToSubmit) answerToSubmit = answers[currentIndex];
+    } else {
+        // 单选
+        if (!answers[currentIndex]) { alert('请选择答案'); return; }
+        answerToSubmit = answers[currentIndex];
+    }
+
+    // 显示提交中
+    document.getElementById('nextBtn').disabled = true;
+    document.getElementById('nextBtn').textContent = '提交中...';
+
+    apiPost('/student/practice/submit', { questionId: q.questionId, studentAnswer: answerToSubmit }).then(function(res) {
+        res = res.data || res;
+        if (res != null) {
+            answerResults[currentIndex] = res;
+            if (answers[currentIndex] != null) submittedCount++;
             renderAnswerCard();
+            renderQuestion();
         }
     }).catch(function(err) {
-        console.error('Failed to submit answer:', err);
+        console.error('Submit failed:', err);
+        alert('提交失败，请重试');
+        renderQuestion();
     });
-    renderQuestion();
+}
+
+// === 导航 ===
+function goNext() {
+    if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+    } else {
+        finishPractice();
+    }
 }
 
 function jumpToQuestion(index) {
@@ -338,15 +482,6 @@ function prevQuestion() {
     if (currentIndex > 0) {
         currentIndex--;
         renderQuestion();
-    }
-}
-
-function nextQuestion() {
-    if (currentIndex < questions.length - 1) {
-        currentIndex++;
-        renderQuestion();
-    } else {
-        finishPractice();
     }
 }
 
@@ -369,11 +504,12 @@ function stopTimer() {
 
 function finishPractice() {
     stopTimer();
+    reviewMode = false;
 
     // Count results
     var correctCount = 0;
     for (var i = 0; i < answerResults.length; i++) {
-        if (answerResults[i] && answerResults[i].correct) correctCount++;
+        if (answerResults[i] && (answerResults[i].correct || answerResults[i].isCorrect)) correctCount++;
     }
     var total = questions.length;
     var accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
@@ -399,23 +535,37 @@ function finishPractice() {
 }
 
 function reviewWrongQuestions() {
-    // Find first wrong question and navigate back to practice area
+    // Find first wrong question and enter review mode
     var wrongIndex = -1;
     for (var i = 0; i < answerResults.length; i++) {
-        if (answerResults[i] && !answerResults[i].correct) {
+        if (answerResults[i] && !(answerResults[i].correct || answerResults[i].isCorrect)) {
             wrongIndex = i;
             break;
         }
     }
     if (wrongIndex >= 0) {
+        reviewMode = true;
         currentIndex = wrongIndex;
+        stopTimer();
+        document.getElementById('practiceTimer').textContent = '复习模式';
         document.getElementById('resultArea').classList.add('hidden');
         document.getElementById('practiceArea').classList.remove('hidden');
+        // 修改完成按钮为"返回结果"
+        document.getElementById('nextBtn').textContent = '返回结果';
+        document.getElementById('nextBtn').onclick = backToResult;
         renderQuestion();
-        startTimer();
     } else {
         alert('恭喜，全部正确！');
     }
+}
+
+function backToResult() {
+    reviewMode = false;
+    document.getElementById('practiceArea').classList.add('hidden');
+    document.getElementById('resultArea').classList.remove('hidden');
+    // 恢复按钮
+    document.getElementById('nextBtn').textContent = '完成练习';
+    document.getElementById('nextBtn').onclick = goNext;
 }
 </script>
 </body>

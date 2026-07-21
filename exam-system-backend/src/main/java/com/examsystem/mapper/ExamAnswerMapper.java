@@ -12,4 +12,6 @@ public interface ExamAnswerMapper {
     int batchInsert(@Param("list") List<ExamAnswer> list);
 
     List<ExamAnswer> selectByExamRecordId(@Param("examRecordId") Long examRecordId);
+
+    int deleteByQuestionId(@Param("questionId") Long questionId);
 }

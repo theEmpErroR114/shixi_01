@@ -40,6 +40,10 @@
         DELETE FROM t_paper_question WHERE paper_id = #{paperId}
     </delete>
 
+    <delete id="deleteByQuestionId">
+        DELETE FROM t_paper_question WHERE question_id = #{questionId}
+    </delete>
+
     <select id="selectByPaperId" resultMap="WithQuestionMap">
         SELECT
             pq.id, pq.paper_id, pq.question_id, pq.score, pq.sort_order,

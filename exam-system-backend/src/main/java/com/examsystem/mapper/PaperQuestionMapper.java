@@ -14,4 +14,6 @@ public interface PaperQuestionMapper {
     int deleteByPaperId(@Param("paperId") Long paperId);
 
     List<PaperQuestion> selectByPaperId(@Param("paperId") Long paperId);
+
+    int deleteByQuestionId(@Param("questionId") Long questionId);
 }

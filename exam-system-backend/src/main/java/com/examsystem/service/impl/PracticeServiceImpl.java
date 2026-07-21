@@ -45,7 +45,20 @@ public class PracticeServiceImpl implements PracticeService {
                 config.getCourseId(), config.getQuestionType(),
                 config.getDifficulty(), count);
         for (Question q : questions) {
-            q.setOptions(questionOptionMapper.selectByQuestionId(q.getQuestionId()));
+            List<QuestionOption> options = questionOptionMapper.selectByQuestionId(q.getQuestionId());
+            // 判断题(questionType=3)：如果数据库中没有选项，自动生成"正确"/"错误"两个默认选项
+            if ((options == null || options.isEmpty()) && q.getQuestionType() != null && q.getQuestionType() == 3) {
+                options = new ArrayList<>();
+                QuestionOption optTrue = new QuestionOption();
+                optTrue.setOptionLabel("A");
+                optTrue.setOptionContent("对");
+                options.add(optTrue);
+                QuestionOption optFalse = new QuestionOption();
+                optFalse.setOptionLabel("B");
+                optFalse.setOptionContent("错");
+                options.add(optFalse);
+            }
+            q.setOptions(options);
             q.setAnswer(null);
             q.setAnalysis(null);
         }
@@ -71,7 +84,7 @@ public class PracticeServiceImpl implements PracticeService {
         vo.setCorrectAnswer(question.getAnswer());
         vo.setIsCorrect(isCorrect);
         vo.setAnalysis(question.getAnalysis());
-        if (question.getQuestionType() != null && question.getQuestionType() <= 2) {
+        if (question.getQuestionType() != null && (question.getQuestionType() == 1 || question.getQuestionType() == 2 || question.getQuestionType() == 3)) {
             List<QuestionOption> options = questionOptionMapper.selectByQuestionId(questionId);
             vo.setOptions(options.stream().map(o -> {
                 PracticeResultVO.OptionVO ov = new PracticeResultVO.OptionVO();

@@ -13,4 +13,6 @@ public interface PracticeRecordMapper {
                                            @Param("offset") Integer offset, @Param("limit") Integer limit);
 
     Long countByStudentId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    int deleteByQuestionId(@Param("questionId") Long questionId);
 }
