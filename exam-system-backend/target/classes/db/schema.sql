@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS t_paper (
     total_score INT DEFAULT 100 COMMENT '试卷总分',
     duration    INT DEFAULT 60 COMMENT '考试时长（分钟）',
     status      TINYINT DEFAULT 0 COMMENT '状态：0未发布 1已发布 2已回收',
+    start_date  DATETIME    NULL        COMMENT '考试开始日期（学生可答题的起始时间）',
+    end_date    DATETIME    NULL        COMMENT '考试截止日期（学生答题的截止时间）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     CONSTRAINT fk_paper_course  FOREIGN KEY (course_id)  REFERENCES t_course (course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试卷表';

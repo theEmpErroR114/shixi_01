@@ -12,7 +12,11 @@
         .option-btn:hover { border-color: #1890FF; background-color: #f0f9ff; }
         .option-btn.active { border-color: #1890FF; background-color: #e6f7ff; color: #1890FF; }
         .nav-active { color: #1890FF; border-bottom: 2px solid #1890FF; }
-    </style>
+                .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #f5f5f5; }
+</style>
 </head>
 <body class="min-h-screen flex flex-col">
 <header class="bg-white shadow-sm">
@@ -27,6 +31,25 @@
 <a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_exam.html">参加测验</a>
 <a class="flex items-center h-full px-2 text-gray-500 hover:text-[#1890FF] font-medium" href="student_results.html">我的成绩</a>
 </nav>
+<div class="ml-auto relative">
+<div class="flex items-center space-x-3 cursor-pointer" id="userMenuTrigger">
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900" id="headerUserName">加载中...</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold" id="headerAvatar">学</div>
+<iconify-icon class="text-gray-400 text-sm" icon="mdi:chevron-down"></iconify-icon>
+</div>
+<div class="user-dropdown" id="userDropdown">
+<a href="#" onclick="openSettingsModal(event)">
+<iconify-icon class="mr-2" icon="mdi:cog"></iconify-icon>
+设置
+</a>
+<a href="login.html">
+<iconify-icon class="mr-2" icon="mdi:logout"></iconify-icon>
+退出登录
+</a>
+</div>
+</div>
 </div>
 </header>
 <main class="flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
@@ -124,6 +147,59 @@
 </div>
 </div>
 </main>
+
+<!-- 设置菜单 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="settingsModal">
+<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-xs overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<h3 class="text-lg font-bold text-gray-800">设置</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeSettingsModal()">
+<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+<div class="p-2">
+<a href="#" onclick="openPasswordModal(event)" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+<iconify-icon class="mr-3 text-lg text-gray-400" icon="mdi:lock-reset"></iconify-icon>
+修改密码
+<iconify-icon class="ml-auto text-gray-300" icon="mdi:chevron-right"></iconify-icon>
+</a>
+</div>
+</div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="passwordModal">
+<div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
+<div class="relative bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<h3 class="text-lg font-bold text-gray-800">修改密码</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closePasswordModal()">
+<iconify-icon class="text-xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+<div class="p-6">
+<form class="space-y-4" id="settingsForm" onsubmit="savePassword(event)">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">原密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_oldPassword" type="password" required/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">新密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_newPassword" type="password" required minlength="4"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">确认新密码 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-[#1890FF] outline-none" id="sp_confirmPassword" type="password" required/>
+</div>
+<div class="pt-4 flex justify-end space-x-3">
+<button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" onclick="closePasswordModal()" type="button">取消</button>
+<button class="px-4 py-2 text-sm font-medium text-white bg-[#1890FF] rounded-md hover:bg-blue-600" type="submit">确认修改</button>
+</div>
+</form>
+</div>
+</div>
+</div>
 <script>
 var API_BASE = '/api';
 
@@ -567,6 +643,66 @@ function backToResult() {
     document.getElementById('nextBtn').textContent = '完成练习';
     document.getElementById('nextBtn').onclick = goNext;
 }
+
+		// User dropdown
+		var userMenuTrigger = document.getElementById('userMenuTrigger');
+		var userDropdown = document.getElementById('userDropdown');
+		if (userMenuTrigger) {
+			userMenuTrigger.addEventListener('click', function(e) {
+				e.stopPropagation();
+				userDropdown.classList.toggle('show');
+			});
+		}
+		document.addEventListener('click', function() {
+			if (userDropdown) userDropdown.classList.remove('show');
+		});
+		// Load current user
+		apiGet('/auth/current-user').then(function(res) {
+			var user = res.data || res;
+			if (user && user.realName) {
+				document.getElementById('headerUserName').textContent = user.realName;
+				document.getElementById('headerAvatar').textContent = user.realName.charAt(0);
+			}
+		}).catch(function() {});
+
+		// 设置菜单
+		function openSettingsModal(event) {
+			if (event) event.preventDefault();
+			document.getElementById('settingsModal').classList.remove('hidden');
+		}
+		function closeSettingsModal() {
+			document.getElementById('settingsModal').classList.add('hidden');
+		}
+		// 修改密码
+		function openPasswordModal(event) {
+			if (event) event.preventDefault();
+			closeSettingsModal();
+			document.getElementById('passwordModal').classList.remove('hidden');
+		}
+		function closePasswordModal() {
+			document.getElementById('passwordModal').classList.add('hidden');
+			document.getElementById('settingsForm').reset();
+		}
+		function savePassword(event) {
+			event.preventDefault();
+			var oldPwd = document.getElementById('sp_oldPassword').value.trim();
+			var newPwd = document.getElementById('sp_newPassword').value.trim();
+			var confirmPwd = document.getElementById('sp_confirmPassword').value.trim();
+			if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
+			if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
+			if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+			fetch(API_BASE + '/auth/change-password', {
+				method: 'PUT',
+				headers: {'Content-Type': 'application/json'},
+				credentials: 'include',
+				body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
+			}).then(function(res) { return res.json(); }).then(function(res) {
+				if (res.code !== 200) { alert('修改失败：' + (res.message || '未知错误')); return; }
+				alert('密码修改成功，请重新登录');
+				window.location.href = 'login.html';
+			}).catch(function() { alert('修改失败，请稍后重试'); });
+			return false;
+		}
 </script>
 </body>
 </html>

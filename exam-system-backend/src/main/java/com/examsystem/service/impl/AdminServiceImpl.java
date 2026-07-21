@@ -100,7 +100,7 @@ public class AdminServiceImpl implements AdminService {
     public void deleteTeacher(Long teacherId) {
         // 清理教师-课程关联
         teacherCourseMapper.deleteByTeacherId(teacherId);
-        // 删除教师（题目和试卷的 teacher_id 会由数据库 ON DELETE SET NULL 自动置空）
+        // 删除教师（题目和试卷的 teacher_id 无外键约束，仅作展示字段，不受影响）
         teacherMapper.deleteById(teacherId);
     }
 

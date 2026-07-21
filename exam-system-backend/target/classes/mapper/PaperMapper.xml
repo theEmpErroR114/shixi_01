@@ -10,6 +10,8 @@
         <result column="total_score" property="totalScore"/>
         <result column="duration" property="duration"/>
         <result column="status" property="status"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
         <result column="create_time" property="createTime"/>
         <result column="course_name" property="courseName"/>
         <result column="teacher_name" property="teacherName"/>
@@ -98,8 +100,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="paperId">
-        INSERT INTO t_paper (paper_name, course_id, teacher_id, total_score, duration, status, create_time)
-        VALUES (#{paperName}, #{courseId}, #{teacherId}, #{totalScore}, #{duration}, #{status}, #{createTime})
+        INSERT INTO t_paper (paper_name, course_id, teacher_id, total_score, duration, status, start_date, end_date, create_time)
+        VALUES (#{paperName}, #{courseId}, #{teacherId}, #{totalScore}, #{duration}, #{status}, #{startDate}, #{endDate}, #{createTime})
     </insert>
 
     <update id="update">
@@ -109,6 +111,8 @@
             <if test="courseId != null">course_id = #{courseId},</if>
             <if test="totalScore != null">total_score = #{totalScore},</if>
             <if test="duration != null">duration = #{duration},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
         </set>
         WHERE paper_id = #{paperId}
     </update>
@@ -120,5 +124,37 @@
     <delete id="deleteById">
         DELETE FROM t_paper WHERE paper_id = #{paperId}
     </delete>
+
+    <!-- 学生可用试卷：已发布 + 课程匹配 + 日期在有效范围内 -->
+    <select id="findAvailableForStudent" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        WHERE p.status = 1
+          AND p.course_id IN
+          <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+              #{cid}
+          </foreach>
+          AND (p.start_date IS NULL OR p.start_date &lt;= #{now})
+          AND (p.end_date IS NULL OR p.end_date &gt;= #{now})
+        ORDER BY p.create_time DESC
+    </select>
+
+    <!-- 学生即将开始的考试：start_date 在未来 -->
+    <select id="findUpcomingForStudent" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        WHERE p.status = 1
+          AND p.course_id IN
+          <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+              #{cid}
+          </foreach>
+          AND p.start_date IS NOT NULL
+          AND p.start_date &gt; #{now}
+        ORDER BY p.start_date ASC
+    </select>
 
 </mapper>

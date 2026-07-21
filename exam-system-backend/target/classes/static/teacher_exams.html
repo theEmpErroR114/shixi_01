@@ -105,6 +105,16 @@
 <input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" type="number" id="paperTotalScore" value="100" min="1" max="1000"/>
 </div>
 </div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" type="datetime-local" id="paperStartDate"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">截止日期</label>
+<input class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" type="datetime-local" id="paperEndDate"/>
+</div>
+</div>
 </div>
 <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
 <button class="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" onclick="closePaperModal()">取消</button>
@@ -430,6 +440,8 @@
                 courseId: paper.courseId,
                 duration: paper.duration,
                 totalScore: paper.totalScore,
+                startDate: paper.startDate || null,
+                endDate: paper.endDate || null,
                 questions: questions
             }).then(function(res) {
                 if (res.code !== 200) {
@@ -478,6 +490,8 @@
             html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:star-outline"></iconify-icon>总分: ' + (p.totalScore || 0) + ' 分</span>';
             html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:timer-outline"></iconify-icon>时长: ' + (p.duration || 0) + ' 分钟</span>';
             html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:calendar-clock"></iconify-icon>' + (p.createTime || '').substring(0, 10) + '</span>';
+            if (p.startDate) { var sd = formatDateTimeForInput(p.startDate); html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:play-circle-outline"></iconify-icon>' + sd.replace('T', ' ') + '</span>'; }
+            if (p.endDate) { var ed = formatDateTimeForInput(p.endDate); html += '<span class="text-gray-500"><iconify-icon class="mr-1" icon="mdi:stop-circle-outline"></iconify-icon>' + ed.replace('T', ' ') + '</span>'; }
             html += '</div></div>';
             html += '<div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between">';
             html += '<span class="text-xs text-gray-400">创建于 ' + (p.createTime || '').substring(0, 10) + '</span>';
@@ -497,6 +511,24 @@
         grid.innerHTML = html;
     }
 
+    function formatDateTimeForInput(dateVal) {
+        if (!dateVal) return '';
+        var d;
+        if (Array.isArray(dateVal)) {
+            d = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0);
+        } else if (typeof dateVal === 'string') {
+            d = new Date(dateVal);
+        } else {
+            return '';
+        }
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0') + 'T' +
+               String(d.getHours()).padStart(2, '0') + ':' +
+               String(d.getMinutes()).padStart(2, '0');
+    }
+
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
     var editPaperId = null;
@@ -507,6 +539,8 @@
         document.getElementById('paperName').value = '';
         document.getElementById('paperDuration').value = '60';
         document.getElementById('paperTotalScore').value = '100';
+        document.getElementById('paperStartDate').value = '';
+        document.getElementById('paperEndDate').value = '';
         // 加载课程列表到下拉框
         apiGet('/teacher/courses').then(function(res) {
             var courses = res.data || [];
@@ -530,6 +564,8 @@
             document.getElementById('paperName').value = paper.paperName || '';
             document.getElementById('paperDuration').value = paper.duration || 60;
             document.getElementById('paperTotalScore').value = paper.totalScore || 100;
+            document.getElementById('paperStartDate').value = formatDateTimeForInput(paper.startDate);
+            document.getElementById('paperEndDate').value = formatDateTimeForInput(paper.endDate);
             // Load courses and set selected
             apiGet('/teacher/courses').then(function(res2) {
                 var courses = res2.data || [];
@@ -558,11 +594,15 @@
         if (!name) { alert('请输入试卷名称'); return; }
         if (!courseId) { alert('请选择课程'); return; }
 
+        var startDateVal = document.getElementById('paperStartDate').value;
+        var endDateVal = document.getElementById('paperEndDate').value;
         var body = {
             paperName: name,
             courseId: parseInt(courseId),
             duration: duration,
-            totalScore: totalScore
+            totalScore: totalScore,
+            startDate: startDateVal ? startDateVal + ':00' : null,
+            endDate: endDateVal ? endDateVal + ':00' : null
         };
 
         var promise;

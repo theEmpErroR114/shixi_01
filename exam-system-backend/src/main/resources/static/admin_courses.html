@@ -166,6 +166,8 @@
 								<th class="px-6 py-3 font-medium">试卷名称</th>
 								<th class="px-6 py-3 font-medium w-20">总分</th>
 								<th class="px-6 py-3 font-medium w-20">时长(分)</th>
+								<th class="px-6 py-3 font-medium w-36">开始日期</th>
+								<th class="px-6 py-3 font-medium w-36">截止日期</th>
 								<th class="px-6 py-3 font-medium w-20">状态</th>
 								<th class="px-6 py-3 font-medium w-24">组卷人</th>
 								<th class="px-6 py-3 font-medium w-40">创建时间</th>
@@ -371,7 +373,25 @@
 		loadCourses();
 	}
 
-	function escapeHtml(str) {
+	function formatDateTime(dateVal) {
+        if (!dateVal) return '--';
+        var d;
+        if (Array.isArray(dateVal)) {
+            d = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0);
+        } else if (typeof dateVal === 'string') {
+            d = new Date(dateVal.replace('T', ' '));
+        } else {
+            return '--';
+        }
+        if (isNaN(d.getTime())) return '--';
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0') + ' ' +
+               String(d.getHours()).padStart(2, '0') + ':' +
+               String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function escapeHtml(str) {
 		if (!str) return '';
 		var div = document.createElement('div');
 		div.appendChild(document.createTextNode(str));
@@ -496,7 +516,7 @@
 		if (!selectedCourseId) return;
 		apiGet('/admin/courses/' + selectedCourseId + '/papers', { page: paperPage, pageSize: pageSize }).then(function(res) {
 			if (res.code !== 200) {
-				document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">加载失败</td></tr>';
+				document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">加载失败</td></tr>';
 				return;
 			}
 			var data = res.data || {};
@@ -506,14 +526,14 @@
 			renderPaperTable(list);
 			renderPaperPagination(total);
 		}).catch(function() {
-			document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
+			document.getElementById('paperTableBody').innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">加载失败，请稍后重试</td></tr>';
 		});
 	}
 
 	function renderPaperTable(list) {
 		var tbody = document.getElementById('paperTableBody');
 		if (!list || list.length === 0) {
-			tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">暂无试卷</td></tr>';
+			tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-400">暂无试卷</td></tr>';
 			return;
 		}
 		var statusMap = {0: '未发布', 1: '已发布', 2: '已回收'};
@@ -530,6 +550,8 @@
 			html += '<td class="px-6 py-3 text-blue-600 font-medium">' + escapeHtml(p.paperName || '') + '</td>';
 			html += '<td class="px-6 py-3 text-gray-500">' + (p.totalScore || 0) + '</td>';
 			html += '<td class="px-6 py-3 text-gray-500">' + (p.duration || 0) + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500 text-xs">' + (p.startDate ? formatDateTime(p.startDate) : '--') + '</td>';
+			html += '<td class="px-6 py-3 text-gray-500 text-xs">' + (p.endDate ? formatDateTime(p.endDate) : '--') + '</td>';
 			html += '<td class="px-6 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (statusClass[p.status] || '') + '">' + (statusMap[p.status] || '未知') + '</span></td>';
 			html += '<td class="px-6 py-3 text-gray-500">' + escapeHtml(p.teacherName || '--') + '</td>';
 			html += '<td class="px-6 py-3 text-gray-400 text-xs">' + escapeHtml(createTime || '--') + '</td>';

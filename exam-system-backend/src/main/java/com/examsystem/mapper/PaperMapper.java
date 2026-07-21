@@ -3,6 +3,7 @@ package com.examsystem.mapper;
 import com.examsystem.entity.Paper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PaperMapper {
@@ -30,4 +31,10 @@ public interface PaperMapper {
     int updateStatus(@Param("paperId") Long paperId, @Param("status") Integer status);
 
     int deleteById(@Param("paperId") Long paperId);
+
+    List<Paper> findAvailableForStudent(@Param("courseIds") List<Long> courseIds,
+                                        @Param("now") LocalDateTime now);
+
+    List<Paper> findUpcomingForStudent(@Param("courseIds") List<Long> courseIds,
+                                       @Param("now") LocalDateTime now);
 }

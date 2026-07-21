@@ -90,7 +90,15 @@ resources/
 
 **Questions and papers are course-bound, not teacher-bound.** `t_question.teacher_id` and `t_paper.teacher_id` are display-only fields (recording who created the content) with NO foreign key constraint. All query filtering is done by `course_id` + `t_teacher_course`, not by `teacher_id`. Deleting a teacher does NOT affect their questions/papers.
 
-> ⚠️ `schema.sql` only executes on first run (when DataInitializer detects no admin exists). Any schema changes needed after the database has been initialized require manual `ALTER TABLE` statements. Always check if the DB schema matches `schema.sql`.
+> ⚠️ **Database setup required before first run**: `schema.sql` is a manual DDL script — it is NOT auto-executed. Before starting the app for the first time:
+> 1. Create the database: `CREATE DATABASE IF NOT EXISTS exam_system DEFAULT CHARACTER SET utf8mb4;`
+> 2. Run `resources/db/schema.sql` against MySQL
+> 3. Update credentials in `application.yml` if different from `root` / `11111111`
+> 4. On first startup, `DataInitializer` will seed the default accounts (checks if admin exists)
+>
+> For subsequent schema changes after the database is initialized, use manual `ALTER TABLE` statements. Always verify the DB schema matches `schema.sql`.
+>
+> 🟡 **Note**: `02_数据库设计.md` in the project root is outdated — it describes 11 tables (missing `t_teacher_course` and `t_student_course`) and includes FK constraints (`fk_question_teacher`, `fk_paper_teacher`) that do NOT exist in the actual schema. Trust `schema.sql` over `02_数据库设计.md`.
 
 ## API Pattern
 
@@ -116,7 +124,8 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 
 ## Frontend Key Rules
 
-1. The HTML files under `resources/static/` are what the app serves — edit these, not the `exam_system/` copies.
+1. The HTML files under `resources/static/` are what the app serves — edit these. There may be stale copies at the project root (`teacher_exams.html`) and in `exam_system/` directories — ignore those, they are not served.
+8. **CORS is wide-open**: `WebMvcConfig` allows all origins (`allowedOriginPatterns("*")`) with credentials. This is intentional for development; restrict in production.
 2. All fetches need `credentials: 'include'` (cookie-based session). 401 response means redirect to `login.html`.
 3. API response fields are camelCase. **Never use `.id`** — each entity has its own PK name (see Common Bugs section for the full table).
 4. Gender is `M`/`F` string, NOT `1`/`0`.
@@ -506,5 +515,5 @@ nextBtn.disabled = false;  // ← REQUIRED, otherwise button stays disabled from
 - **True/false questions (type=3) may have no options in DB**. Practice service must auto-generate default options with content "对"/"错" (matching the teacher form dropdown values, NOT "正确"/"错误").
 - **Student practice flow is confirm-then-next**: select answer → "确认答案" → see feedback → "下一题". Never submit immediately on option click.
 - **Deleting a teacher does NOT affect questions/papers**: `teacher_id` has no FK constraint — it's a plain display-only field. Questions/papers remain accessible to other teachers of the same course via `course_id` + `t_teacher_course`.
-- **Deleting a student preserves records**: `t_practice_record.student_id` and `t_exam_record.student_id` are plain fields with no FK constraint. Practice and exam records are preserved.
+- **Deleting a student preserves records**: `t_practice_record.student_id` and `t_exam_record.student_id` have FK constraints with `ON DELETE SET NULL`. When a student is deleted, their practice/exam records are preserved (student_id set to NULL).
 - 🔴 **NEVER create test/temporary accounts.** Only the 6 default accounts should exist. Use them for all testing.

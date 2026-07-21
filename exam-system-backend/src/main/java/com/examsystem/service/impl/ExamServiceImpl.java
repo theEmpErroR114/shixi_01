@@ -44,16 +44,25 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public List<Paper> getAvailableExams(Long studentId) {
-        // 只返回学生关联课程的已发布试卷
         List<Long> enrolledCourseIds = studentCourseMapper.selectCourseIdsByStudentId(studentId);
         if (enrolledCourseIds.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Paper> papers = paperMapper.findByFilters(1, null, null, null);
+        List<Paper> papers = paperMapper.findAvailableForStudent(enrolledCourseIds, LocalDateTime.now());
         return papers.stream().filter(p -> {
-            if (!enrolledCourseIds.contains(p.getCourseId())) {
-                return false;
-            }
+            List<ExamRecord> records = examRecordMapper.selectByStudentIdAndPaperId(studentId, p.getPaperId(), 1);
+            return records.isEmpty();
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Paper> getUpcomingExams(Long studentId) {
+        List<Long> enrolledCourseIds = studentCourseMapper.selectCourseIdsByStudentId(studentId);
+        if (enrolledCourseIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Paper> papers = paperMapper.findUpcomingForStudent(enrolledCourseIds, LocalDateTime.now());
+        return papers.stream().filter(p -> {
             List<ExamRecord> records = examRecordMapper.selectByStudentIdAndPaperId(studentId, p.getPaperId(), 1);
             return records.isEmpty();
         }).collect(Collectors.toList());
@@ -64,6 +73,12 @@ public class ExamServiceImpl implements ExamService {
         Paper paper = paperMapper.selectById(paperId);
         if (paper == null || paper.getStatus() != 1) {
             throw new BusinessException("该试卷不可作答");
+        }
+        if (paper.getStartDate() != null && paper.getStartDate().isAfter(LocalDateTime.now())) {
+            throw new BusinessException("该考试尚未开始");
+        }
+        if (paper.getEndDate() != null && paper.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("该考试已截止");
         }
         List<ExamRecord> completed = examRecordMapper.selectByStudentIdAndPaperId(studentId, paperId, 1);
         if (!completed.isEmpty()) {
@@ -91,7 +106,22 @@ public class ExamServiceImpl implements ExamService {
         List<Question> questions = new ArrayList<>();
         for (PaperQuestion pq : pqList) {
             Question q = questionMapper.selectById(pq.getQuestionId());
-            q.setOptions(questionOptionMapper.selectByQuestionId(pq.getQuestionId()));
+            List<QuestionOption> options = questionOptionMapper.selectByQuestionId(pq.getQuestionId());
+            // 判断题自动生成默认选项
+            if ((options == null || options.isEmpty()) && q.getQuestionType() != null && q.getQuestionType() == 3) {
+                options = new ArrayList<>();
+                QuestionOption optA = new QuestionOption();
+                optA.setOptionLabel("A");
+                optA.setOptionContent("对");
+                optA.setIsCorrect(0);
+                options.add(optA);
+                QuestionOption optB = new QuestionOption();
+                optB.setOptionLabel("B");
+                optB.setOptionContent("错");
+                optB.setIsCorrect(0);
+                options.add(optB);
+            }
+            q.setOptions(options);
             q.setAnswer(null);
             q.setAnalysis(null);
             questions.add(q);

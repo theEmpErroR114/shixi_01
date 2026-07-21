@@ -61,6 +61,8 @@ public class PaperServiceImpl implements PaperService {
         paper.setTotalScore(request.getTotalScore() != null ? request.getTotalScore() : 100);
         paper.setDuration(request.getDuration() != null ? request.getDuration() : 60);
         paper.setStatus(0);
+        paper.setStartDate(request.getStartDate());
+        paper.setEndDate(request.getEndDate());
         paper.setCreateTime(LocalDateTime.now());
         paperMapper.insert(paper);
 
@@ -95,6 +97,8 @@ public class PaperServiceImpl implements PaperService {
         paper.setCourseId(request.getCourseId());
         paper.setTotalScore(request.getTotalScore());
         paper.setDuration(request.getDuration());
+        paper.setStartDate(request.getStartDate());
+        paper.setEndDate(request.getEndDate());
         paperMapper.update(paper);
 
         if (request.getQuestions() != null) {

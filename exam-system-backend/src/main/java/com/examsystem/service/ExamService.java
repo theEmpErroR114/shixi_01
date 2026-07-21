@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface ExamService {
     List<Paper> getAvailableExams(Long studentId);
+    List<Paper> getUpcomingExams(Long studentId);
     Long startExam(Long studentId, Long paperId);
     List<com.examsystem.entity.Question> getExamQuestions(Long examRecordId, Long studentId);
     ExamResultVO submitExam(Long examRecordId, Long studentId, ExamSubmitRequest request);

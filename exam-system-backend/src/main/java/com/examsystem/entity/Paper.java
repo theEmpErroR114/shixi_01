@@ -13,6 +13,8 @@ public class Paper {
     private Integer totalScore;
     private Integer duration;
     private Integer status;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private LocalDateTime createTime;
 
     // 非数据库字段，用于关联查询展示

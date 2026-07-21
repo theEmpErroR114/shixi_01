@@ -44,7 +44,7 @@ public class StudentDashboardController {
     @GetMapping("/upcoming-exams")
     public Result<List<Paper>> upcomingExams(HttpSession session) {
         Long studentId = (Long) session.getAttribute(SessionUtil.SESSION_USER_ID);
-        return Result.success(examService.getAvailableExams(studentId));
+        return Result.success(examService.getUpcomingExams(studentId));
     }
 
     @GetMapping("/recent-practice")
