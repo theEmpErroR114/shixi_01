@@ -324,6 +324,8 @@ Different endpoints return different `data` shapes:
 
 Always verify: `res.data.list` for paginated endpoints, `res.data` for single-entity and list endpoints.
 
+**Important:** `apiGet()`/`apiPost()` return the FULL response `{code, data, message}` — they do NOT auto-unwrap. Always add `data = data.data || data` in `.then()` callbacks before accessing entity fields. Forgetting this causes all fields to be `undefined` (silently shows `'--'` or empty). This caused score/correctCount display failures on `student_exam.html` submit result and `student_results.html` detail view.
+
 ### 🟡 Frontend: `console.log` Errors — Always Check Browser Console
 
 After every HTML/JS edit, ask yourself: "Will this actually parse?" Use the JS syntax checker:
@@ -496,6 +498,70 @@ When a button triggers an async API call and is disabled to prevent double-click
 var nextBtn = document.getElementById('nextBtn');
 nextBtn.disabled = false;  // ← REQUIRED, otherwise button stays disabled from "提交中..." state
 ```
+
+## Paper Date Fields (start_date / end_date)
+
+`t_paper` has two optional `DATETIME` fields: `start_date` (开始日期) and `end_date` (截止日期). Both are nullable — papers without dates are always available.
+
+**Student-facing filtering:**
+- Available exams: `status=1` AND `(start_date IS NULL OR start_date <= NOW())` AND `(end_date IS NULL OR end_date >= NOW())` — see `PaperMapper.findAvailableForStudent`
+- Upcoming exams: `status=1` AND `start_date IS NOT NULL AND start_date > NOW()` — see `PaperMapper.findUpcomingForStudent`
+- `ExamServiceImpl.startExam()` validates: startDate not yet reached → "该考试尚未开始", endDate passed → "该考试已截止"
+
+**DTO note:** `PaperCreateRequest.startDate`/`endDate` use `@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")`. Frontend `datetime-local` inputs return `"YYYY-MM-DDTHH:MM"` — append `:00` before sending to backend.
+
+## Student Exam Page — Question Type Handling
+
+Unlike the practice page, the exam page (`student_exam.html`) was significantly refactored. `renderExamQuestion()` handles all 5 question types:
+
+| Type | Rendering | Input |
+|------|-----------|-------|
+| 1 (单选) | Radio buttons | `examSelectAnswer(label)` |
+| 2 (多选) | Checkboxes | `examToggleMulti(label)` — toggle + sort comma-separated |
+| 3 (判断) | Radio buttons (auto-generated 对/错) | `examSelectAnswer(label)` |
+| 4 (填空) | `<textarea rows="2">` | `examSaveTextAnswer()` |
+| 5 (简答) | `<textarea rows="5">` | `examSaveTextAnswer()` |
+
+- `examSaveCurrentAnswer()` saves text answers before navigating to another question
+- `submitExam()` also calls `examSaveCurrentAnswer()` before building the answer list
+- `ExamServiceImpl.getExamQuestions()` auto-generates "对"/"错" options for type=3 when DB returns empty (same pattern as PracticeServiceImpl)
+- `getTypeName()` uses integer comparison (`type == 1`), NOT string comparison
+
+## Student Header — User Dropdown
+
+All 4 student pages now share the same header pattern as teacher pages:
+- Right side: avatar + name + chevron-down → dropdown (`id="userDropdown"`, class `user-dropdown`)
+- Dropdown contains: "设置" → "修改密码" (calls `PUT /api/auth/change-password`)
+- CSS: `.user-dropdown { display:none; position:absolute; ... }` / `.user-dropdown.show { display:block; }`
+- JS: click `userMenuTrigger` toggles `.show`; document click removes it
+- User info loaded via `GET /api/auth/current-user` → `headerUserName` + `headerAvatar`
+
+## Static HTML Changes Require JAR Rebuild
+
+Unlike Java changes (`.java` → `mvn package`), static HTML file edits under `resources/static/` also require a JAR rebuild and server restart. The running server serves static files from inside the JAR, not from the source directory. Always rebuild the JAR after HTML edits:
+
+```bash
+mvn -f exam-system-backend/pom.xml clean package -DskipTests -q
+lsof -ti:8080 | xargs kill -9
+java -jar exam-system-backend/target/exam-system-backend-1.0.0.jar &
+```
+
+Verify: `curl -s 'http://localhost:8080/student_exam.html' | grep "expected_change"`
+
+## JS Quoting in `onclick` Attributes
+
+When building HTML strings in JS that contain `onclick`/`onchange` with quoted arguments, use `\'` (escaped single quote) inside single-quoted JS strings:
+
+```javascript
+// CORRECT — \' produces a literal ' in the HTML attribute
+html += '<input onchange="examSelectAnswer(\'' + label + '\')"/>';
+// Produces: <input onchange="examSelectAnswer('A')"/>
+
+// WRONG — two single quotes '' break out of the JS string
+html += '<input onchange="examSelectAnswer('' + label + '')"/>';  // SyntaxError!
+```
+
+**Always run JS syntax check after HTML edits** — a single broken `onclick` line breaks ALL JavaScript on the page.
 
 ## Key Constraints
 
