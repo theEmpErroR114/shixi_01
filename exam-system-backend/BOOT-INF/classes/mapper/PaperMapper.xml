@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.examsystem.mapper.PaperMapper">
+
+    <resultMap id="BaseResultMap" type="com.examsystem.entity.Paper">
+        <id column="paper_id" property="paperId"/>
+        <result column="paper_name" property="paperName"/>
+        <result column="course_id" property="courseId"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="total_score" property="totalScore"/>
+        <result column="duration" property="duration"/>
+        <result column="status" property="status"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="create_time" property="createTime"/>
+        <result column="course_name" property="courseName"/>
+        <result column="teacher_name" property="teacherName"/>
+    </resultMap>
+
+    <select id="findByFilters" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByFilters" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_paper p
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+        </where>
+    </select>
+
+    <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND p.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_paper p
+        <where>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+            <if test="courseId != null">
+                AND p.course_id = #{courseId}
+            </if>
+            <if test="courseIds != null and courseId == null">
+                AND p.course_id IN
+                <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        WHERE p.paper_id = #{paperId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="paperId">
+        INSERT INTO t_paper (paper_name, course_id, teacher_id, total_score, duration, status, start_date, end_date, create_time)
+        VALUES (#{paperName}, #{courseId}, #{teacherId}, #{totalScore}, #{duration}, #{status}, #{startDate}, #{endDate}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE t_paper
+        <set>
+            <if test="paperName != null">paper_name = #{paperName},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="totalScore != null">total_score = #{totalScore},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+        </set>
+        WHERE paper_id = #{paperId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE t_paper SET status = #{status} WHERE paper_id = #{paperId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_paper WHERE paper_id = #{paperId}
+    </delete>
+
+    <!-- 学生可用试卷：已发布 + 课程匹配 + 日期在有效范围内 -->
+    <select id="findAvailableForStudent" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        WHERE p.status = 1
+          AND p.course_id IN
+          <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+              #{cid}
+          </foreach>
+          AND (p.start_date IS NULL OR p.start_date &lt;= #{now})
+          AND (p.end_date IS NULL OR p.end_date &gt;= #{now})
+        ORDER BY p.create_time DESC
+    </select>
+
+    <!-- 学生即将开始的考试：start_date 在未来 -->
+    <select id="findUpcomingForStudent" resultMap="BaseResultMap">
+        SELECT p.*, c.course_name, t.real_name AS teacher_name
+        FROM t_paper p
+        LEFT JOIN t_course c ON p.course_id = c.course_id
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        WHERE p.status = 1
+          AND p.course_id IN
+          <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
+              #{cid}
+          </foreach>
+          AND p.start_date IS NOT NULL
+          AND p.start_date &gt; #{now}
+        ORDER BY p.start_date ASC
+    </select>
+
+</mapper>
