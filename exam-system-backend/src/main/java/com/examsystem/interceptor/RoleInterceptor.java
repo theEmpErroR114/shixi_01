@@ -26,6 +26,10 @@ public class RoleInterceptor implements HandlerInterceptor {
         String role = (String) session.getAttribute(SessionUtil.SESSION_USER_ROLE);
         String path = request.getRequestURI();
 
+        // admin is superuser — can access all role-specific paths
+        if ("admin".equals(role)) {
+            return true;
+        }
         if (path.startsWith("/api/admin/") && !"admin".equals(role)) {
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(403);
