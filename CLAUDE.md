@@ -10,6 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Teacher (4): `teacher_dashboard.html`, `teacher_questions.html`, `teacher_exams.html`, `teacher_students.html`
 - Student (4): `student_dashboard.html`, `student_practice.html`, `student_exam.html`, `student_results.html`
 
+**External documentation** (in project root, for reference only — do NOT edit unless asked):
+- `API接口文档.md` — complete API reference (47 endpoints with request/response examples)
+- `答辩准备-项目讲解与预判问题.md` — project defense preparation guide (Chinese)
+
 ## Build & Run
 
 ### macOS / Linux
@@ -104,7 +108,7 @@ resources/
 
 Every response: `{"code":200,"data":{...},"message":"success"}`. Error codes: 400/401/403/500.
 
-Auth: `POST /api/auth/login` with `{role, username, password}` → sets session. All other `/api/**` require login (LoginInterceptor). Role paths (`/api/admin/**`, `/api/teacher/**`, `/api/student/**`) are checked by RoleInterceptor.
+Auth: `POST /api/auth/login` with `{role, username, password}` → sets session. All other `/api/**` require login (LoginInterceptor). Role paths (`/api/admin/**`, `/api/teacher/**`, `/api/student/**`) are checked by RoleInterceptor. **Admin is superuser**: RoleInterceptor allows admin role to access ALL paths including `/api/teacher/**` and `/api/student/**`.
 - `PUT /api/auth/change-password` — change own password `{oldPassword, newPassword}` (all roles)
 - `DELETE /api/admin/teachers/{id}` — delete teacher (removes course links; questions and papers preserved — `teacher_id` has no FK constraint)
 - `DELETE /api/admin/students/{id}` — delete student (removes course links; practice/exam records preserved — `student_id` has no FK constraint)
@@ -125,13 +129,13 @@ Question types: 1=单选, 2=多选, 3=判断, 4=填空, 5=简答. Paper status: 
 ## Frontend Key Rules
 
 1. The HTML files under `resources/static/` are what the app serves — edit these. There may be stale copies at the project root (`teacher_exams.html`) and in `exam_system/` directories — ignore those, they are not served.
-8. **CORS is wide-open**: `WebMvcConfig` allows all origins (`allowedOriginPatterns("*")`) with credentials. This is intentional for development; restrict in production.
 2. All fetches need `credentials: 'include'` (cookie-based session). 401 response means redirect to `login.html`.
 3. API response fields are camelCase. **Never use `.id`** — each entity has its own PK name (see Common Bugs section for the full table).
 4. Gender is `M`/`F` string, NOT `1`/`0`.
 5. Question type, difficulty, and paper status are integers, NOT enum strings.
-6. Every API response is `{code, data, message}`. See Common Bugs section for how to unwrap `data` (it differs by endpoint) and always check `res.code !== 200`.
+6. Every API response is `{code, data, message}`. Always check `res.code !== 200` before processing `data`.
 7. CDN: `cdn.tailwindcss.com` (do NOT change unless broken). Iconify Icon is served locally from `iconify-icon.min.js` — do NOT revert to jsdelivr CDN (blocked in China).
+8. **CORS is wide-open**: `WebMvcConfig` allows all origins (`allowedOriginPatterns("*")`) with credentials. This is intentional for development; restrict in production.
 
 ## ⚠️ HTML Editing — Tag Balancing (CRITICAL)
 
@@ -583,3 +587,4 @@ html += '<input onchange="examSelectAnswer('' + label + '')"/>';  // SyntaxError
 - **Deleting a teacher does NOT affect questions/papers**: `teacher_id` has no FK constraint — it's a plain display-only field. Questions/papers remain accessible to other teachers of the same course via `course_id` + `t_teacher_course`.
 - **Deleting a student preserves records**: `t_practice_record.student_id` and `t_exam_record.student_id` have FK constraints with `ON DELETE SET NULL`. When a student is deleted, their practice/exam records are preserved (student_id set to NULL).
 - 🔴 **NEVER create test/temporary accounts.** Only the 6 default accounts should exist. Use them for all testing.
+- **Admin role can access teacher and student APIs**: `RoleInterceptor` has an early-return for `"admin".equals(role)` before checking `/api/teacher/` and `/api/student/` paths. Admin is effectively a superuser that bypasses all role checks.
