@@ -7,8 +7,11 @@
 <title>登录 - 课程习题测验系统</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="iconify-icon.min.js"></script>
+<!-- 页面自定义样式 -->
 <style>
+    /* 页面背景色：浅灰色 */
     body { background-color: #F0F2F5; }
+    /* 角色切换标签按钮默认样式 */
     .tab-btn {
         color: #6B7280;
         border-bottom: 3px solid transparent;
@@ -16,7 +19,9 @@
         transition: all 0.25s ease;
         font-weight: 500;
     }
+    /* 标签按钮悬停效果 */
     .tab-btn:hover { color: #1890FF; background: #E6F0FF; }
+    /* 当前选中标签按钮高亮样式 */
     .tab-active {
         color: #1890FF !important;
         border-bottom-color: #1890FF !important;
@@ -26,8 +31,10 @@
 </style>
 </head>
 <body class="h-screen flex items-center justify-center">
+<!-- 登录卡片容器 -->
 <div class="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
 
+<!-- 页面头部：Logo + 系统名称 -->
 <div class="bg-[#1890FF] py-8 text-center">
     <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
         <iconify-icon class="text-[#1890FF] text-3xl" icon="mdi:book-open-variant"></iconify-icon>
@@ -49,12 +56,15 @@
     </button>
 </div>
 
+<!-- 当前角色提示信息 -->
 <div id="roleHint" class="mx-8 mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-600 rounded-lg text-sm text-center font-medium">
     当前登录身份：<span id="roleLabel">管理员</span>
 </div>
 
+<!-- 错误提示信息区域（默认隐藏） -->
 <div id="errorMsg" class="hidden mx-8 mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm text-center"></div>
 
+<!-- 登录表单区域 -->
 <div class="p-8">
     <form class="space-y-6" id="loginForm" onsubmit="handleLogin(event)">
         <input id="currentRole" type="hidden" value="admin"/>
@@ -85,9 +95,16 @@
 </div>
 
 <script>
+    /** API 基础路径 */
     var API_BASE = '/api';
+    /** 角色名称映射：用于显示中文角色名称 */
     var ROLE_NAMES = {admin: '管理员', teacher: '老师', student: '学生'};
 
+    /**
+     * 切换登录角色标签页
+     * @param {string} role - 角色标识：'admin' | 'teacher' | 'student'
+     * 功能：更新隐藏域 currentRole、角色提示文字、标签页高亮、账号输入框占位符
+     */
     function switchRole(role) {
         document.getElementById('currentRole').value = role;
         document.getElementById('roleLabel').textContent = ROLE_NAMES[role];
@@ -102,6 +119,12 @@
         else input.placeholder = '请输入学号';
     }
 
+    /**
+     * 处理登录表单提交
+     * @param {Event} e - 表单提交事件
+     * 功能：调用 POST /api/auth/login 接口进行身份验证，成功后根据角色跳转到对应控制台
+     * 角色路由：admin → admin_dashboard.html | teacher → teacher_dashboard.html | student → student_dashboard.html
+     */
     async function handleLogin(e) {
         e.preventDefault();
         var role = document.getElementById('currentRole').value;
@@ -137,6 +160,7 @@
         btn.disabled = false;
     }
 
+    /** 页面初始化：默认选中管理员角色 */
     switchRole('admin');
 </script>
 </body>

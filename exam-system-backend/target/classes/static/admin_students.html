@@ -7,22 +7,34 @@
 <title>学生账号管理 - 课程习题测验系统</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="iconify-icon.min.js"></script>
+<!-- 管理员控制台公共样式 -->
 <style>
+        /* 页面背景色 */
         body { background-color: #F0F2F5; }
+        /* 侧边栏：深蓝色背景 */
         .sidebar { background-color: #001529; }
+        /* 侧边栏菜单项样式 */
         .sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
+        /* 侧边栏菜单项悬停效果 */
         .sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
+        /* 侧边栏当前激活菜单项 */
         .sidebar-item.active { color: #fff; background-color: #1890FF; }
+        /* 侧边栏折叠状态 */
         .sidebar.collapsed { display: none; }
+        /* 用户下拉菜单容器 */
         .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+        /* 用户下拉菜单展开 */
         .user-dropdown.show { display: block; }
+        /* 下拉菜单链接项 */
         .user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+        /* 下拉菜单链接项悬停 */
         .user-dropdown a:hover { background: #f5f5f5; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 <!-- 侧边栏 -->
 <div id="sidebar" class="sidebar w-60 flex-none flex flex-col">
+<!-- 侧边栏头部：Logo + 标题 -->
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 <iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
             管理中心
@@ -187,8 +199,10 @@
 </div>
 </div>
 <script>
+    /** API 基础路径 */
     var API_BASE = '/api';
 
+    /** GET 请求封装，401 自动跳转登录页 */
     function apiGet(url, params) {
         var query = params ? '?' + new URLSearchParams(params).toString() : '';
         return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
@@ -197,6 +211,7 @@
         });
     }
 
+    /** POST 请求封装 */
     function apiPost(url, data) {
         return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -204,6 +219,7 @@
         });
     }
 
+    /** PUT 请求封装 */
     function apiPut(url, data) {
         return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -211,6 +227,7 @@
         });
     }
 
+    /** DELETE 请求封装 */
     function apiDelete(url) {
         return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -218,13 +235,21 @@
         });
     }
 
+    /** 当前页码 */
     var currentPage = 1;
+    /** 每页条数 */
     var pageSize = 10;
+    /** 总页数 */
     var totalPages = 1;
+    /** 当前编辑的学生ID，null 表示新增模式 */
     var editingId = null;
+    /** 所有课程列表缓存，用于渲染课程分配复选框 */
     var allCourses = [];
 
-    // 加载管理员姓名
+    /**
+     * 加载当前登录管理员姓名，显示在顶部导航栏
+     * 调用 GET /api/auth/current-user
+     */
     function loadAdminName() {
         apiGet('/auth/current-user').then(function(user) {
             var data = user.data || user;
@@ -235,7 +260,10 @@
         }).catch(function() {});
     }
 
-    // 加载所有课程
+    /**
+     * 加载所有课程列表，用于渲染课程分配复选框
+     * 调用 GET /api/courses（公开接口）
+     */
     function loadAllCourses() {
         apiGet('/courses').then(function(res) {
             allCourses = res.data || res || [];
@@ -244,7 +272,11 @@
         }).catch(function() {});
     }
 
-    // 加载学生列表
+    /**
+     * 加载学生列表（分页+搜索+状态筛选）
+     * 调用 GET /api/admin/students
+     * 参数：page, pageSize, keyword, status
+     */
     function loadStudents() {
         var keyword = document.getElementById('searchKeyword').value;
         var status = document.getElementById('searchStatus').value;
@@ -312,7 +344,10 @@
         tbody.innerHTML = html;
     }
 
-    // 渲染分页
+    /**
+     * 渲染分页控件
+     * @param {number} total - 总记录数
+     */
     function renderPagination(total) {
         document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条记录，每页 ' + pageSize + ' 条';
         var buttonsHtml = '';
@@ -350,12 +385,21 @@
         document.getElementById('paginationButtons').innerHTML = buttonsHtml;
     }
 
+    /**
+     * 跳转到指定页码
+     * @param {number} page - 目标页码
+     */
     function goToPage(page) {
         if (page < 1 || page > totalPages) return;
         currentPage = page;
         loadStudents();
     }
 
+    /**
+     * HTML 转义函数，防止 XSS 注入
+     * @param {string} str - 待转义字符串
+     * @returns {string} 转义后的安全字符串
+     */
     function escapeHtml(str) {
         if (!str) return '';
         var div = document.createElement('div');
@@ -363,7 +407,10 @@
         return div.innerHTML;
     }
 
-    // 加载每位学生的课程标签
+    /**
+     * 为表格中每位学生加载课程标签，显示在"所学课程"列
+     * 遍历所有 span[id^="courses-"]，调用 GET /api/admin/students/{studentId}/courses
+     */
     function loadStudentsCourses() {
         var spans = document.querySelectorAll('[id^="courses-"]');
         spans.forEach(function(span) {
@@ -386,8 +433,15 @@
         });
     }
 
-    // 搜索功能
+    /** 搜索输入防抖定时器（400ms 延迟） */
     var searchTimer = null;
+
+    /**
+     * 页面 DOM 加载完成后初始化：
+     * 1. 侧边栏折叠/展开 + 用户下拉菜单
+     * 2. 加载管理员姓名和学生列表
+     * 3. 搜索框输入防抖（400ms）+ 状态下拉筛选
+     */
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('menuToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -420,7 +474,10 @@
         });
     });
 
-    // 打开新增模态框
+    /**
+     * 打开新增学生模态框，重置所有表单字段
+     * @param {string} type - 操作类型，'add' 表示新增
+     */
     function openModal(type) {
         editingId = null;
         document.getElementById('editId').value = '';
@@ -438,7 +495,11 @@
         document.getElementById('modal').classList.remove('hidden');
     }
 
-    // 打开编辑模态框
+    /**
+     * 打开编辑学生模态框，加载学生详情并显示课程分配复选框
+     * 调用 GET /api/admin/students/{id} 获取学生详情
+     * @param {number} id - 学生 studentId
+     */
     function openEditModal(id) {
         editingId = id;
         apiGet('/admin/students/' + id).then(function(res) {
@@ -463,7 +524,11 @@
         });
     }
 
-    // 加载学生课程分配复选框
+    /**
+     * 加载指定学生的课程分配情况并渲染复选框
+     * 调用 GET /api/admin/students/{studentId}/courses
+     * @param {number} studentId - 学生ID
+     */
     function loadStudentCourseAssign(studentId) {
         apiGet('/admin/students/' + studentId + '/courses').then(function(res) {
             var assigned = res.data || res || [];
@@ -478,6 +543,10 @@
         });
     }
 
+    /**
+     * 渲染课程分配复选框列表
+     * @param {Object} assignedIds - 已分配课程ID集合，key 为 courseId，value 为 true
+     */
     function renderCourseCheckboxes(assignedIds) {
         var container = document.getElementById('courseCheckboxes');
         if (allCourses.length === 0) {
@@ -496,11 +565,18 @@
         container.innerHTML = html;
     }
 
+    /** 关闭模态框 */
     function closeModal() {
         document.getElementById('modal').classList.add('hidden');
     }
 
-    // 提交表单
+    /**
+     * 提交新增/编辑学生表单
+     * 新增：POST /api/admin/students
+     * 编辑：PUT /api/admin/students/{id}
+     * 编辑模式下同时保存课程分配：PUT /api/admin/students/{id}/courses
+     * @param {Event} e - 表单提交事件
+     */
     function submitForm(e) {
         e.preventDefault();
         var data = {
@@ -549,7 +625,12 @@
         return false;
     }
 
-    // 切换状态
+    /**
+     * 切换学生启用/禁用状态
+     * 调用 PUT /api/admin/students/{id}/status
+     * @param {number} id - 学生 studentId
+     * @param {number} newStatus - 新状态：1=启用, 0=禁用
+     */
     function toggleStatus(id, newStatus) {
         if (!confirm('确定要' + (newStatus === 1 ? '启用' : '禁用') + '该学生账号吗？')) return;
         apiPut('/admin/students/' + id + '/status', { status: newStatus }).then(function() {
@@ -559,7 +640,11 @@
         });
     }
 
-    // 重置密码（在编辑弹窗中调用）
+    /**
+     * 重置学生密码为默认密码（123456）
+     * 调用 PUT /api/admin/students/{id}/reset-password
+     * @param {Event} event - 按钮点击事件
+     */
     function doResetPassword(event) {
         if (!editingId) return;
         if (!confirm('确定要重置该学生的密码吗？重置后密码将恢复为默认密码。')) return;
@@ -570,7 +655,11 @@
         });
     }
 
-    // 删除学生
+    /**
+     * 删除学生账号（该学生的练习和测验记录也将被删除）
+     * 调用 DELETE /api/admin/students/{id}
+     * @param {number} id - 学生 studentId
+     */
     function deleteStudent(id) {
         if (!confirm('确定要删除该学生账号吗？此操作将同时删除该学生的练习记录和测验记录，且不可恢复！')) return;
         apiDelete('/admin/students/' + id).then(function(res) {

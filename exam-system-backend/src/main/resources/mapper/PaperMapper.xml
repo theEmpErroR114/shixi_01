@@ -2,40 +2,48 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.PaperMapper">
 
+    <!-- ================================================================ -->
+    <!-- 试卷（Paper）实体结果映射                                              -->
+    <!-- 表：t_paper，主键：paper_id                                        -->
+    <!-- 状态：0=未发布（草稿），1=已发布，2=已回收                              -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.Paper">
         <id column="paper_id" property="paperId"/>
         <result column="paper_name" property="paperName"/>
         <result column="course_id" property="courseId"/>
-        <result column="teacher_id" property="teacherId"/>
+        <result column="teacher_id" property="teacherId"/>           <!-- 创建教师ID（仅展示用，无FK约束） -->
         <result column="total_score" property="totalScore"/>
-        <result column="duration" property="duration"/>
+        <result column="duration" property="duration"/>              <!-- 考试时长（分钟） -->
         <result column="status" property="status"/>
-        <result column="start_date" property="startDate"/>
-        <result column="end_date" property="endDate"/>
+        <result column="start_date" property="startDate"/>           <!-- 开考日期（可空，空表示随时可考） -->
+        <result column="end_date" property="endDate"/>               <!-- 截止日期（可空，空表示无截止） -->
         <result column="create_time" property="createTime"/>
+        <!-- 以下字段来自 JOIN，非 t_paper 表字段 -->
         <result column="course_name" property="courseName"/>
         <result column="teacher_name" property="teacherName"/>
     </resultMap>
 
+    <!-- 按条件分页查询试卷，关联课程表和教师表，支持按状态和课程ID过滤 -->
     <select id="findByFilters" resultMap="BaseResultMap">
         SELECT p.*, c.course_name, t.real_name AS teacher_name
         FROM t_paper p
-        LEFT JOIN t_course c ON p.course_id = c.course_id
-        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
+        LEFT JOIN t_course c ON p.course_id = c.course_id         <!-- 关联课程表：获取课程名称 -->
+        LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id      <!-- 关联教师表：获取教师姓名 -->
         <where>
             <if test="status != null">
-                AND p.status = #{status}
+                AND p.status = #{status}            <!-- 按试卷状态过滤（0/1/2） -->
             </if>
             <if test="courseId != null">
-                AND p.course_id = #{courseId}
+                AND p.course_id = #{courseId}       <!-- 按课程过滤 -->
             </if>
         </where>
         ORDER BY p.create_time DESC
         <if test="offset != null and limit != null">
-            LIMIT #{offset}, #{limit}
+            LIMIT #{offset}, #{limit}                 <!-- 分页参数 -->
         </if>
     </select>
 
+    <!-- 统计按条件过滤的试卷总数，用于分页 -->
     <select id="countByFilters" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_paper p
         <where>
@@ -48,6 +56,7 @@
         </where>
     </select>
 
+    <!-- 按条件+教师课程范围查询试卷（教师只能查看自己授课课程的试卷） -->
     <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
         SELECT p.*, c.course_name, t.real_name AS teacher_name
         FROM t_paper p
@@ -60,10 +69,11 @@
             <if test="courseId != null">
                 AND p.course_id = #{courseId}
             </if>
+            <!-- courseIds 和 courseId 互斥：优先使用单个 courseId，只有未指定 courseId 时才用 courseIds 列表 -->
             <if test="courseIds != null and courseId == null">
                 AND p.course_id IN
                 <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
-                    #{cid}
+                    #{cid}                          <!-- 遍历教师授课课程ID列表 -->
                 </foreach>
             </if>
         </where>
@@ -73,6 +83,7 @@
         </if>
     </select>
 
+    <!-- 统计教师课程范围内的试卷总数 -->
     <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_paper p
         <where>
@@ -91,6 +102,7 @@
         </where>
     </select>
 
+    <!-- 根据主键查询试卷详情，关联课程和教师信息 -->
     <select id="selectById" resultMap="BaseResultMap">
         SELECT p.*, c.course_name, t.real_name AS teacher_name
         FROM t_paper p
@@ -99,61 +111,65 @@
         WHERE p.paper_id = #{paperId}
     </select>
 
+    <!-- 新增试卷，主键自动回填到 paperId 字段 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="paperId">
         INSERT INTO t_paper (paper_name, course_id, teacher_id, total_score, duration, status, start_date, end_date, create_time)
         VALUES (#{paperName}, #{courseId}, #{teacherId}, #{totalScore}, #{duration}, #{status}, #{startDate}, #{endDate}, #{createTime})
     </insert>
 
+    <!-- 动态更新试卷信息（不包含题目列表，题目通过 PaperQuestion 单独管理） -->
     <update id="update">
         UPDATE t_paper
         <set>
-            <if test="paperName != null">paper_name = #{paperName},</if>
-            <if test="courseId != null">course_id = #{courseId},</if>
-            <if test="totalScore != null">total_score = #{totalScore},</if>
-            <if test="duration != null">duration = #{duration},</if>
-            <if test="startDate != null">start_date = #{startDate},</if>
-            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="paperName != null">paper_name = #{paperName},</if>       <!-- 试卷名称 -->
+            <if test="courseId != null">course_id = #{courseId},</if>          <!-- 所属课程 -->
+            <if test="totalScore != null">total_score = #{totalScore},</if>    <!-- 试卷总分 -->
+            <if test="duration != null">duration = #{duration},</if>           <!-- 考试时长 -->
+            <if test="startDate != null">start_date = #{startDate},</if>       <!-- 开考日期 -->
+            <if test="endDate != null">end_date = #{endDate},</if>             <!-- 截止日期 -->
         </set>
         WHERE paper_id = #{paperId}
     </update>
 
+    <!-- 更新试卷状态（发布/回收） -->
     <update id="updateStatus">
         UPDATE t_paper SET status = #{status} WHERE paper_id = #{paperId}
     </update>
 
+    <!-- 根据主键删除试卷 -->
     <delete id="deleteById">
         DELETE FROM t_paper WHERE paper_id = #{paperId}
     </delete>
 
-    <!-- 学生可用试卷：已发布 + 课程匹配 + 日期在有效范围内 -->
+    <!-- 学生端：查询当前可参加的考试（已发布 + 在有效日期范围内 + 学生选修的课程） -->
     <select id="findAvailableForStudent" resultMap="BaseResultMap">
         SELECT p.*, c.course_name, t.real_name AS teacher_name
         FROM t_paper p
         LEFT JOIN t_course c ON p.course_id = c.course_id
         LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
-        WHERE p.status = 1
+        WHERE p.status = 1                                          <!-- 已发布的试卷 -->
           AND p.course_id IN
           <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
-              #{cid}
+              #{cid}                                                 <!-- 学生选修的课程ID列表 -->
           </foreach>
-          AND (p.start_date IS NULL OR p.start_date &lt;= #{now})
-          AND (p.end_date IS NULL OR p.end_date &gt;= #{now})
+          AND (p.start_date IS NULL OR p.start_date &lt;= #{now})    <!-- 未设开始日期，或已到开始时间 -->
+          AND (p.end_date IS NULL OR p.end_date &gt;= #{now})       <!-- 未设截止日期，或尚未过期 -->
         ORDER BY p.create_time DESC
     </select>
 
-    <!-- 学生即将开始的考试：start_date 在未来 -->
+    <!-- 学生端：查询即将开始的考试（start_date 在未来） -->
     <select id="findUpcomingForStudent" resultMap="BaseResultMap">
         SELECT p.*, c.course_name, t.real_name AS teacher_name
         FROM t_paper p
         LEFT JOIN t_course c ON p.course_id = c.course_id
         LEFT JOIN t_teacher t ON p.teacher_id = t.teacher_id
-        WHERE p.status = 1
+        WHERE p.status = 1                                          <!-- 已发布的试卷 -->
           AND p.course_id IN
           <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
               #{cid}
           </foreach>
-          AND p.start_date IS NOT NULL
-          AND p.start_date &gt; #{now}
+          AND p.start_date IS NOT NULL                              <!-- 必须设置了开始日期 -->
+          AND p.start_date &gt; #{now}                              <!-- 开始日期尚未到达 -->
         ORDER BY p.start_date ASC
     </select>
 

@@ -149,9 +149,17 @@
 </div>
 </div>
 <script>
+    /** API 请求基础路径 */
     var API_BASE = '/api';
+    /** 当前页码 */
     var currentPage = 1;
 
+    /**
+     * 发送 GET 请求
+     * @param {string} url - API路径
+     * @param {object} params - 请求参数对象
+     * @returns {Promise} 返回 JSON 格式响应，401时自动跳转登录页
+     */
     function apiGet(url, params) {
         var q = params ? '?' + new URLSearchParams(params).toString() : '';
         return fetch(API_BASE + url + q, { credentials: 'include' }).then(function(res) {
@@ -160,17 +168,27 @@
         });
     }
 
+    /**
+     * HTML 转义，防止 XSS 攻击
+     * @param {string} s - 需要转义的字符串
+     * @returns {string} 转义后的安全字符串
+     */
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+    /** 搜索学生：重置到第一页并重新加载 */
     function searchStudents() {
         currentPage = 1;
         loadStudents();
     }
 
+    /**
+     * 加载学生成绩统计列表
+     * 调用 GET /api/teacher/students/stats 获取授课范围内学生的练习和测验统计
+     */
     function loadStudents() {
         var keyword = document.getElementById('searchInput').value.trim();
         var params = {page: currentPage, pageSize: 10};
-        if (keyword) params.keyword = keyword;
+        if (keyword) params.keyword = keyword; // 按姓名搜索
         apiGet('/teacher/students/stats', params).then(function(res) {
             var data = res.data || res;
             var list = data.list || data.records || [];
@@ -179,6 +197,11 @@
         }).catch(function() {});
     }
 
+    /**
+     * 渲染学生成绩统计表格
+     * 列：姓名、班级、练习次数、练习正确率、测验次数、测验均分、操作
+     * @param {Array} list - 学生统计数据列表
+     */
     function renderTable(list) {
         var tbody = document.getElementById('studentTableBody');
         if (list.length === 0) {
@@ -192,6 +215,7 @@
             html += '<td class="px-6 py-4 font-bold">' + esc(s.realName || '') + '</td>';
             html += '<td class="px-6 py-4">' + esc(s.className || '') + '</td>';
             html += '<td class="px-6 py-4">' + (s.practiceCount || 0) + '</td>';
+            // 练习正确率 >= 60% 显示绿色，否则显示红色
             html += '<td class="px-6 py-4"><span class="text-' + ((s.practiceCorrectRate || 0) >= 60 ? 'green' : 'red') + '-600 font-bold">' + (s.practiceCorrectRate || 0) + '%</span></td>';
             html += '<td class="px-6 py-4">' + (s.examCount || 0) + '</td>';
             html += '<td class="px-6 py-4 font-bold text-blue-600">' + (s.examAvgScore || 0) + '</td>';
@@ -201,6 +225,11 @@
         tbody.innerHTML = html;
     }
 
+    /**
+     * 渲染分页控件
+     * @param {number} total - 总条数
+     * @param {number} page - 当前页码
+     */
     function renderPagination(total, page) {
         var pages = Math.ceil(total / 10);
         document.getElementById('pageInfo').textContent = '共 ' + total + ' 条';
@@ -213,16 +242,24 @@
         document.getElementById('pageBtns').innerHTML = html;
     }
 
+    /** 跳转到指定页 */
     function goPage(p) { currentPage = p; loadStudents(); }
 
+    /**
+     * 显示学生成绩详情弹窗
+     * 调用 GET /api/teacher/students/{studentId}/detail 获取学生详细成绩
+     * @param {number} studentId - 学生ID
+     */
     function showDetail(studentId) {
         apiGet('/teacher/students/' + studentId + '/detail').then(function(res) {
             var d = res.data || res;
             document.getElementById('detailName').textContent = (d.realName || '') + ' - ' + (d.className || '');
+            // 渲染统计卡片：练习次数、练习正确率、测验均分
             document.getElementById('detailStats').innerHTML =
                 '<div class="bg-blue-50 p-4 rounded"><p class="text-xs text-gray-500">练习次数</p><p class="text-xl font-bold">' + (d.practiceCount || 0) + '</p></div>' +
                 '<div class="bg-green-50 p-4 rounded"><p class="text-xs text-gray-500">练习正确率</p><p class="text-xl font-bold">' + (d.practiceCorrectRate || 0) + '%</p></div>' +
                 '<div class="bg-orange-50 p-4 rounded"><p class="text-xs text-gray-500">测验均分</p><p class="text-xl font-bold">' + (d.examAvgScore || 0) + '</p></div>';
+            // 渲染测验成绩列表
             var scoresHtml = '';
             var scores = d.examScores || [];
             for (var i = 0; i < scores.length; i++) {
@@ -233,8 +270,13 @@
         });
     }
 
+    /** 关闭学生详情弹窗 */
     function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); }
 
+    /**
+     * 加载当前登录用户信息并更新顶部导航栏
+     * 调用 GET /api/auth/current-user
+     */
     function loadCurrentUser() {
         apiGet('/auth/current-user').then(function(user) {
             var u = user.data || user;
@@ -247,9 +289,11 @@
         });
     }
 
+    // ===== 页面初始化 =====
     loadCurrentUser();
     loadStudents();
 
+    // ===== 用户下拉菜单切换 =====
     var userMenuTrigger = document.getElementById('userMenuTrigger');
     var userDropdown = document.getElementById('userDropdown');
     userMenuTrigger.addEventListener('click', function(e) {
@@ -260,24 +304,35 @@
         userDropdown.classList.remove('show');
     });
 
-    // 设置菜单
+    // ==================== 设置菜单相关函数 ====================
+
+    /** 打开设置菜单模态框 */
     function openSettingsModal(event) {
         if (event) event.preventDefault();
         document.getElementById('settingsModal').classList.remove('hidden');
     }
+    /** 关闭设置菜单模态框 */
     function closeSettingsModal() {
         document.getElementById('settingsModal').classList.add('hidden');
     }
-    // 修改密码
+
+    // ==================== 修改密码相关函数 ====================
+
+    /** 打开修改密码模态框（同时关闭设置菜单） */
     function openPasswordModal(event) {
         if (event) event.preventDefault();
         closeSettingsModal();
         document.getElementById('passwordModal').classList.remove('hidden');
     }
+    /** 关闭修改密码模态框并重置表单 */
     function closePasswordModal() {
         document.getElementById('passwordModal').classList.add('hidden');
         document.getElementById('settingsForm').reset();
     }
+    /**
+     * 提交修改密码请求
+     * 调用 PUT /api/auth/change-password，成功后跳转登录页
+     */
     function savePassword(event) {
         event.preventDefault();
         var oldPwd = document.getElementById('sp_oldPassword').value.trim();
@@ -286,6 +341,7 @@
         if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
         if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
         if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+        // 调用修改密码接口
         fetch(API_BASE + '/auth/change-password', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},

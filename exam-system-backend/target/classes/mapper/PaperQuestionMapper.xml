@@ -2,48 +2,58 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.PaperQuestionMapper">
 
+    <!-- ================================================================ -->
+    <!-- 试卷-题目关联表（PaperQuestion）Mapper                                -->
+    <!-- 表：t_paper_question，主键：id，多对多中间表                            -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.PaperQuestion">
         <id column="id" property="id"/>
         <result column="paper_id" property="paperId"/>
         <result column="question_id" property="questionId"/>
-        <result column="score" property="score"/>
-        <result column="sort_order" property="sortOrder"/>
+        <result column="score" property="score"/>                    <!-- 该题在试卷中的分值 -->
+        <result column="sort_order" property="sortOrder"/>           <!-- 题目排列序号 -->
     </resultMap>
 
+    <!-- 带题目详细信息的扩展结果映射，用于查询试卷时一并获取题目内容 -->
     <resultMap id="WithQuestionMap" type="com.examsystem.entity.PaperQuestion" extends="BaseResultMap">
         <association property="question" javaType="com.examsystem.entity.Question">
             <id column="q_id" property="questionId"/>
             <result column="q_course_id" property="courseId"/>
-            <result column="q_question_type" property="questionType"/>
-            <result column="q_content" property="content"/>
-            <result column="q_answer" property="answer"/>
-            <result column="q_analysis" property="analysis"/>
-            <result column="q_difficulty" property="difficulty"/>
+            <result column="q_question_type" property="questionType"/>   <!-- 题目类型：1-单选 2-多选 3-判断 4-填空 5-简答 -->
+            <result column="q_content" property="content"/>              <!-- 题目内容 -->
+            <result column="q_answer" property="answer"/>                <!-- 正确答案 -->
+            <result column="q_analysis" property="analysis"/>            <!-- 题目解析 -->
+            <result column="q_difficulty" property="difficulty"/>         <!-- 难度：1-易 2-中 3-难 -->
             <result column="q_teacher_id" property="teacherId"/>
             <result column="q_create_time" property="createTime"/>
         </association>
     </resultMap>
 
+    <!-- 插入单条试卷-题目关联 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO t_paper_question (paper_id, question_id, score, sort_order)
         VALUES (#{paperId}, #{questionId}, #{score}, #{sortOrder})
     </insert>
 
+    <!-- 批量插入试卷-题目关联，用于组卷时一次保存所有题目 -->
     <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO t_paper_question (paper_id, question_id, score, sort_order) VALUES
-        <foreach collection="list" item="item" separator=",">
+        <foreach collection="list" item="item" separator=",">  <!-- 遍历题目列表，逗号分隔多条记录 -->
             (#{item.paperId}, #{item.questionId}, #{item.score}, #{item.sortOrder})
         </foreach>
     </insert>
 
+    <!-- 根据试卷ID删除该试卷的所有题目关联（重新组卷前先删后插） -->
     <delete id="deleteByPaperId">
         DELETE FROM t_paper_question WHERE paper_id = #{paperId}
     </delete>
 
+    <!-- 根据题目ID删除关联（删除题目时级联删除 FK 引用） -->
     <delete id="deleteByQuestionId">
         DELETE FROM t_paper_question WHERE question_id = #{questionId}
     </delete>
 
+    <!-- 查询某试卷的所有题目（含题目详细信息），按 sort_order 排序 -->
     <select id="selectByPaperId" resultMap="WithQuestionMap">
         SELECT
             pq.id, pq.paper_id, pq.question_id, pq.score, pq.sort_order,

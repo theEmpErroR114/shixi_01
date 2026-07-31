@@ -2,6 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.StudentCourseMapper">
 
+    <!-- ================================================================ -->
+    <!-- 学生-课程关联表（StudentCourse）Mapper                                -->
+    <!-- 表：t_student_course，多对多中间表，无独立主键                          -->
+    <!-- ================================================================ -->
+
+    <!-- 根据学生ID查询该学生选修的所有课程（返回完整 Course 对象） -->
     <select id="selectCoursesByStudentId" resultType="com.examsystem.entity.Course">
         SELECT c.course_id, c.course_name, c.description, c.create_time
         FROM t_course c
@@ -10,18 +16,22 @@
         ORDER BY c.course_name
     </select>
 
+    <!-- 根据学生ID查询该学生选修的课程ID列表（仅返回 course_id） -->
     <select id="selectCourseIdsByStudentId" resultType="java.lang.Long">
         SELECT course_id FROM t_student_course WHERE student_id = #{studentId}
     </select>
 
+    <!-- 删除某个学生的所有课程关联（重新分配课程前先删后插） -->
     <delete id="deleteByStudentId">
         DELETE FROM t_student_course WHERE student_id = #{studentId}
     </delete>
 
+    <!-- 删除某门课程的所有学生关联 -->
     <delete id="deleteByCourseId">
         DELETE FROM t_student_course WHERE course_id = #{courseId}
     </delete>
 
+    <!-- 新增学生-课程关联记录 -->
     <insert id="insert">
         INSERT INTO t_student_course (student_id, course_id) VALUES (#{studentId}, #{courseId})
     </insert>

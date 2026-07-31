@@ -48,8 +48,10 @@
 </nav>
 
 </div>
-<!-- 主内容区 -->
+<!-- ==================== 主内容区域 ==================== -->
 <div class="flex-1 flex flex-col overflow-hidden">
+
+<!-- 顶部导航栏：面包屑 + 用户下拉菜单 -->
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
 <div class="flex items-center space-x-2 text-sm text-gray-500">
 <span>教学管理</span>
@@ -78,7 +80,7 @@
 </div>
 </header>
 <div class="flex-1 flex overflow-hidden">
-<!-- 左侧分类树 -->
+<!-- ==================== 左侧课程分类树 ==================== -->
 <div class="w-64 bg-white border-r border-gray-100 flex flex-col overflow-hidden">
 <div class="p-4 border-b border-gray-50 flex items-center justify-between">
 <span class="font-bold text-gray-800 text-sm">课程分类</span>
@@ -90,9 +92,10 @@
 <div class="text-center text-sm text-gray-400 py-4">加载中...</div>
 </div>
 </div>
-<!-- 右侧列表 -->
+<!-- ==================== 右侧题目列表区域 ==================== -->
 <div class="flex-1 flex flex-col overflow-hidden p-6">
-<!-- 筛选栏 -->
+
+<!-- 筛选栏：按题型、难度、关键词过滤 -->
 <div class="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-50 flex flex-wrap items-center gap-6">
 <div class="flex items-center space-x-2">
 <span class="text-sm text-gray-500">题型：</span>
@@ -255,8 +258,15 @@
 </div>
 </div>
 <script>
+    /** API 请求基础路径 */
     var API_BASE = '/api';
 
+    /**
+     * 发送 GET 请求
+     * @param {string} url - API路径
+     * @param {object} params - 请求参数对象
+     * @returns {Promise} 返回 JSON 格式响应，401时自动跳转登录页
+     */
     function apiGet(url, params) {
         var query = params ? '?' + new URLSearchParams(params).toString() : '';
         return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
@@ -264,18 +274,35 @@
             return res.json();
         });
     }
+    /**
+     * 发送 POST 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPost(url, data) {
         return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
             return res.json();
         });
     }
+    /**
+     * 发送 PUT 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPut(url, data) {
         return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
             return res.json();
         });
     }
+    /**
+     * 发送 DELETE 请求
+     * @param {string} url - API路径
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiDelete(url) {
         return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -283,14 +310,15 @@
         });
     }
 
-    // 当前筛选状态
-    var currentCourseId = '';
-    var currentDifficulty = '';
-    var currentPage = 1;
-    var currentPageSize = 10;
-    var courseList = [];
-    var optionCount = 0;
+    // ===== 当前筛选状态 =====
+    var currentCourseId = '';       // 当前选中的课程ID，空字符串表示全部
+    var currentDifficulty = '';     // 当前选中的难度，空字符串表示全部
+    var currentPage = 1;            // 当前页码
+    var currentPageSize = 10;       // 每页显示条数
+    var courseList = [];            // 课程列表缓存
+    var optionCount = 0;            // 当前已添加的选项数量
 
+    // 题型映射：整数类型 -> 中文标签
     var TYPE_LABELS = {
         '1': '单选题',
         '2': '多选题',
@@ -298,6 +326,7 @@
         '4': '填空题',
         '5': '简答题'
     };
+    // 题型对应的颜色主题
     var TYPE_COLORS = {
         '1': 'blue',
         '2': 'purple',
@@ -305,19 +334,30 @@
         '4': 'orange',
         '5': 'red'
     };
+    // 难度映射
     var DIFFICULTY_LABELS = { '1': '易', '2': '中', '3': '难' };
     var DIFFICULTY_COLORS = { '1': 'green', '2': 'orange', '3': 'red' };
 
+    /**
+     * HTML 转义，防止 XSS 攻击
+     * @param {string} str - 需要转义的字符串
+     * @returns {string} 转义后的 HTML 安全字符串
+     */
     function escapeHtml(str) {
         var div = document.createElement('div');
         div.textContent = str || '';
         return div.innerHTML;
     }
 
-    // ===== 课程树 =====
+    // ==================== 课程树 ====================
+
+    /**
+     * 加载教师所授课程列表
+     * 调用 GET /api/teacher/courses 获取当前教师有权限的课程
+     */
     function loadCourses() {
         apiGet('/teacher/courses').then(function(data) {
-            data = data.data || data;
+            data = data.data || data; // GET /api/teacher/courses 返回 data 直接是数组
             courseList = data.records || data.list || data || [];
             renderCourseTree(courseList);
         }).catch(function(err) {
@@ -325,6 +365,10 @@
         });
     }
 
+    /**
+     * 渲染左侧课程分类树
+     * @param {Array} courses - 课程列表
+     */
     function renderCourseTree(courses) {
         var tree = document.getElementById('courseTree');
         var html = '<div class="tree-node px-4 py-3 cursor-pointer text-sm text-gray-600 active" data-course-id="" onclick="selectCourse(this, \'\')">全部题目</div>';
@@ -338,6 +382,11 @@
         tree.innerHTML = html;
     }
 
+    /**
+     * 选择课程节点，更新 active 样式并重新加载题目列表
+     * @param {Element} el - 被点击的树节点DOM元素
+     * @param {string} courseId - 课程ID，空字符串表示全部
+     */
     function selectCourse(el, courseId) {
         var nodes = document.querySelectorAll('#courseTree .tree-node');
         for (var i = 0; i < nodes.length; i++) {
@@ -345,37 +394,50 @@
         }
         el.classList.add('active');
         currentCourseId = courseId;
-        currentPage = 1;
+        currentPage = 1; // 切换课程时重置到第一页
         loadQuestions();
     }
 
-    // ===== 筛选 =====
+    // ==================== 筛选 ====================
+
+    /**
+     * 选择难度筛选，更新按钮样式并重新加载
+     * @param {Element} btn - 被点击的难度按钮DOM元素
+     * @param {string} difficulty - 难度值：'1'易/'2'中/'3'难/''全部
+     */
     function selectDifficulty(btn, difficulty) {
         var btns = document.querySelectorAll('#difficultyBtns button');
         for (var i = 0; i < btns.length; i++) {
             btns[i].className = 'px-3 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50';
         }
-        btn.className = 'px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded';
+        btn.className = 'px-3 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded'; // 选中态样式
         currentDifficulty = difficulty;
         currentPage = 1;
         loadQuestions();
     }
 
+    /** 应用筛选条件（题型或关键词变化时触发） */
     function applyFilters() {
         currentPage = 1;
         loadQuestions();
     }
 
-    // ===== 题目列表 =====
+    // ==================== 题目列表 ====================
+
+    /**
+     * 加载题目列表（分页、筛选）
+     * 调用 GET /api/teacher/questions 获取当前教师在权限范围内的题目
+     */
     function loadQuestions() {
         var params = { page: currentPage, pageSize: currentPageSize };
         if (currentCourseId) params.courseId = currentCourseId;
         if (currentDifficulty) params.difficulty = currentDifficulty;
         var typeVal = document.getElementById('filterType').value;
-        if (typeVal) params.questionType = typeVal;
+        if (typeVal) params.questionType = typeVal; // 题型筛选：1单选/2多选/3判断/4填空/5简答
         var keyword = document.getElementById('filterKeyword').value.trim();
         if (keyword) params.keyword = keyword;
 
+        // 分页接口返回 data.list
         apiGet('/teacher/questions', params).then(function(data) {
             data = data.data || data;
             renderQuestions(data.records || data.list || []);
@@ -385,6 +447,10 @@
         });
     }
 
+    /**
+     * 渲染题目卡片列表
+     * @param {Array} questions - 题目数组
+     */
     function renderQuestions(questions) {
         var container = document.getElementById('questionList');
         if (questions.length === 0) {
@@ -406,6 +472,7 @@
             html += '<span class="px-2 py-0.5 bg-' + diffColor + '-50 text-' + diffColor + '-600 text-xs font-bold rounded">难度：' + diffLabel + '</span>';
             html += '<span class="text-gray-400 text-xs">ID: ' + escapeHtml(q.questionId || '') + '</span>';
             html += '</div>';
+            // 操作按钮：鼠标悬停时显示
             html += '<div class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">';
             html += '<button class="text-blue-500 text-sm hover:underline" onclick="editQuestion(\'' + q.questionId + '\')">编辑</button>';
             html += '<button class="text-red-400 text-sm hover:underline" onclick="deleteQuestion(\'' + q.questionId + '\')">删除</button>';
@@ -413,13 +480,14 @@
             html += '</div>';
             html += '<div class="text-gray-800 font-medium mb-4 leading-relaxed">' + escapeHtml(q.content || '') + '</div>';
 
-            // 选项
+            // 渲染选项（单选/多选有选项，判断/填空/简答无选项）
             var options = q.options || [];
             if (options.length > 0) {
                 html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">';
                 for (var j = 0; j < options.length; j++) {
                     var opt = options[j];
                     var isCorrect = opt.isCorrect;
+                    // 多选题额外判断：通过 answer 字段中包含的选项标签来标记正确答案
                     if (q.questionType == 2 || q.questionType === '2' || q.questionType === 'MULTI_CHOICE') {
                         isCorrect = q.answer && q.answer.indexOf(opt.optionLabel) >= 0;
                     }
@@ -428,6 +496,7 @@
                 }
                 html += '</div>';
             } else if (q.answer) {
+                // 无选项但有答案（如填空/简答/判断）：直接显示答案文本
                 html += '<div class="text-sm text-gray-500 mt-2">答案：' + escapeHtml(q.answer) + '</div>';
             }
 
@@ -440,6 +509,10 @@
         container.innerHTML = html;
     }
 
+    /**
+     * 渲染分页控件
+     * @param {object} data - 分页数据 {total, current, pages}
+     */
     function renderPagination(data) {
         var total = data.total || 0;
         var page = data.current || currentPage;
@@ -462,17 +535,20 @@
         document.getElementById('pageBtns').innerHTML = btnHtml;
     }
 
+    /** 跳转到指定页 */
     function goPage(p) {
         currentPage = p;
         loadQuestions();
     }
 
-    // ===== 题目模态框 =====
+    // ==================== 题目表单模态框 ====================
+
+    /** 打开新增题目模态框，初始化所有表单字段为默认值 */
     function openQuestionModal() {
         document.getElementById('qModalTitle').textContent = '新增习题';
-        document.getElementById('qEditId').value = '';
-        document.getElementById('qType').value = '1';
-        document.getElementById('qDifficulty').value = '1';
+        document.getElementById('qEditId').value = ''; // 清空编辑ID表示新增
+        document.getElementById('qType').value = '1'; // 默认单选题
+        document.getElementById('qDifficulty').value = '1'; // 默认难度：易
         document.getElementById('qContent').value = '';
         document.getElementById('qAnswer').value = '';
         document.getElementById('qAnswerTf').value = '';
@@ -480,17 +556,22 @@
         optionCount = 0;
         document.getElementById('optionsContainer').innerHTML = '';
         populateCourseSelect('');
-        onQuestionTypeChange();
+        onQuestionTypeChange(); // 根据默认题型显示/隐藏选项区和答案区
         document.getElementById('qModal').classList.remove('hidden');
     }
 
+    /** 关闭题目表单模态框 */
     function closeQuestionModal() {
         document.getElementById('qModal').classList.add('hidden');
     }
 
+    /**
+     * 填充课程下拉选择框
+     * @param {string} selectedId - 默认选中的课程ID
+     */
     function populateCourseSelect(selectedId) {
         var sel = document.getElementById('qCourseId');
-        var html = '<option value="">请选择课程</option>';
+        var html = '<option value="">请选择课程</option>'; // 必须保留默认占位选项
         for (var i = 0; i < courseList.length; i++) {
             var c = courseList[i];
             var selAttr = c.courseId == selectedId ? ' selected' : '';
@@ -499,16 +580,20 @@
         sel.innerHTML = html;
     }
 
+    /**
+     * 题型变化时切换表单UI
+     * 单选题(1)/多选题(2)：显示选项区 + 隐藏答案输入区（答案从勾选自动生成）
+     * 判断题(3)/填空题(4)/简答题(5)：隐藏选项区 + 显示答案输入区
+     */
     function onQuestionTypeChange() {
         var type = document.getElementById('qType').value;
         var optionsArea = document.getElementById('optionsArea');
         var answerArea = document.getElementById('answerArea');
-        // 判断题/填空题/简答题：隐藏选项区，显示答案区
-        // 单选题/多选题：显示选项区，隐藏答案区（答案从勾选自动生成）
+        // 类型3/4/5不需要选项，直接输入答案
         var noOptions = type == 3 || type == 4 || type == 5;
         optionsArea.style.display = noOptions ? 'none' : 'block';
-        answerArea.style.display = (type == 1 || type == 2) ? 'none' : 'block';
-        // 判断题：下拉选择；填空/简答：文本输入
+        answerArea.style.display = (type == 1 || type == 2) ? 'none' : 'block'; // 类型1/2隐藏答案区
+        // 判断题(3)使用下拉选择框，填空(4)/简答(5)使用文本输入框
         var isTf = type == 3;
         document.getElementById('qAnswer').className = isTf ? 'hidden' : 'w-full border rounded-md px-3 py-2 text-sm';
         document.getElementById('qAnswerTf').className = isTf ? 'w-full border rounded-md px-3 py-2 text-sm' : 'hidden';
@@ -519,9 +604,13 @@
         }
     }
 
+    /**
+     * 添加一个选项行到选项容器
+     * 单选题添加 radio 按钮，多选题添加 checkbox
+     */
     function addOption() {
         var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        if (optionCount >= labels.length) return;
+        if (optionCount >= labels.length) return; // 最多26个选项
         var label = labels.charAt(optionCount);
         optionCount++;
         var container = document.getElementById('optionsContainer');
@@ -529,7 +618,7 @@
         div.className = 'flex items-center space-x-3 mb-2';
         div.id = 'optRow' + optionCount;
         var type = document.getElementById('qType').value;
-        var inputType = type == 2 ? 'checkbox' : 'radio';
+        var inputType = type == 2 ? 'checkbox' : 'radio'; // 多选题用checkbox，单选题用radio
         div.innerHTML = '<input type="' + inputType + '" name="correctOption" value="' + label + '"/>' +
             '<span class="w-6 text-sm text-gray-500 font-bold">' + label + '</span>' +
             '<input class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm" type="text" placeholder="选项内容"/>' +
@@ -537,11 +626,16 @@
         container.appendChild(div);
     }
 
+    /** 删除指定选项行 */
     function removeOption(rowId) {
         var el = document.getElementById(rowId);
         if (el) el.parentNode.removeChild(el);
     }
 
+    /**
+     * 收集选项容器中的所有选项数据
+     * @returns {Array} 选项对象数组 [{optionLabel, optionContent, isCorrect}]
+     */
     function collectOptions() {
         var rows = document.querySelectorAll('#optionsContainer > div');
         var options = [];
@@ -553,44 +647,55 @@
                 options.push({
                     optionLabel: labelSpan.textContent.trim(),
                     optionContent: input.value.trim(),
-                    isCorrect: check && check.checked ? 1 : 0
+                    isCorrect: check && check.checked ? 1 : 0 // isCorrect 必须是整数 1/0，不能是 boolean
                 });
             }
         }
         return options;
     }
 
+    /**
+     * 保存题目（新增或编辑）
+     * 新增：POST /api/teacher/questions
+     * 编辑：PUT /api/teacher/questions/{id}
+     * 单选/多选题的答案从勾选的选项自动生成（如 "A" 或 "A,C"）
+     */
     function saveQuestion() {
         var id = document.getElementById('qEditId').value;
         var courseId = document.getElementById('qCourseId').value;
         var questionType = document.getElementById('qType').value;
         var difficulty = document.getElementById('qDifficulty').value;
         var content = document.getElementById('qContent').value.trim();
+        // 判断题从下拉框取值，其他题型从文本输入框取值
         var answer = (questionType == 3) ? document.getElementById('qAnswerTf').value : document.getElementById('qAnswer').value.trim();
         var analysis = document.getElementById('qAnalysis').value.trim();
 
+        // 前端表单校验
         if (!courseId) { alert('请选择课程'); return; }
         if (!content) { alert('请输入题干内容'); return; }
         if (questionType == 3 && !answer) { alert('请选择判断题答案'); return; }
 
         var body = {
-            courseId: parseInt(courseId),
-            questionType: parseInt(questionType),
-            difficulty: parseInt(difficulty),
+            courseId: parseInt(courseId),       // 转为整数
+            questionType: parseInt(questionType), // 转为整数
+            difficulty: parseInt(difficulty),     // 转为整数
             content: content,
             answer: answer,
             analysis: analysis
         };
 
+        // 判断题/填空题/简答题不需要选项
         var noOptions = questionType == 3 || questionType == 4 || questionType == 5;
         if (!noOptions) {
             body.options = collectOptions();
+            // 至少两个选项
             if (body.options.length < 2) { alert('单选题和多选题至少需要两个选项'); return; }
+            // 选项内容不能为空
             for (var i = 0; i < body.options.length; i++) {
                 if (!body.options[i].optionContent) { alert('选项内容不能为空'); return; }
             }
 
-            // 单选/多选：从勾选的选项自动生成答案
+            // 单选/多选：从勾选的选项自动生成答案（如 "A" 或 "A,C"）
             var correctLabels = [];
             for (var i = 0; i < body.options.length; i++) {
                 if (body.options[i].isCorrect) {
@@ -601,17 +706,20 @@
                 alert('请勾选正确答案');
                 return;
             }
+            // 多选题必须至少两个正确答案
             if (questionType == 2 && correctLabels.length < 2) {
                 alert('多选题必须至少选择两个正确答案');
                 return;
             }
-            body.answer = correctLabels.join(',');
+            body.answer = correctLabels.join(','); // 用逗号拼接多选答案
         }
 
         var promise;
         if (id) {
+            // 编辑已有题目
             promise = apiPut('/teacher/questions/' + id, body);
         } else {
+            // 新增题目
             promise = apiPost('/teacher/questions', body);
         }
 
@@ -621,23 +729,28 @@
                 return;
             }
             closeQuestionModal();
-            loadQuestions();
+            loadQuestions(); // 刷新列表
         }).catch(function(err) {
             console.error('Save failed:', err);
             alert('保存失败：' + (err.message || '未知错误'));
         });
     }
 
+    /**
+     * 编辑已有题目：加载题目详情并填充表单
+     * 调用 GET /api/teacher/questions/{id} 获取题目完整信息
+     */
     function editQuestion(id) {
         apiGet('/teacher/questions/' + id).then(function(data) {
             var q = data.data || data;
             if (!q) { alert('未找到该题目'); return; }
 
             document.getElementById('qModalTitle').textContent = '编辑习题';
-            document.getElementById('qEditId').value = q.questionId;
+            document.getElementById('qEditId').value = q.questionId; // 设置编辑ID
             document.getElementById('qType').value = q.questionType || '1';
             document.getElementById('qDifficulty').value = q.difficulty || '2';
             document.getElementById('qContent').value = q.content || '';
+            // 判断题答案用下拉框，其他用文本框
             if (q.questionType == 3) {
                 document.getElementById('qAnswerTf').value = q.answer || '';
             } else {
@@ -647,18 +760,20 @@
 
             populateCourseSelect(q.courseId || '');
 
+            // 还原已有选项
             optionCount = 0;
             var container = document.getElementById('optionsContainer');
             container.innerHTML = '';
             var options = q.options || [];
             for (var j = 0; j < options.length; j++) {
-                addOption();
+                addOption(); // 先添加一空行
                 var row = container.lastChild;
                 if (row) {
                     var inputs = row.querySelectorAll('input[type="text"]');
                     if (inputs.length > 0) inputs[0].value = options[j].optionContent || '';
                     var check = row.querySelector('input[name="correctOption"]');
                     if (check) {
+                        // 多选题通过 answer 字段匹配正确答案
                         if ((q.questionType == 2 || q.questionType === '2' || q.questionType === 'MULTI_CHOICE') && q.answer) {
                             check.checked = q.answer.indexOf(options[j].optionLabel) >= 0;
                         } else {
@@ -668,13 +783,18 @@
                 }
             }
 
-            onQuestionTypeChange();
+            onQuestionTypeChange(); // 根据题型调整UI
             document.getElementById('qModal').classList.remove('hidden');
         }).catch(function(err) {
             console.error('Failed to load question:', err);
         });
     }
 
+    /**
+     * 删除题目
+     * 调用 DELETE /api/teacher/questions/{id}
+     * 注意：后端会级联删除该题目在 t_question_option、t_paper_question、t_practice_record、t_exam_answer 中的关联记录
+     */
     function deleteQuestion(id) {
         if (!confirm('确定要删除该题目吗？此操作不可恢复。')) return;
         apiDelete('/teacher/questions/' + id).then(function(res) {
@@ -683,13 +803,17 @@
                 return;
             }
             alert('删除成功');
-            loadQuestions();
+            loadQuestions(); // 刷新列表
         }).catch(function(err) {
             console.error('Delete failed:', err);
             alert('删除失败，请检查网络连接');
         });
     }
 
+    /**
+     * 加载当前登录用户信息并更新顶部导航栏
+     * 调用 GET /api/auth/current-user
+     */
     function loadCurrentUser() {
         apiGet('/auth/current-user').then(function(user) {
             var u = user.data || user;
@@ -702,41 +826,53 @@
         });
     }
 
-    // ===== 初始化 =====
+    // ===== 页面初始化：加载用户信息、课程树、题目列表 =====
     document.addEventListener('DOMContentLoaded', function() {
         loadCurrentUser();
-        loadCourses();
-        loadQuestions();
+        loadCourses();   // 先加载课程树
+        loadQuestions(); // 再加载题目列表
     });
 
+    // ===== 用户下拉菜单切换 =====
     var userMenuTrigger = document.getElementById('userMenuTrigger');
     var userDropdown = document.getElementById('userDropdown');
     userMenuTrigger.addEventListener('click', function(e) {
-        e.stopPropagation();
+        e.stopPropagation(); // 阻止冒泡，防止被 document click 关闭
         userDropdown.classList.toggle('show');
     });
     document.addEventListener('click', function() {
         userDropdown.classList.remove('show');
     });
 
-    // 设置菜单
+    // ==================== 设置菜单相关函数 ====================
+
+    /** 打开设置菜单模态框 */
     function openSettingsModal(event) {
         if (event) event.preventDefault();
         document.getElementById('settingsModal').classList.remove('hidden');
     }
+    /** 关闭设置菜单模态框 */
     function closeSettingsModal() {
         document.getElementById('settingsModal').classList.add('hidden');
     }
-    // 修改密码
+
+    // ==================== 修改密码相关函数 ====================
+
+    /** 打开修改密码模态框（同时关闭设置菜单） */
     function openPasswordModal(event) {
         if (event) event.preventDefault();
         closeSettingsModal();
         document.getElementById('passwordModal').classList.remove('hidden');
     }
+    /** 关闭修改密码模态框并重置表单 */
     function closePasswordModal() {
         document.getElementById('passwordModal').classList.add('hidden');
         document.getElementById('settingsForm').reset();
     }
+    /**
+     * 提交修改密码
+     * 调用 PUT /api/auth/change-password，成功后跳转登录页
+     */
     function savePassword(event) {
         event.preventDefault();
         var oldPwd = document.getElementById('sp_oldPassword').value.trim();
@@ -745,6 +881,7 @@
         if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
         if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
         if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+        // 调用修改密码接口
         fetch(API_BASE + '/auth/change-password', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},

@@ -2,43 +2,52 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.PracticeRecordMapper">
 
+    <!-- ================================================================ -->
+    <!-- 练习记录（PracticeRecord）实体结果映射                                 -->
+    <!-- 表：t_practice_record，主键：record_id                               -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.PracticeRecord">
         <id column="record_id" property="recordId"/>
         <result column="student_id" property="studentId"/>
         <result column="question_id" property="questionId"/>
-        <result column="student_answer" property="studentAnswer"/>
-        <result column="is_correct" property="isCorrect"/>
-        <result column="practice_time" property="practiceTime"/>
-        <result column="question_content" property="questionContent"/>
-        <result column="correct_answer" property="correctAnswer"/>
-        <result column="analysis" property="analysis"/>
-        <result column="course_name" property="courseName"/>
+        <result column="student_answer" property="studentAnswer"/>       <!-- 学生作答内容 -->
+        <result column="is_correct" property="isCorrect"/>               <!-- 是否正确：1=正确，0=错误 -->
+        <result column="practice_time" property="practiceTime"/>         <!-- 练习时间 -->
+        <!-- 以下字段来自 JOIN，非 t_practice_record 表字段 -->
+        <result column="question_content" property="questionContent"/>   <!-- 题目内容 -->
+        <result column="correct_answer" property="correctAnswer"/>        <!-- 正确答案 -->
+        <result column="analysis" property="analysis"/>                   <!-- 题目解析 -->
+        <result column="course_name" property="courseName"/>             <!-- 课程名称 -->
     </resultMap>
 
+    <!-- 插入单条练习记录 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="recordId">
         INSERT INTO t_practice_record (student_id, question_id, student_answer, is_correct, practice_time)
         VALUES (#{studentId}, #{questionId}, #{studentAnswer}, #{isCorrect}, #{practiceTime})
     </insert>
 
+    <!-- 分页查询学生的练习记录，关联题目表和课程表获取详细信息，支持按课程过滤 -->
     <select id="selectByStudentId" resultMap="BaseResultMap">
         SELECT pr.*, q.content AS question_content, q.answer AS correct_answer, q.analysis, c.course_name
         FROM t_practice_record pr
-        LEFT JOIN t_question q ON pr.question_id = q.question_id
-        LEFT JOIN t_course c ON q.course_id = c.course_id
+        LEFT JOIN t_question q ON pr.question_id = q.question_id      <!-- 关联题目表：获取题目内容和答案 -->
+        LEFT JOIN t_course c ON q.course_id = c.course_id             <!-- 关联课程表：获取课程名称 -->
         WHERE pr.student_id = #{studentId}
         <if test="courseId != null">
-            AND q.course_id = #{courseId}
+            AND q.course_id = #{courseId}          <!-- 可选：按课程过滤 -->
         </if>
         ORDER BY pr.practice_time DESC
         <if test="offset != null and limit != null">
-            LIMIT #{offset}, #{limit}
+            LIMIT #{offset}, #{limit}                <!-- 分页参数 -->
         </if>
     </select>
 
+    <!-- 根据题目ID删除练习记录（删除题目时级联删除 FK 引用） -->
     <delete id="deleteByQuestionId">
         DELETE FROM t_practice_record WHERE question_id = #{questionId}
     </delete>
 
+    <!-- 统计学生的练习总次数，支持按课程过滤 -->
     <select id="countByStudentId" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_practice_record pr
         LEFT JOIN t_question q ON pr.question_id = q.question_id

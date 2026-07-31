@@ -2,73 +2,86 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.StudentMapper">
 
+    <!-- ================================================================ -->
+    <!-- 学生（Student）实体结果映射                                            -->
+    <!-- 表：t_student，主键：student_id                                     -->
+    <!-- 状态：0=禁用，1=启用                                                  -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.Student">
         <id column="student_id" property="studentId"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
         <result column="real_name" property="realName"/>
-        <result column="gender" property="gender"/>
-        <result column="class_name" property="className"/>
+        <result column="gender" property="gender"/>                   <!-- 性别：M=男，F=女 -->
+        <result column="class_name" property="className"/>             <!-- 班级名称 -->
         <result column="phone" property="phone"/>
-        <result column="status" property="status"/>
-        <result column="create_by" property="createBy"/>
+        <result column="status" property="status"/>                   <!-- 状态：0=禁用，1=启用 -->
+        <result column="create_by" property="createBy"/>              <!-- 创建者（管理员ID） -->
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!-- 根据用户名查询学生，用于登录认证 -->
     <select id="findByUsername" resultMap="BaseResultMap">
         SELECT * FROM t_student WHERE username = #{username}
     </select>
 
+    <!-- 根据主键查询学生 -->
     <select id="selectById" resultMap="BaseResultMap">
         SELECT * FROM t_student WHERE student_id = #{studentId}
     </select>
 
+    <!-- 新增学生，主键自动回填到 studentId -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="studentId">
         INSERT INTO t_student (username, password, real_name, gender, class_name, phone, status, create_by, create_time)
         VALUES (#{username}, #{password}, #{realName}, #{gender}, #{className}, #{phone}, #{status}, #{createBy}, #{createTime})
     </insert>
 
+    <!-- 动态更新学生信息：只更新传入的非空字段（不包含密码和状态，密码和状态有单独的接口） -->
     <update id="update">
         UPDATE t_student
         <set>
-            <if test="username != null">username = #{username},</if>
-            <if test="realName != null">real_name = #{realName},</if>
-            <if test="gender != null">gender = #{gender},</if>
-            <if test="className != null">class_name = #{className},</if>
-            <if test="phone != null">phone = #{phone},</if>
+            <if test="username != null">username = #{username},</if>      <!-- 用户名 -->
+            <if test="realName != null">real_name = #{realName},</if>    <!-- 真实姓名 -->
+            <if test="gender != null">gender = #{gender},</if>           <!-- 性别 -->
+            <if test="className != null">class_name = #{className},</if>  <!-- 班级 -->
+            <if test="phone != null">phone = #{phone},</if>              <!-- 手机号 -->
         </set>
         WHERE student_id = #{studentId}
     </update>
 
+    <!-- 更新学生启用/禁用状态 -->
     <update id="updateStatus">
         UPDATE t_student SET status = #{status} WHERE student_id = #{studentId}
     </update>
 
+    <!-- 修改学生密码 -->
     <update id="updatePassword">
         UPDATE t_student SET password = #{password} WHERE student_id = #{studentId}
     </update>
 
+    <!-- 分页查询学生列表，支持多条件过滤：关键字（姓名/用户名/手机号）、班级、状态 -->
     <select id="findByKeyword" resultMap="BaseResultMap">
         SELECT * FROM t_student
         <where>
             <if test="keyword != null and keyword != ''">
-                AND (real_name LIKE CONCAT('%', #{keyword}, '%')
-                     OR username LIKE CONCAT('%', #{keyword}, '%')
-                     OR phone LIKE CONCAT('%', #{keyword}, '%'))
+                AND (real_name LIKE CONCAT('%', #{keyword}, '%')       <!-- 按姓名模糊搜索 -->
+                     OR username LIKE CONCAT('%', #{keyword}, '%')      <!-- 按用户名模糊搜索 -->
+                     OR phone LIKE CONCAT('%', #{keyword}, '%'))        <!-- 按手机号模糊搜索 -->
             </if>
             <if test="className != null and className != ''">
-                AND class_name = #{className}
+                AND class_name = #{className}                           <!-- 按班级精确过滤 -->
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND status = #{status}                                  <!-- 按状态过滤 -->
             </if>
         </where>
         ORDER BY create_time DESC
         <if test="offset != null and limit != null">
-            LIMIT #{offset}, #{limit}
+            LIMIT #{offset}, #{limit}                                   <!-- 分页参数 -->
         </if>
     </select>
 
+    <!-- 统计符合条件的学生总数，用于分页 -->
     <select id="countByKeyword" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_student
         <where>
@@ -86,15 +99,16 @@
         </where>
     </select>
 
+    <!-- 查询所有学生的统计数据：练习次数、练习正确率、考试次数、考试平均分（管理员视图） -->
     <select id="selectStudentStats" resultType="java.util.HashMap">
         SELECT
             s.student_id,
             s.real_name,
             s.class_name,
-            COUNT(DISTINCT pr.record_id) AS practice_count,
-            ROUND(AVG(CASE WHEN pr.is_correct IS NOT NULL THEN pr.is_correct ELSE NULL END) * 100, 1) AS practice_correct_rate,
-            COUNT(DISTINCT er.exam_record_id) AS exam_count,
-            ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score
+            COUNT(DISTINCT pr.record_id) AS practice_count,              <!-- 练习总次数 -->
+            ROUND(AVG(CASE WHEN pr.is_correct IS NOT NULL THEN pr.is_correct ELSE NULL END) * 100, 1) AS practice_correct_rate,  <!-- 练习正确率（百分比） -->
+            COUNT(DISTINCT er.exam_record_id) AS exam_count,             <!-- 考试总次数 -->
+            ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score  <!-- 已完成考试的平均分 -->
         FROM t_student s
         LEFT JOIN t_practice_record pr ON s.student_id = pr.student_id
         LEFT JOIN t_exam_record er ON s.student_id = er.student_id
@@ -111,6 +125,7 @@
         </if>
     </select>
 
+    <!-- 查询单个学生的统计数据（学生个人视图） -->
     <select id="selectStudentStatsByStudentId" resultType="java.util.HashMap">
         SELECT
             s.student_id,
@@ -127,6 +142,7 @@
         GROUP BY s.student_id, s.real_name, s.class_name
     </select>
 
+    <!-- 查询教师授课课程范围内的学生统计数据（教师视图：只统计选修教师所授课程的学生） -->
     <select id="selectStudentStatsByCourseIds" resultType="java.util.HashMap">
         SELECT
             s.student_id,
@@ -137,14 +153,14 @@
             COUNT(DISTINCT er.exam_record_id) AS exam_count,
             ROUND(AVG(CASE WHEN er.status = 1 THEN er.total_score ELSE NULL END), 1) AS exam_avg_score
         FROM t_student s
-        INNER JOIN t_student_course sc ON s.student_id = sc.student_id
+        INNER JOIN t_student_course sc ON s.student_id = sc.student_id      <!-- 只统计选修了指定课程的学生 -->
         LEFT JOIN t_practice_record pr ON s.student_id = pr.student_id
         LEFT JOIN t_exam_record er ON s.student_id = er.student_id
         <where>
             <if test="courseIds != null">
                 sc.course_id IN
                 <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
-                    #{cid}
+                    #{cid}                                                  <!-- 教师授课课程ID列表 -->
                 </foreach>
             </if>
             <if test="keyword != null and keyword != ''">
@@ -159,10 +175,11 @@
         </if>
     </select>
 
+    <!-- 统计教师课程范围内的学生总数 -->
     <select id="countByCourseIds" resultType="java.lang.Long">
         SELECT COUNT(DISTINCT s.student_id)
         FROM t_student s
-        INNER JOIN t_student_course sc ON s.student_id = sc.student_id
+        INNER JOIN t_student_course sc ON s.student_id = sc.student_id    <!-- 通过学生-课程关联表过滤 -->
         <where>
             <if test="courseIds != null">
                 sc.course_id IN
@@ -177,6 +194,7 @@
         </where>
     </select>
 
+    <!-- 根据主键删除学生（注意：练习和考试记录通过 ON DELETE SET NULL 保留） -->
     <delete id="deleteById">
         DELETE FROM t_student WHERE student_id = #{studentId}
     </delete>

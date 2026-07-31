@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.ExamRecordMapper">
 
+    <!-- ================================================================ -->
+    <!-- 考试记录（ExamRecord）实体结果映射                                     -->
+    <!-- 表：t_exam_record，主键：exam_record_id                              -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.ExamRecord">
         <id column="exam_record_id" property="examRecordId"/>
         <result column="student_id" property="studentId"/>
@@ -9,7 +13,8 @@
         <result column="total_score" property="totalScore"/>
         <result column="start_time" property="startTime"/>
         <result column="submit_time" property="submitTime"/>
-        <result column="status" property="status"/>
+        <result column="status" property="status"/>                   <!-- 考试状态：0=进行中，1=已完成 -->
+        <!-- 以下字段来自 JOIN，非 t_exam_record 表字段 -->
         <result column="paper_name" property="paperName"/>
         <result column="course_name" property="courseName"/>
         <result column="paper_duration" property="paperDuration"/>
@@ -18,20 +23,23 @@
         <result column="class_name" property="className"/>
     </resultMap>
 
+    <!-- 创建考试记录（学生开始考试时调用），主键自动回填 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="examRecordId">
         INSERT INTO t_exam_record (student_id, paper_id, total_score, start_time, submit_time, status)
         VALUES (#{studentId}, #{paperId}, #{totalScore}, #{startTime}, #{submitTime}, #{status})
     </insert>
 
+    <!-- 根据学生ID和试卷ID查询考试记录，可选按状态过滤（用于判断是否已交卷） -->
     <select id="selectByStudentIdAndPaperId" resultMap="BaseResultMap">
         SELECT * FROM t_exam_record
         WHERE student_id = #{studentId} AND paper_id = #{paperId}
         <if test="status != null">
-            AND status = #{status}
+            AND status = #{status}           <!-- 可选：按考试状态过滤 -->
         </if>
         ORDER BY start_time DESC
     </select>
 
+    <!-- 分页查询学生的考试记录列表，关联试卷表和课程表获取试卷名称和课程名称 -->
     <select id="selectByStudentIdWithPage" resultMap="BaseResultMap">
         SELECT er.*, p.paper_name, c.course_name
         FROM t_exam_record er
@@ -40,49 +48,55 @@
         WHERE er.student_id = #{studentId}
         ORDER BY er.start_time DESC
         <if test="offset != null and limit != null">
-            LIMIT #{offset}, #{limit}
+            LIMIT #{offset}, #{limit}        <!-- 分页：偏移量和条数 -->
         </if>
     </select>
 
+    <!-- 统计学生的考试总次数 -->
     <select id="countByStudentId" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_exam_record WHERE student_id = #{studentId}
     </select>
 
+    <!-- 根据主键查询考试记录详情，关联试卷、课程、学生表获取完整信息 -->
     <select id="selectById" resultMap="BaseResultMap">
         SELECT er.*, p.paper_name, c.course_name,
                p.duration AS paper_duration, p.total_score AS paper_total_score,
                s.real_name AS student_name, s.class_name
         FROM t_exam_record er
-        LEFT JOIN t_paper p ON er.paper_id = p.paper_id
-        LEFT JOIN t_course c ON p.course_id = c.course_id
-        LEFT JOIN t_student s ON er.student_id = s.student_id
+        LEFT JOIN t_paper p ON er.paper_id = p.paper_id          <!-- 关联试卷表：获取试卷名称、时长、总分 -->
+        LEFT JOIN t_course c ON p.course_id = c.course_id        <!-- 关联课程表：获取课程名称 -->
+        LEFT JOIN t_student s ON er.student_id = s.student_id    <!-- 关联学生表：获取姓名、班级 -->
         WHERE er.exam_record_id = #{examRecordId}
     </select>
 
+    <!-- 更新考试总分（自动批改后更新） -->
     <update id="updateTotalScore">
         UPDATE t_exam_record SET total_score = #{totalScore} WHERE exam_record_id = #{examRecordId}
     </update>
 
+    <!-- 更新考试状态和交卷时间（交卷时调用） -->
     <update id="updateStatus">
         UPDATE t_exam_record SET status = #{status}, submit_time = #{submitTime}
         WHERE exam_record_id = #{examRecordId}
     </update>
 
+    <!-- 查询学生的历次考试成绩（已完成的考试），返回总分、试卷名称、试卷总分、交卷时间 -->
     <select id="selectExamScoresByStudentId" resultType="java.util.HashMap">
         SELECT er.total_score, p.paper_name, p.total_score AS paper_total_score,
                er.submit_time
         FROM t_exam_record er
         LEFT JOIN t_paper p ON er.paper_id = p.paper_id
-        WHERE er.student_id = #{studentId} AND er.status = 1
+        WHERE er.student_id = #{studentId} AND er.status = 1   <!-- 只查已完成的考试 -->
         ORDER BY er.submit_time DESC
     </select>
 
+    <!-- 查询某份试卷的所有学生成绩，按总分降序排列（教师查看班级成绩） -->
     <select id="selectScoresByPaperId" resultType="java.util.HashMap">
         SELECT s.student_id, s.real_name, s.class_name,
                er.total_score, er.submit_time
         FROM t_exam_record er
         LEFT JOIN t_student s ON er.student_id = s.student_id
-        WHERE er.paper_id = #{paperId} AND er.status = 1
+        WHERE er.paper_id = #{paperId} AND er.status = 1       <!-- 只查已完成的考试 -->
         ORDER BY er.total_score DESC
     </select>
 

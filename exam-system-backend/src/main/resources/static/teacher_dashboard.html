@@ -21,7 +21,8 @@
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-<!-- 侧边栏 -->
+
+<!-- ==================== 侧边栏导航 ==================== -->
 <div class="sidebar w-60 flex-none flex flex-col">
 <div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 <iconify-icon class="mr-2 text-2xl text-blue-400" icon="mdi:school-outline"></iconify-icon>
@@ -47,8 +48,10 @@
 </nav>
 
 </div>
-<!-- 主内容 -->
+<!-- ==================== 主内容区域 ==================== -->
 <div class="flex-1 flex flex-col overflow-hidden">
+
+<!-- 顶部导航栏：面包屑 + 用户下拉菜单 -->
 <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
 <div class="flex items-center space-x-2 text-sm text-gray-500">
 <span>教学管理</span>
@@ -77,7 +80,8 @@
 </div>
 </header>
 <main class="flex-1 overflow-y-auto p-8">
-<!-- 数据卡片 -->
+
+<!-- ==================== KPI 数据卡片：题库总数、试卷总数、已发布测验、授课学生数 ==================== -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
 <div class="absolute right-[-10px] top-[-10px] text-6xl text-blue-50 opacity-10 group-hover:scale-110 transition-transform">
@@ -114,7 +118,7 @@
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- 左侧：成绩概览 -->
+<!-- ==================== 左侧：待批阅简答题 ==================== -->
 <div class="lg:col-span-2 space-y-8">
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <h3 class="text-lg font-bold text-gray-800 mb-6">待批阅简答题</h3>
@@ -135,7 +139,7 @@
 <p class="text-center text-sm text-gray-400 py-4 hidden" id="reviewEmpty">暂无待批阅的简答题</p>
 </div>
 </div>
-<!-- 右侧：最近发布试卷 -->
+<!-- ==================== 右侧：正在进行的测验 + 快捷操作 ==================== -->
 <div class="space-y-6">
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <div class="flex items-center justify-between mb-6">
@@ -170,7 +174,7 @@
 
 
 </div>
-<!-- 设置菜单 -->
+<!-- ==================== 设置菜单模态框 ==================== -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="settingsModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-xs overflow-hidden">
@@ -190,7 +194,7 @@
 </div>
 </div>
 
-<!-- 修改密码模态框 -->
+<!-- ==================== 修改密码模态框 ==================== -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="passwordModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden">
@@ -223,8 +227,15 @@
 </div>
 </div>
 <script>
+    /** API 请求基础路径 */
     var API_BASE = '/api';
 
+    /**
+     * 发送 GET 请求
+     * @param {string} url - API路径（如 '/auth/current-user'）
+     * @param {object} params - 请求参数对象
+     * @returns {Promise} 返回 JSON 格式响应，401时自动跳转登录页
+     */
     function apiGet(url, params) {
         var query = params ? '?' + new URLSearchParams(params).toString() : '';
         return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
@@ -232,18 +243,35 @@
             return res.json();
         });
     }
+    /**
+     * 发送 POST 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPost(url, data) {
         return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
             return res.json();
         });
     }
+    /**
+     * 发送 PUT 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPut(url, data) {
         return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
             return res.json();
         });
     }
+    /**
+     * 发送 DELETE 请求
+     * @param {string} url - API路径
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiDelete(url) {
         return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -251,27 +279,37 @@
         });
     }
 
+    /**
+     * 加载当前登录用户信息并更新顶部导航栏
+     * 调用 GET /api/auth/current-user 获取用户信息
+     */
     function loadCurrentUser() {
         apiGet('/auth/current-user').then(function(user) {
-            var u = user.data || user;
+            var u = user.data || user; // 兼容不同返回格式：res.data 或直接返回
             var name = u.realName || u.username || '老师';
             document.getElementById('headerUserName').textContent = name + ' 老师';
             document.getElementById('headerUserDept').textContent = (u.college || '') + (u.major ? ' · ' + u.major : '');
-            document.getElementById('headerAvatar').textContent = name.charAt(0);
+            document.getElementById('headerAvatar').textContent = name.charAt(0); // 取名字首字作为头像文字
         }).catch(function(err) {
             console.error('Failed to load user:', err);
         });
     }
 
+    /**
+     * 加载首页仪表盘统计数据
+     * 调用 GET /api/teacher/dashboard/stats 获取题库数量、试卷数量、发布数、学生数
+     */
     function loadDashboardStats() {
         apiGet('/teacher/dashboard/stats').then(function(stats) {
             stats = stats.data || stats;
+            // 填充四个 KPI 卡片数据
             document.getElementById('kpiQuestionCount').textContent = (stats.questionCount != null ? stats.questionCount.toLocaleString() : '--');
             document.getElementById('kpiPaperCount').textContent = (stats.paperCount != null ? stats.paperCount : '--');
             document.getElementById('kpiPublishedCount').textContent = (stats.publishedPaperCount != null ? stats.publishedPaperCount : '--');
             document.getElementById('kpiStudentCount').textContent = (stats.studentCount != null ? stats.studentCount : '--');
 
             document.getElementById('kpiNewQuestions').textContent = stats.newQuestionsThisMonth || 0;
+            // 草稿数量 = 试卷总数 - 已发布试卷数
             var draftCount = (stats.paperCount || 0) - (stats.publishedPaperCount || 0);
             document.getElementById('kpiPaperSub').textContent = '包含 ' + draftCount + ' 份草稿';
         }).catch(function(err) {
@@ -279,7 +317,12 @@
         });
     }
 
+    /**
+     * 加载正在进行的测验列表
+     * 调用 GET /api/teacher/papers?status=1 获取已发布状态的试卷
+     */
     function loadActiveExams() {
+        // status=1 表示"已发布"状态，即正在进行的测验
         apiGet('/teacher/papers', { status: 1, pageSize: 5 }).then(function(data) {
             data = data.data || data;
             var list = data.records || data.list || [];
@@ -299,9 +342,11 @@
                 html += '<span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded">进行中</span>';
                 html += '</div>';
                 html += '<div class="flex justify-between text-xs text-blue-700 mt-3">';
+                // 显示交卷进度：已提交人数 / 学生总数
                 html += '<span>已提交: ' + (paper.submittedCount || 0) + ' / ' + (paper.totalStudentCount || 0) + '</span>';
                 html += '</div>';
                 html += '<div class="w-full bg-blue-200 h-1.5 rounded-full mt-2 overflow-hidden">';
+                // 计算交卷完成率进度条百分比
                 var pct = paper.totalStudentCount > 0 ? Math.round(paper.submittedCount / paper.totalStudentCount * 100) : 0;
                 html += '<div class="bg-blue-600 h-full" style="width: ' + pct + '%"></div>';
                 html += '</div></div>';
@@ -312,12 +357,15 @@
         });
     }
 
+    /**
+     * 加载待批阅简答题列表（当前为预留接口，显示空状态）
+     * 实际生产中需要对接批阅相关的 API 接口
+     */
     function loadPendingReviews() {
         apiGet('/teacher/questions', { questionType: 'SUBJECTIVE', pageSize: 5 }).then(function(data) {
             var tbody = document.getElementById('reviewTbody');
             var empty = document.getElementById('reviewEmpty');
-            // Pending reviews would come from a grading endpoint - keeping this section prepared
-            // For now show empty state
+            // 待批阅数据需要对接批阅专用接口，当前显示空状态
             empty.classList.remove('hidden');
         }).catch(function(err) {
             console.error('Failed to load reviews:', err);
@@ -326,55 +374,75 @@
         });
     }
 
+    /**
+     * HTML 转义，防止 XSS 攻击
+     * @param {string} str - 需要转义的字符串
+     * @returns {string} 转义后的 HTML 安全字符串
+     */
     function escapeHtml(str) {
         var div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     }
 
+    // ===== 页面初始化：DOM 加载完成后执行所有数据加载 =====
     document.addEventListener('DOMContentLoaded', function() {
-        loadCurrentUser();
-        loadDashboardStats();
-        loadActiveExams();
-        loadPendingReviews();
+        loadCurrentUser();       // 加载当前用户信息到顶栏
+        loadDashboardStats();    // 加载统计数据卡片
+        loadActiveExams();       // 加载正在进行的测验列表
+        loadPendingReviews();    // 加载待批阅列表（预留）
     });
 
+    // ===== 用户下拉菜单切换 =====
     var userMenuTrigger = document.getElementById('userMenuTrigger');
     var userDropdown = document.getElementById('userDropdown');
     userMenuTrigger.addEventListener('click', function(e) {
-        e.stopPropagation();
+        e.stopPropagation(); // 阻止事件冒泡，防止立即被 document 的 click 事件关闭
         userDropdown.classList.toggle('show');
     });
     document.addEventListener('click', function() {
-        userDropdown.classList.remove('show');
+        userDropdown.classList.remove('show'); // 点击页面其他位置关闭下拉菜单
     });
 
-    // 设置菜单
+    // ==================== 设置菜单相关函数 ====================
+
+    /** 打开设置菜单模态框 */
     function openSettingsModal(event) {
         if (event) event.preventDefault();
         document.getElementById('settingsModal').classList.remove('hidden');
     }
+    /** 关闭设置菜单模态框 */
     function closeSettingsModal() {
         document.getElementById('settingsModal').classList.add('hidden');
     }
-    // 修改密码
+
+    // ==================== 修改密码相关函数 ====================
+
+    /** 打开修改密码模态框（同时关闭设置菜单） */
     function openPasswordModal(event) {
         if (event) event.preventDefault();
         closeSettingsModal();
         document.getElementById('passwordModal').classList.remove('hidden');
     }
+    /** 关闭修改密码模态框并重置表单 */
     function closePasswordModal() {
         document.getElementById('passwordModal').classList.add('hidden');
         document.getElementById('settingsForm').reset();
     }
+    /**
+     * 提交修改密码请求
+     * 调用 PUT /api/auth/change-password，成功后跳转登录页要求重新登录
+     */
     function savePassword(event) {
         event.preventDefault();
         var oldPwd = document.getElementById('sp_oldPassword').value.trim();
         var newPwd = document.getElementById('sp_newPassword').value.trim();
         var confirmPwd = document.getElementById('sp_confirmPassword').value.trim();
+        // 前端表单校验
         if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
         if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
         if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+        // 调用修改密码接口
         fetch(API_BASE + '/auth/change-password', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},

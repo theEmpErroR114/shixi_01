@@ -7,26 +7,41 @@
 <title>课程管理 - 课程习题测验系统</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="iconify-icon.min.js"></script>
+<!-- 管理员控制台公共样式 + 课程页面特有样式 -->
 <style>
+	/* 页面背景色 */
 	body { background-color: #F0F2F5; }
+	/* 侧边栏：深蓝色背景 */
 	.sidebar { background-color: #001529; }
+	/* 侧边栏菜单项样式 */
 	.sidebar-item { color: rgba(255, 255, 255, 0.65); transition: all 0.3s; }
+	/* 侧边栏菜单项悬停效果 */
 	.sidebar-item:hover { color: #fff; background-color: rgba(24, 144, 255, 0.1); }
+	/* 侧边栏当前激活菜单项 */
 	.sidebar-item.active { color: #fff; background-color: #1890FF; }
+	/* 侧边栏折叠状态 */
 	.sidebar.collapsed { display: none; }
+	/* 用户下拉菜单容器 */
 	.user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); min-width: 140px; z-index: 50; display: none; }
+	/* 用户下拉菜单展开 */
 	.user-dropdown.show { display: block; }
+	/* 下拉菜单链接项 */
 	.user-dropdown a { display: flex; align-items: center; padding: 10px 16px; font-size: 14px; color: #595959; text-decoration: none; transition: background 0.2s; }
+	/* 下拉菜单链接项悬停 */
 	.user-dropdown a:hover { background: #f5f5f5; }
+	/* 模态框过渡动画 */
 	.modal { transition: opacity 0.3s ease-out; }
+	/* 课程表格行：可点击，悬停高亮 */
 	.course-row { cursor: pointer; transition: background 0.15s; }
 	.course-row:hover { background-color: #E6F7FF !important; }
+	/* 课程表格行：选中高亮 */
 	.course-row.selected { background-color: #E6F7FF !important; }
 </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 <!-- 侧边栏 -->
 <div id="sidebar" class="sidebar w-60 flex-none flex flex-col">
+	<!-- 侧边栏头部：Logo + 标题 -->
 	<div class="h-16 flex items-center px-6 text-white text-xl font-bold border-b border-gray-800">
 		<iconify-icon class="mr-2 text-2xl" icon="mdi:shield-account"></iconify-icon>
 		管理中心
@@ -215,8 +230,10 @@
 	</div>
 </div>
 <script>
+	/** API 基础路径 */
 	var API_BASE = '/api';
 
+	/** GET 请求封装，401 自动跳转登录页 */
 	function apiGet(url, params) {
 		var query = params ? '?' + new URLSearchParams(params).toString() : '';
 		return fetch(API_BASE + url + query, { credentials: 'include' }).then(function(res) {
@@ -225,6 +242,7 @@
 		});
 	}
 
+	/** POST 请求封装 */
 	function apiPost(url, data) {
 		return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
 			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -232,6 +250,7 @@
 		});
 	}
 
+	/** PUT 请求封装 */
 	function apiPut(url, data) {
 		return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
 			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -239,6 +258,7 @@
 		});
 	}
 
+	/** DELETE 请求封装 */
 	function apiDelete(url) {
 		return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
 			if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauthorized'); }
@@ -246,22 +266,36 @@
 		});
 	}
 
+	/** 当前页码 */
 	var currentPage = 1;
+	/** 每页条数 */
 	var pageSize = 10;
+	/** 总页数 */
 	var totalPages = 1;
+	/** 当前编辑的课程ID，null 表示新增模式 */
 	var editingId = null;
 
-	// 课程详情面板状态
+	// === 课程详情面板状态 ===
 	var selectedCourseId = null;
+	/** 当前选中的课程名称 */
 	var selectedCourseName = '';
+	/** 当前选中的课程描述 */
 	var selectedCourseDesc = '';
+	/** 当前激活的详情标签页：'questions' | 'papers' */
 	var currentTab = 'questions';
+	/** 题目列表当前页码 */
 	var questionPage = 1;
+	/** 题目列表总页数 */
 	var questionTotalPages = 1;
+	/** 试卷列表当前页码 */
 	var paperPage = 1;
+	/** 试卷列表总页数 */
 	var paperTotalPages = 1;
 
-	// 加载管理员姓名
+	/**
+	 * 加载当前登录管理员姓名，显示在顶部导航栏
+	 * 调用 GET /api/auth/current-user
+	 */
 	function loadAdminName() {
 		apiGet('/auth/current-user').then(function(user) {
 			var data = user.data || user;
@@ -272,7 +306,10 @@
 		}).catch(function() {});
 	}
 
-	// 加载课程列表
+	/**
+	 * 加载课程列表（分页+搜索）
+	 * 调用 GET /api/admin/courses?page=&pageSize=&keyword=
+	 */
 	function loadCourses() {
 		var keyword = document.getElementById('searchKeyword').value;
 		var params = { page: currentPage, pageSize: pageSize };
@@ -295,7 +332,10 @@
 		});
 	}
 
-	// 渲染表格
+	/**
+	 * 渲染课程数据表格
+	 * @param {Array} list - 课程数据，字段包含 courseId, courseName, description, createTime
+	 */
 	function renderTable(list) {
 		var tbody = document.getElementById('courseTableBody');
 		if (!list || list.length === 0) {
@@ -329,7 +369,10 @@
 		tbody.innerHTML = html;
 	}
 
-	// 渲染分页
+	/**
+	 * 渲染分页控件
+	 * @param {number} total - 总记录数
+	 */
 	function renderPagination(total) {
 		document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条记录，每页 ' + pageSize + ' 条';
 		var buttonsHtml = '';
@@ -367,12 +410,21 @@
 		document.getElementById('paginationButtons').innerHTML = buttonsHtml;
 	}
 
+	/**
+	 * 跳转到指定页码
+	 * @param {number} page - 目标页码
+	 */
 	function goToPage(page) {
 		if (page < 1 || page > totalPages) return;
 		currentPage = page;
 		loadCourses();
 	}
 
+	/**
+	 * 格式化日期时间为 YYYY-MM-DD HH:MM 格式
+	 * @param {string|Array} dateVal - 日期值（字符串或数组格式）
+	 * @returns {string} 格式化后的日期时间字符串
+	 */
 	function formatDateTime(dateVal) {
         if (!dateVal) return '--';
         var d;
@@ -398,6 +450,11 @@
 		return div.innerHTML;
 	}
 
+	/**
+	 * HTML 属性值转义函数，用于 onclick 等属性中的字符串参数
+	 * @param {string} str - 待转义字符串
+	 * @returns {string} 转义后的安全字符串
+	 */
 	function escapeHtmlAttr(str) {
 		if (!str) return '';
 		return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -405,6 +462,12 @@
 
 	// === 课程详情面板 ===
 
+	/**
+	 * 展开课程详情面板，加载该课程的题目和试卷
+	 * @param {number} courseId - 课程ID
+	 * @param {string} courseName - 课程名称
+	 * @param {string} description - 课程描述
+	 */
 	function viewCourseDetail(courseId, courseName, description) {
 		selectedCourseId = courseId;
 		selectedCourseName = courseName;
@@ -420,12 +483,17 @@
 		document.getElementById('courseDetailPanel').scrollIntoView({ behavior: 'smooth' });
 	}
 
+	/** 关闭课程详情面板，重置选中课程并刷新列表 */
 	function closeDetailPanel() {
 		selectedCourseId = null;
 		document.getElementById('courseDetailPanel').classList.add('hidden');
 		loadCourses();
 	}
 
+	/**
+	 * 切换课程详情标签页（题目列表 / 试卷列表）
+	 * @param {string} tab - 标签页标识：'questions' | 'papers'
+	 */
 	function switchTab(tab) {
 		currentTab = tab;
 		var tabQ = document.getElementById('tabQuestions');
@@ -448,7 +516,10 @@
 		}
 	}
 
-	// 加载课程题目
+	/**
+	 * 加载课程题目列表
+	 * 调用 GET /api/admin/courses/{courseId}/questions?page=&pageSize=
+	 */
 	function loadCourseQuestions() {
 		if (!selectedCourseId) return;
 		apiGet('/admin/courses/' + selectedCourseId + '/questions', { page: questionPage, pageSize: pageSize }).then(function(res) {
@@ -467,6 +538,10 @@
 		});
 	}
 
+	/**
+	 * 渲染题目表格
+	 * @param {Array} list - 题目数据数组，字段：questionId, content, questionType, difficulty, teacherName, createTime
+	 */
 	function renderQuestionTable(list) {
 		var tbody = document.getElementById('questionTableBody');
 		if (!list || list.length === 0) {
@@ -494,6 +569,10 @@
 		tbody.innerHTML = html;
 	}
 
+	/**
+	 * 渲染题目分页控件
+	 * @param {number} total - 总记录数
+	 */
 	function renderQuestionPagination(total) {
 		document.getElementById('questionPaginationInfo').textContent = '共 ' + total + ' 条';
 		var buttonsHtml = '';
@@ -505,13 +584,20 @@
 		document.getElementById('questionPaginationButtons').innerHTML = buttonsHtml;
 	}
 
+	/**
+	 * 题目分页跳转
+	 * @param {number} page - 目标页码
+	 */
 	function questionGoToPage(page) {
 		if (page < 1 || page > questionTotalPages) return;
 		questionPage = page;
 		loadCourseQuestions();
 	}
 
-	// 加载课程试卷
+	/**
+	 * 加载课程试卷列表
+	 * 调用 GET /api/admin/courses/{courseId}/papers?page=&pageSize=
+	 */
 	function loadCoursePapers() {
 		if (!selectedCourseId) return;
 		apiGet('/admin/courses/' + selectedCourseId + '/papers', { page: paperPage, pageSize: pageSize }).then(function(res) {
@@ -530,6 +616,10 @@
 		});
 	}
 
+	/**
+	 * 渲染试卷表格
+	 * @param {Array} list - 试卷数据数组，字段：paperId, paperName, totalScore, duration, startDate, endDate, status, teacherName, createTime
+	 */
 	function renderPaperTable(list) {
 		var tbody = document.getElementById('paperTableBody');
 		if (!list || list.length === 0) {
@@ -560,6 +650,10 @@
 		tbody.innerHTML = html;
 	}
 
+	/**
+	 * 渲染试卷分页控件
+	 * @param {number} total - 总记录数
+	 */
 	function renderPaperPagination(total) {
 		document.getElementById('paperPaginationInfo').textContent = '共 ' + total + ' 条';
 		var buttonsHtml = '';
@@ -571,14 +665,25 @@
 		document.getElementById('paperPaginationButtons').innerHTML = buttonsHtml;
 	}
 
+	/**
+	 * 试卷分页跳转
+	 * @param {number} page - 目标页码
+	 */
 	function paperGoToPage(page) {
 		if (page < 1 || page > paperTotalPages) return;
 		paperPage = page;
 		loadCoursePapers();
 	}
 
-	// 搜索功能
+	/** 搜索输入防抖定时器（400ms 延迟） */
 	var searchTimer = null;
+
+	/**
+	 * 页面 DOM 加载完成后初始化：
+	 * 1. 侧边栏折叠/展开 + 用户下拉菜单
+	 * 2. 加载管理员姓名和课程列表
+	 * 3. 搜索框输入防抖（400ms）
+	 */
 	document.addEventListener('DOMContentLoaded', function() {
 		// 侧边栏切换
 		document.getElementById('menuToggle').addEventListener('click', function() {
@@ -608,7 +713,10 @@
 		});
 	});
 
-	// 打开新增模态框
+	/**
+	 * 打开新增课程模态框，重置所有表单字段
+	 * @param {string} type - 操作类型，'add' 表示新增
+	 */
 	function openModal(type) {
 		editingId = null;
 		document.getElementById('editId').value = '';
@@ -618,7 +726,11 @@
 		document.getElementById('modal').classList.remove('hidden');
 	}
 
-	// 打开编辑模态框
+	/**
+	 * 打开编辑课程模态框，加载课程详情
+	 * 调用 GET /api/admin/courses/{id}
+	 * @param {number} id - 课程 courseId
+	 */
 	function openEditModal(id) {
 		editingId = id;
 		apiGet('/admin/courses/' + id).then(function(res) {
@@ -637,11 +749,17 @@
 		});
 	}
 
+	/** 关闭模态框 */
 	function closeModal() {
 		document.getElementById('modal').classList.add('hidden');
 	}
 
-	// 提交表单
+	/**
+	 * 提交新增/编辑课程表单
+	 * 新增：POST /api/admin/courses
+	 * 编辑：PUT /api/admin/courses/{id}
+	 * @param {Event} e - 表单提交事件
+	 */
 	function submitForm(e) {
 		e.preventDefault();
 		var data = {
@@ -680,7 +798,11 @@
 		return false;
 	}
 
-	// 删除课程
+	/**
+	 * 删除课程（只能删除无关联题目和试卷的课程）
+	 * 调用 DELETE /api/admin/courses/{id}
+	 * @param {number} id - 课程 courseId
+	 */
 	function deleteCourse(id) {
 		if (!confirm('确定要删除该课程吗？删除后无法恢复。')) return;
 		apiDelete('/admin/courses/' + id).then(function(res) {

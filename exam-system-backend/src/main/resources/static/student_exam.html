@@ -51,7 +51,8 @@
 </div>
 </header>
 
-<!-- 测验列表页 -->
+<!-- ========== 测验列表页 ========== -->
+<!-- 展示学生可参加的所有测验：名称、时长、题数、起止日期、状态 -->
 <main class="max-w-5xl mx-auto px-4 py-8 w-full" id="examListPage">
 <h2 class="text-2xl font-bold text-gray-800 mb-8">在线测验</h2>
 <div class="space-y-6" id="examListContainer">
@@ -59,7 +60,8 @@
 </div>
 </main>
 
-<!-- 考试界面 -->
+<!-- ========== 考试界面（全屏覆盖） ========== -->
+<!-- 顶栏：标题 + 倒计时 + 交卷按钮 | 左侧：答题卡 | 右侧：题目答题区 -->
 <div class="fixed inset-0 bg-[#F0F2F5] z-[100] hidden flex flex-col" id="examInterface">
 <div class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
 <div class="flex items-center text-gray-800 font-bold">
@@ -72,7 +74,8 @@
 </div>
 </div>
 <div class="flex-1 flex overflow-hidden">
-<!-- 答题卡 -->
+<!-- ========== 考试答题卡面板 ========== -->
+<!-- 题号颜色：蓝色=已答，白框=未答，可点击跳转 -->
 <div class="w-80 bg-white border-r p-6 flex flex-col overflow-y-auto">
 <h4 class="font-bold text-sm text-gray-500 uppercase mb-4">答题进度</h4>
 <div class="text-sm text-gray-600 mb-3" id="answeredCount">已答 0/0</div>
@@ -87,7 +90,7 @@
 </div>
 </div>
 </div>
-<!-- 答题区 -->
+<!-- ========== 考试答题区 ========== -->
 <div class="flex-1 p-12 overflow-y-auto flex flex-col items-center">
 <div class="w-full max-w-3xl bg-white p-10 rounded-xl shadow-sm">
 <div class="text-sm text-blue-500 font-bold mb-4" id="examQuestionLabel">单选题 (1/20)</div>
@@ -105,7 +108,8 @@
 </div>
 </div>
 
-<!-- 确认交卷弹窗 -->
+<!-- ========== 确认交卷弹窗 ========== -->
+<!-- 显示未答题数警告，防止误操作 -->
 <div class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center hidden" id="submitModal">
 <div class="bg-white p-8 rounded-xl max-w-sm w-full text-center">
 <iconify-icon class="text-6xl text-orange-400 mb-4" icon="mdi:help-circle-outline"></iconify-icon>
@@ -118,7 +122,8 @@
 </div>
 </div>
 
-<!-- 考试结果 -->
+<!-- ========== 考试结果页 ========== -->
+<!-- 显示得分、正确率、用时，可查看成绩详情或返回列表 -->
 <div class="fixed inset-0 bg-[#F0F2F5] z-[100] hidden flex items-center justify-center" id="examResultPage">
 <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-xl text-center">
 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -139,7 +144,8 @@
 </div>
 
 
-<!-- 设置菜单 -->
+<!-- ========== 设置菜单模态框 ========== -->
+<!-- 点击用户下拉中的"设置"打开 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="settingsModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-xs overflow-hidden">
@@ -159,7 +165,8 @@
 </div>
 </div>
 
-<!-- 修改密码模态框 -->
+<!-- ========== 修改密码模态框 ========== -->
+<!-- 表单包含原密码、新密码、确认新密码 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="passwordModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden">
@@ -614,7 +621,7 @@ function submitExam() {
 // Initialize
 loadAvailableExams();
 
-		// User dropdown
+		// ========== 用户下拉菜单交互 ==========
 		var userMenuTrigger = document.getElementById('userMenuTrigger');
 		var userDropdown = document.getElementById('userDropdown');
 		if (userMenuTrigger) {
@@ -626,7 +633,7 @@ loadAvailableExams();
 		document.addEventListener('click', function() {
 			if (userDropdown) userDropdown.classList.remove('show');
 		});
-		// Load current user
+		// 加载用户信息 → GET /api/auth/current-user
 		apiGet('/auth/current-user').then(function(res) {
 			var user = res.data || res;
 			if (user && user.realName) {
@@ -635,32 +642,38 @@ loadAvailableExams();
 			}
 		}).catch(function() {});
 
-		// 设置菜单
+		// ========== 设置菜单 ==========
+		/** 打开设置菜单 */
 		function openSettingsModal(event) {
 			if (event) event.preventDefault();
 			document.getElementById('settingsModal').classList.remove('hidden');
 		}
+		/** 关闭设置菜单 */
 		function closeSettingsModal() {
 			document.getElementById('settingsModal').classList.add('hidden');
 		}
-		// 修改密码
+		// ========== 修改密码 ==========
+		/** 打开密码修改模态框 */
 		function openPasswordModal(event) {
 			if (event) event.preventDefault();
 			closeSettingsModal();
 			document.getElementById('passwordModal').classList.remove('hidden');
 		}
+		/** 关闭密码修改模态框 */
 		function closePasswordModal() {
 			document.getElementById('passwordModal').classList.add('hidden');
 			document.getElementById('settingsForm').reset();
 		}
+		/** 提交修改密码 → PUT /api/auth/change-password */
 		function savePassword(event) {
 			event.preventDefault();
 			var oldPwd = document.getElementById('sp_oldPassword').value.trim();
 			var newPwd = document.getElementById('sp_newPassword').value.trim();
 			var confirmPwd = document.getElementById('sp_confirmPassword').value.trim();
-			if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
-			if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
-			if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+			if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; } // 非空校验
+			if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; } // 一致性校验
+			if (newPwd.length < 4) { alert('新密码长度至少4位'); return; } // 最小长度校验
+			// PUT /api/auth/change-password
 			fetch(API_BASE + '/auth/change-password', {
 				method: 'PUT',
 				headers: {'Content-Type': 'application/json'},

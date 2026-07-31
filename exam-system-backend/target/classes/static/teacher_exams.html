@@ -224,10 +224,19 @@
 </div>
 </div>
 <script>
+    /** API 请求基础路径 */
     var API_BASE = '/api';
+    /** 当前试卷列表的标签页筛选状态：'0'草稿, '1'已发布, '2'已回收, ''全部 */
     var currentStatus = '';
+    /** 当前页码 */
     var currentPage = 1;
 
+    /**
+     * 发送 GET 请求
+     * @param {string} url - API路径
+     * @param {object} params - 请求参数对象
+     * @returns {Promise} 返回 JSON 格式响应，401时自动跳转登录页
+     */
     function apiGet(url, params) {
         var q = params ? '?' + new URLSearchParams(params).toString() : '';
         return fetch(API_BASE + url + q, { credentials: 'include' }).then(function(res) {
@@ -235,18 +244,35 @@
             return res.json();
         });
     }
+    /**
+     * 发送 POST 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPost(url, data) {
         return fetch(API_BASE + url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify(data) }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
             return res.json();
         });
     }
+    /**
+     * 发送 PUT 请求
+     * @param {string} url - API路径
+     * @param {object} data - 请求体对象（可选，空body发{}）
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiPut(url, data) {
         return fetch(API_BASE + url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: data ? JSON.stringify(data) : '{}' }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
             return res.json();
         });
     }
+    /**
+     * 发送 DELETE 请求
+     * @param {string} url - API路径
+     * @returns {Promise} 返回 JSON 格式响应
+     */
     function apiDel(url) {
         return fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' }).then(function(res) {
             if (res.status === 401) { window.location.href = 'login.html'; throw new Error('unauth'); }
@@ -254,47 +280,65 @@
         });
     }
 
+    // 试卷状态映射：0=草稿, 1=已发布, 2=已回收
     var STATUS_MAP = {0: '草稿', 1: '已发布', 2: '已回收'};
     var STATUS_CLASS = {0: 'bg-gray-100 text-gray-500', 1: 'bg-green-50 text-green-600', 2: 'bg-red-50 text-red-500'};
 
+    /**
+     * 按状态标签页筛选试卷
+     * @param {string} status - 筛选状态：'0'草稿/'1'已发布/'2'已回收/''全部
+     * @param {Element} btn - 被点击的标签按钮DOM元素
+     */
     function filterPapers(status, btn) {
         currentStatus = status;
         var btns = document.querySelectorAll('.tab-item');
         for (var i = 0; i < btns.length; i++) {
             btns[i].className = 'tab-item pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium';
         }
-        btn.className = 'tab-item pb-3 border-b-2 font-medium tab-active';
+        btn.className = 'tab-item pb-3 border-b-2 font-medium tab-active'; // 选中态
         loadPapers();
     }
 
-    // ===== 编辑试卷题目 =====
+    // ==================== 编辑试卷题目（组卷） ====================
+
+    /** 当前正在编辑的试卷ID */
     var qePaperId = null;
+    /** 该课程下所有可用题目列表 */
     var qeAllQuestions = [];
-    var qeSelectedIds = {};  // questionId -> score
+    /** 已选题目映射：questionId -> score（分值） */
+    var qeSelectedIds = {};
+    /** 试卷所属课程ID */
     var qePaperCourseId = null;
+    /** 试卷总分 */
     var qePaperTotalScore = 100;
 
+    /**
+     * 打开编辑试卷题目模态框（组卷界面）
+     * 第一步：GET /api/teacher/papers/{paperId} 获取试卷已有题目
+     * 第二步：GET /api/teacher/questions?courseId=... 加载该课程所有题目
+     * @param {number} paperId - 试卷ID
+     */
     function editPaperQuestions(paperId) {
         qePaperId = paperId;
         qeSelectedIds = {};
         qePaperTotalScore = 100;
         document.getElementById('questionEditorModal').classList.remove('hidden');
 
-        // Load paper detail to get existing questions
+        // 先获取试卷详情，得到已有题目列表和课程ID
         apiGet('/teacher/papers/' + paperId).then(function(res) {
             var paper = res.data || res;
             document.getElementById('qePaperTitle').textContent = '编辑题目 - ' + (paper.paperName || '');
             qePaperCourseId = paper.courseId;
             qePaperTotalScore = paper.totalScore || 100;
 
-            // Mark already-assigned questions
+            // 将已分配的题目标记到 qeSelectedIds 中
             var existingQuestions = paper.questions || [];
             for (var i = 0; i < existingQuestions.length; i++) {
                 var pq = existingQuestions[i];
                 qeSelectedIds[pq.questionId] = pq.score || 10;
             }
 
-            // Load all questions for this course
+            // 链式调用：加载该课程下所有题目
             return apiGet('/teacher/questions', { courseId: paper.courseId, pageSize: 200 });
         }).then(function(res) {
             var data = res.data || res;
@@ -306,6 +350,7 @@
         });
     }
 
+    /** 关闭组卷编辑模态框，清空状态 */
     function closeQuestionEditor() {
         document.getElementById('questionEditorModal').classList.add('hidden');
         qePaperId = null;
@@ -313,11 +358,16 @@
         qeSelectedIds = {};
     }
 
+    // 编辑器中题型和难度的标签/颜色映射
     var QE_TYPE_LABELS = {'1':'单选','2':'多选','3':'判断','4':'填空','5':'简答'};
     var QE_TYPE_COLORS = {'1':'blue','2':'purple','3':'green','4':'orange','5':'red'};
     var QE_DIFF_LABELS = {'1':'易','2':'中','3':'难'};
     var QE_DIFF_COLORS = {'1':'green','2':'orange','3':'red'};
 
+    /**
+     * 渲染题目选择列表（支持按题型和难度筛选）
+     * 已选题目显示蓝色高亮背景
+     */
     function renderQuestionList() {
         var container = document.getElementById('qeQuestionList');
         var filterType = document.getElementById('qeFilterType').value;
@@ -340,7 +390,7 @@
             var q = filtered[i];
             var qid = q.questionId || q.id;
             var isChecked = qeSelectedIds.hasOwnProperty(qid);
-            var score = isChecked ? qeSelectedIds[qid] : 10;
+            var score = isChecked ? qeSelectedIds[qid] : 10; // 默认分值10分
             var typeLabel = QE_TYPE_LABELS[q.questionType] || q.questionType;
             var typeColor = QE_TYPE_COLORS[q.questionType] || 'gray';
             var diffLabel = QE_DIFF_LABELS[q.difficulty] || q.difficulty;
@@ -364,6 +414,7 @@
                 html += '</div>';
             }
             html += '</div>';
+            // 每题单独设置分值
             html += '<div class="flex items-center space-x-2 flex-none">';
             html += '<span class="text-xs text-gray-400">分值</span>';
             html += '<input type="number" class="w-16 border border-gray-200 rounded px-2 py-1 text-sm text-center" value="' + score + '" min="1" max="100" onchange="updateQEScore(\'' + qid + '\', this.value)" onfocus="this.select()"/>';
@@ -374,13 +425,18 @@
         updateQESummary();
     }
 
+    /**
+     * 勾选/取消勾选一道题目
+     * @param {string} qid - 题目ID
+     * @param {boolean} checked - 是否选中
+     */
     function toggleQEQuestion(qid, checked) {
         if (checked) {
-            qeSelectedIds[qid] = 10; // default score
+            qeSelectedIds[qid] = 10; // 默认10分
         } else {
             delete qeSelectedIds[qid];
         }
-        // Re-render just this row's background
+        // 只更新当前行的背景色，不重新渲染整个列表
         var row = document.getElementById('qechk_' + qid).closest('.flex');
         if (row) {
             if (checked) {
@@ -393,6 +449,11 @@
         updateQESummary();
     }
 
+    /**
+     * 更新某道题的分值
+     * @param {string} qid - 题目ID
+     * @param {string|number} value - 新的分值
+     */
     function updateQEScore(qid, value) {
         var score = parseInt(value) || 10;
         if (score < 1) score = 1;
@@ -400,6 +461,10 @@
         updateQESummary();
     }
 
+    /**
+     * 更新已选题目统计摘要（已选数量 + 分值合计）
+     * 如果分值合计超过试卷总分，显示红色警告
+     */
     function updateQESummary() {
         var ids = Object.keys(qeSelectedIds);
         var total = 0;
@@ -409,11 +474,17 @@
         document.getElementById('qeSelectedCount').textContent = ids.length;
         document.getElementById('qeTotalScore').textContent = total;
         var overLimit = total > qePaperTotalScore;
+        // 超分用红色，正常用蓝色
         document.getElementById('qeTotalScore').className = overLimit ? 'font-bold text-red-600' : 'font-bold text-blue-600';
         document.getElementById('qeScoreLimit').textContent = ' / ' + qePaperTotalScore;
         document.getElementById('qeScoreLimit').className = overLimit ? 'text-red-500' : 'text-gray-500';
     }
 
+    /**
+     * 保存组卷结果
+     * 调用 PUT /api/teacher/papers/{paperId} 更新试卷信息及题目列表
+     * 前置校验：题目分值合计不能超过试卷总分
+     */
     function savePaperQuestions() {
         var questions = [];
         var sortOrder = 1;
@@ -429,12 +500,15 @@
             });
         }
 
+        // 先获取试卷信息，校验分值
         apiGet('/teacher/papers/' + qePaperId).then(function(res) {
             var paper = res.data || res;
+            // 校验：题目分值合计不能超过试卷总分
             if (questionTotal > (paper.totalScore || 100)) {
                 alert('题目分值合计 ' + questionTotal + ' 分，超过试卷总分 ' + (paper.totalScore || 100) + ' 分，请调整！');
-                return; // 跳过保存，不执行后续 then
+                return; // 不执行后续保存
             }
+            // 更新试卷（包含题目列表），注意不能包含 questions: [] 否则会清空题目
             return apiPut('/teacher/papers/' + qePaperId, {
                 paperName: paper.paperName,
                 courseId: paper.courseId,
@@ -457,6 +531,10 @@
         });
     }
 
+    /**
+     * 加载试卷列表
+     * 调用 GET /api/teacher/papers，按 currentStatus 筛选
+     */
     function loadPapers() {
         var params = {page: currentPage, pageSize: 20};
         if (currentStatus !== '') params.status = currentStatus;
@@ -469,6 +547,10 @@
         });
     }
 
+    /**
+     * 渲染试卷卡片网格
+     * 根据试卷状态（草稿/已发布/已回收）显示不同的操作按钮
+     */
     function renderPapers(papers) {
         document.getElementById('paperCount').textContent = papers.length;
         var grid = document.getElementById('paperGrid');
@@ -496,6 +578,10 @@
             html += '<div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between">';
             html += '<span class="text-xs text-gray-400">创建于 ' + (p.createTime || '').substring(0, 10) + '</span>';
             html += '<div class="flex space-x-3">';
+            // 根据试卷状态显示不同的操作按钮
+            // 草稿(0)：可编辑题目、编辑信息、发布、删除
+            // 已发布(1)：可回收（学生无法继续参加）
+            // 已回收(2)：可删除
             if (p.status === 0) {
                 html += '<button class="text-green-600 text-sm hover:underline" onclick="editPaperQuestions(' + p.paperId + ')">编辑题目</button>';
                 html += '<button class="text-gray-500 text-sm hover:underline" onclick="editPaperInfo(' + p.paperId + ')">编辑信息</button>';
@@ -511,6 +597,12 @@
         grid.innerHTML = html;
     }
 
+    /**
+     * 将后端返回的日期值格式化为 datetime-local input 所需格式 (YYYY-MM-DDTHH:MM)
+     * 处理两种格式：数组格式 [year,month,day,hour,min] 和 ISO 字符串格式
+     * @param {*} dateVal - 后端返回的日期值
+     * @returns {string} 格式化后的日期字符串
+     */
     function formatDateTimeForInput(dateVal) {
         if (!dateVal) return '';
         var d;
@@ -529,16 +621,26 @@
                String(d.getMinutes()).padStart(2, '0');
     }
 
+    /**
+     * HTML 转义，防止 XSS 攻击
+     * @param {string} s - 需要转义的字符串
+     * @returns {string} 转义后的安全字符串
+     */
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+    /** 当前编辑的试卷ID，null表示新增模式 */
     var editPaperId = null;
 
+    /**
+     * 打开创建试卷模态框
+     * 先加载课程列表到下拉框
+     */
     function showCreatePaper() {
-        editPaperId = null;
+        editPaperId = null; // null表示新增
         document.getElementById('paperModalTitle').textContent = '创建试卷';
         document.getElementById('paperName').value = '';
-        document.getElementById('paperDuration').value = '60';
-        document.getElementById('paperTotalScore').value = '100';
+        document.getElementById('paperDuration').value = '60'; // 默认60分钟
+        document.getElementById('paperTotalScore').value = '100'; // 默认100分
         document.getElementById('paperStartDate').value = '';
         document.getElementById('paperEndDate').value = '';
         // 加载课程列表到下拉框
@@ -556,6 +658,10 @@
         });
     }
 
+    /**
+     * 打开编辑试卷信息模态框
+     * 调用 GET /api/teacher/papers/{paperId} 获取试卷详情
+     */
     function editPaperInfo(paperId) {
         apiGet('/teacher/papers/' + paperId).then(function(res) {
             var paper = res.data || res;
@@ -566,7 +672,7 @@
             document.getElementById('paperTotalScore').value = paper.totalScore || 100;
             document.getElementById('paperStartDate').value = formatDateTimeForInput(paper.startDate);
             document.getElementById('paperEndDate').value = formatDateTimeForInput(paper.endDate);
-            // Load courses and set selected
+            // 加载课程列表并选中当前课程的选项
             apiGet('/teacher/courses').then(function(res2) {
                 var courses = res2.data || [];
                 var optionsHtml = '<option value="">请选择课程</option>';
@@ -581,10 +687,17 @@
         }).catch(function() { alert('获取试卷信息失败'); });
     }
 
+    /** 关闭试卷创建/编辑模态框 */
     function closePaperModal() {
         document.getElementById('paperModal').classList.add('hidden');
     }
 
+    /**
+     * 保存试卷（新增或编辑）
+     * 新增：POST /api/teacher/papers
+     * 编辑：PUT /api/teacher/papers/{id}
+     * 注意：编辑试卷信息时不应包含 questions，否则会清空已组卷的题目
+     */
     function savePaper() {
         var name = document.getElementById('paperName').value.trim();
         var courseId = document.getElementById('paperCourseId').value;
@@ -594,6 +707,7 @@
         if (!name) { alert('请输入试卷名称'); return; }
         if (!courseId) { alert('请选择课程'); return; }
 
+        // datetime-local input 返回 "YYYY-MM-DDTHH:MM"，后端需要 "YYYY-MM-DDTHH:MM:SS"
         var startDateVal = document.getElementById('paperStartDate').value;
         var endDateVal = document.getElementById('paperEndDate').value;
         var body = {
@@ -601,7 +715,7 @@
             courseId: parseInt(courseId),
             duration: duration,
             totalScore: totalScore,
-            startDate: startDateVal ? startDateVal + ':00' : null,
+            startDate: startDateVal ? startDateVal + ':00' : null, // 补上秒数
             endDate: endDateVal ? endDateVal + ':00' : null
         };
 
@@ -623,30 +737,49 @@
         }).catch(function() { alert('保存失败，请检查网络连接'); });
     }
 
+    /**
+     * 发布试卷
+     * 调用 PUT /api/teacher/papers/{id}/publish
+     * 前置校验：
+     * 1. 试卷必须有题目
+     * 2. 题目分值合计必须等于试卷总分（精确匹配）
+     * 发布后学生即可参加测验
+     */
     function publishPaper(id) {
+        // 先获取试卷详情进行校验
         apiGet('/teacher/papers/' + id).then(function(res) {
             var paper = res.data || res;
             var questions = paper.questions || [];
+            // 计算题目分值合计
             var questionTotal = 0;
             for (var i = 0; i < questions.length; i++) {
                 questionTotal += questions[i].score || 0;
             }
             var totalScore = paper.totalScore || 100;
+            // 校验：不能空卷发布
             if (questions.length === 0) {
                 alert('试卷没有题目，请先组卷！');
                 return;
             }
+            // 校验：分值必须精确匹配试卷总分
             if (questionTotal !== totalScore) {
                 alert('题目分值合计 ' + questionTotal + ' 分，试卷总分 ' + totalScore + ' 分，分值不匹配，无法发布！');
                 return;
             }
             if (!confirm('确定要发布该试卷吗？发布后学生即可参加测验。')) return;
+            // 调用发布接口
             apiPut('/teacher/papers/' + id + '/publish').then(function() {
                 alert('试卷发布成功！学生现在可以参加该测验。');
                 loadPapers();
             }).catch(function() { alert('发布失败'); });
         }).catch(function() { alert('获取试卷信息失败'); });
     }
+
+    /**
+     * 回收试卷
+     * 调用 PUT /api/teacher/papers/{id}/recall
+     * 回收后学生无法继续参加该测验
+     */
     function recallPaper(id) {
         if (!confirm('确定要回收该试卷吗？回收后学生将无法继续参加该测验。')) return;
         apiPut('/teacher/papers/' + id + '/recall').then(function() {
@@ -654,11 +787,20 @@
             loadPapers();
         }).catch(function() { alert('回收失败'); });
     }
+
+    /**
+     * 删除试卷
+     * 调用 DELETE /api/teacher/papers/{id}
+     */
     function deletePaper(id) {
         if (!confirm('确定要删除该试卷吗？')) return;
         apiDel('/teacher/papers/' + id).then(function() { loadPapers(); }).catch(function() { alert('删除失败'); });
     }
 
+    /**
+     * 加载当前登录用户信息并更新顶部导航栏
+     * 调用 GET /api/auth/current-user
+     */
     function loadCurrentUser() {
         apiGet('/auth/current-user').then(function(user) {
             var u = user.data || user;
@@ -671,9 +813,11 @@
         });
     }
 
+    // ===== 页面初始化 =====
     loadCurrentUser();
     loadPapers();
 
+    // ===== 用户下拉菜单切换 =====
     var userMenuTrigger = document.getElementById('userMenuTrigger');
     var userDropdown = document.getElementById('userDropdown');
     userMenuTrigger.addEventListener('click', function(e) {
@@ -684,24 +828,35 @@
         userDropdown.classList.remove('show');
     });
 
-    // 设置菜单
+    // ==================== 设置菜单相关函数 ====================
+
+    /** 打开设置菜单模态框 */
     function openSettingsModal(event) {
         if (event) event.preventDefault();
         document.getElementById('settingsModal').classList.remove('hidden');
     }
+    /** 关闭设置菜单模态框 */
     function closeSettingsModal() {
         document.getElementById('settingsModal').classList.add('hidden');
     }
-    // 修改密码
+
+    // ==================== 修改密码相关函数 ====================
+
+    /** 打开修改密码模态框（同时关闭设置菜单） */
     function openPasswordModal(event) {
         if (event) event.preventDefault();
         closeSettingsModal();
         document.getElementById('passwordModal').classList.remove('hidden');
     }
+    /** 关闭修改密码模态框并重置表单 */
     function closePasswordModal() {
         document.getElementById('passwordModal').classList.add('hidden');
         document.getElementById('settingsForm').reset();
     }
+    /**
+     * 提交修改密码
+     * 调用 PUT /api/auth/change-password，成功后跳转登录页
+     */
     function savePassword(event) {
         event.preventDefault();
         var oldPwd = document.getElementById('sp_oldPassword').value.trim();
@@ -710,6 +865,7 @@
         if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
         if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
         if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+        // 调用修改密码接口
         fetch(API_BASE + '/auth/change-password', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},

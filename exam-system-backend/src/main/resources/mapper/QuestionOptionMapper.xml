@@ -2,30 +2,38 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.QuestionOptionMapper">
 
+    <!-- ================================================================ -->
+    <!-- 题目选项（QuestionOption）实体结果映射                                 -->
+    <!-- 表：t_question_option，主键：option_id                              -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.QuestionOption">
         <id column="option_id" property="optionId"/>
         <result column="question_id" property="questionId"/>
-        <result column="option_label" property="optionLabel"/>
-        <result column="option_content" property="optionContent"/>
-        <result column="is_correct" property="isCorrect"/>
+        <result column="option_label" property="optionLabel"/>        <!-- 选项标签，如 A、B、C、D -->
+        <result column="option_content" property="optionContent"/>    <!-- 选项内容 -->
+        <result column="is_correct" property="isCorrect"/>            <!-- 是否为正确答案：1=是，0=否 -->
     </resultMap>
 
+    <!-- 插入单个选项 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="optionId">
         INSERT INTO t_question_option (question_id, option_label, option_content, is_correct)
         VALUES (#{questionId}, #{optionLabel}, #{optionContent}, #{isCorrect})
     </insert>
 
+    <!-- 根据题目ID删除该题目的所有选项（更新题目时先删后插） -->
     <delete id="deleteByQuestionId">
         DELETE FROM t_question_option WHERE question_id = #{questionId}
     </delete>
 
+    <!-- 批量插入选项，用于创建/编辑题目时一次保存所有选项 -->
     <insert id="batchInsert" useGeneratedKeys="true" keyProperty="optionId">
         INSERT INTO t_question_option (question_id, option_label, option_content, is_correct) VALUES
-        <foreach collection="list" item="item" separator=",">
+        <foreach collection="list" item="item" separator=",">  <!-- 遍历选项列表，逗号分隔多条记录 -->
             (#{item.questionId}, #{item.optionLabel}, #{item.optionContent}, #{item.isCorrect})
         </foreach>
     </insert>
 
+    <!-- 根据题目ID查询该题目的所有选项，按选项标签排序 -->
     <select id="selectByQuestionId" resultMap="BaseResultMap">
         SELECT * FROM t_question_option WHERE question_id = #{questionId} ORDER BY option_label
     </select>

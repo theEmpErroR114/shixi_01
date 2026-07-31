@@ -1,26 +1,46 @@
+# ================================================================
+# 服务器配置（Server Configuration）
+# ================================================================
 server:
-  port: 8080
+  port: 8080                          # 应用监听端口
   servlet:
     session:
-      timeout: 30m
+      timeout: 30m                    # Session 超时时间（30分钟）
       cookie:
-        name: QUIZ_SESSION
-        http-only: true
+        name: QUIZ_SESSION            # Session Cookie 名称
+        http-only: true               # 禁止 JavaScript 读取 Cookie，防止 XSS 攻击
 
+# ================================================================
+# Spring 核心配置
+# ================================================================
 spring:
+  # ----------------------------------------------------------------
+  # 数据源配置（DataSource）
+  # ----------------------------------------------------------------
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver                          # MySQL JDBC 驱动
     url: jdbc:mysql://localhost:3306/exam_system?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: root
-    password: 11111111
+    # 数据库连接URL，参数说明：
+    #   useSSL=false              — 禁用SSL连接（开发环境）
+    #   serverTimezone=Asia/Shanghai — 使用上海时区（UTC+8）
+    #   characterEncoding=UTF-8  — 字符集编码
+    #   allowPublicKeyRetrieval=true — 允许客户端获取服务器公钥
+    username: root                      # 数据库用户名
+    password: 11111111                  # 数据库密码
 
+# ================================================================
+# MyBatis 配置
+# ================================================================
 mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.examsystem.entity
+  mapper-locations: classpath:mapper/*.xml   # Mapper XML 文件扫描路径
+  type-aliases-package: com.examsystem.entity  # 实体类别名包（自动映射）
   configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true       # 下划线自动转驼峰命名（如 real_name → realName）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL 日志输出到标准输出（控制台）
 
+# ================================================================
+# 日志配置（Logging）
+# ================================================================
 logging:
   level:
-    com.examsystem: debug
+    com.examsystem: debug   # 项目包日志级别设为 DEBUG，输出详细调试信息

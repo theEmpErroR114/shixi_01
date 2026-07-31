@@ -51,7 +51,8 @@
 </div>
 </header>
 <main class="max-w-7xl mx-auto px-4 py-8 w-full">
-<!-- 统计卡片 -->
+<!-- ========== 统计概览卡片 ========== -->
+<!-- 四个KPI：总测验次数、平均分、最高分、累计错题数 -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 <p class="text-gray-400 text-sm">总测验次数</p>
@@ -105,7 +106,8 @@
 </div>
 </main>
 
-<!-- 成绩详情弹窗 -->
+<!-- ========== 成绩详情弹窗 ========== -->
+<!-- 点击"题目回顾"打开，显示得分概览+逐题答案对比 -->
 <div class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center hidden" id="detailModal">
 <div class="bg-white p-8 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto mx-4">
 <div class="flex items-center justify-between mb-6">
@@ -121,7 +123,8 @@
 </div>
 
 
-<!-- 设置菜单 -->
+<!-- ========== 设置菜单模态框 ========== -->
+<!-- 点击用户下拉中的"设置"打开 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="settingsModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-xs overflow-hidden">
@@ -141,7 +144,8 @@
 </div>
 </div>
 
-<!-- 修改密码模态框 -->
+<!-- ========== 修改密码模态框 ========== -->
+<!-- 表单包含原密码、新密码、确认新密码 -->
 <div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="passwordModal">
 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
 <div class="relative bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden">
@@ -381,7 +385,7 @@ function checkUrlParams() {
 loadResults();
 checkUrlParams();
 
-		// User dropdown
+		// ========== 用户下拉菜单交互 ==========
 		var userMenuTrigger = document.getElementById('userMenuTrigger');
 		var userDropdown = document.getElementById('userDropdown');
 		if (userMenuTrigger) {
@@ -393,7 +397,7 @@ checkUrlParams();
 		document.addEventListener('click', function() {
 			if (userDropdown) userDropdown.classList.remove('show');
 		});
-		// Load current user
+		// 加载用户信息 → GET /api/auth/current-user
 		apiGet('/auth/current-user').then(function(res) {
 			var user = res.data || res;
 			if (user && user.realName) {
@@ -402,32 +406,38 @@ checkUrlParams();
 			}
 		}).catch(function() {});
 
-		// 设置菜单
+		// ========== 设置菜单 ==========
+		/** 打开设置菜单 */
 		function openSettingsModal(event) {
 			if (event) event.preventDefault();
 			document.getElementById('settingsModal').classList.remove('hidden');
 		}
+		/** 关闭设置菜单 */
 		function closeSettingsModal() {
 			document.getElementById('settingsModal').classList.add('hidden');
 		}
-		// 修改密码
+		// ========== 修改密码 ==========
+		/** 打开密码修改模态框 */
 		function openPasswordModal(event) {
 			if (event) event.preventDefault();
 			closeSettingsModal();
 			document.getElementById('passwordModal').classList.remove('hidden');
 		}
+		/** 关闭密码修改模态框 */
 		function closePasswordModal() {
 			document.getElementById('passwordModal').classList.add('hidden');
 			document.getElementById('settingsForm').reset();
 		}
+		/** 提交修改密码 → PUT /api/auth/change-password */
 		function savePassword(event) {
 			event.preventDefault();
 			var oldPwd = document.getElementById('sp_oldPassword').value.trim();
 			var newPwd = document.getElementById('sp_newPassword').value.trim();
 			var confirmPwd = document.getElementById('sp_confirmPassword').value.trim();
-			if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; }
-			if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; }
-			if (newPwd.length < 4) { alert('新密码长度至少4位'); return; }
+			if (!oldPwd || !newPwd || !confirmPwd) { alert('请填写所有字段'); return; } // 非空校验
+			if (newPwd !== confirmPwd) { alert('两次输入的新密码不一致'); return; } // 一致性校验
+			if (newPwd.length < 4) { alert('新密码长度至少4位'); return; } // 最小长度校验
+			// PUT /api/auth/change-password
 			fetch(API_BASE + '/auth/change-password', {
 				method: 'PUT',
 				headers: {'Content-Type': 'application/json'},

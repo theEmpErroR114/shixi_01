@@ -2,42 +2,51 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.QuestionMapper">
 
+    <!-- ================================================================ -->
+    <!-- 题目（Question）实体结果映射                                           -->
+    <!-- 表：t_question，主键：question_id                                    -->
+    <!-- 题目类型：1=单选 2=多选 3=判断 4=填空 5=简答                             -->
+    <!-- 难度：1=易 2=中 3=难                                                 -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.Question">
         <id column="question_id" property="questionId"/>
         <result column="course_id" property="courseId"/>
-        <result column="question_type" property="questionType"/>
-        <result column="content" property="content"/>
-        <result column="answer" property="answer"/>
-        <result column="analysis" property="analysis"/>
-        <result column="difficulty" property="difficulty"/>
-        <result column="teacher_id" property="teacherId"/>
+        <result column="question_type" property="questionType"/>     <!-- 题目类型（1-5） -->
+        <result column="content" property="content"/>                <!-- 题目内容/题干 -->
+        <result column="answer" property="answer"/>                  <!-- 正确答案 -->
+        <result column="analysis" property="analysis"/>              <!-- 题目解析 -->
+        <result column="difficulty" property="difficulty"/>           <!-- 难度等级（1-3） -->
+        <result column="teacher_id" property="teacherId"/>           <!-- 创建教师ID（仅展示，无FK约束） -->
         <result column="create_time" property="createTime"/>
+        <!-- 以下字段来自 JOIN，非 t_question 表字段 -->
         <result column="course_name" property="courseName"/>
         <result column="teacher_name" property="teacherName"/>
     </resultMap>
 
+    <!-- 按条件分页查询题目，支持按课程、题型、难度、关键字过滤 -->
     <select id="findByFilters" resultMap="BaseResultMap">
         SELECT * FROM t_question
         <where>
             <if test="courseId != null">
-                AND course_id = #{courseId}
+                AND course_id = #{courseId}               <!-- 按课程过滤 -->
             </if>
             <if test="questionType != null">
-                AND question_type = #{questionType}
+                AND question_type = #{questionType}       <!-- 按题型过滤（1-5） -->
             </if>
             <if test="difficulty != null">
-                AND difficulty = #{difficulty}
+                AND difficulty = #{difficulty}            <!-- 按难度过滤（1-3） -->
             </if>
             <if test="keyword != null and keyword != ''">
-                AND content LIKE CONCAT('%', #{keyword}, '%')
+                AND content LIKE CONCAT('%', #{keyword}, '%')   <!-- 按关键字模糊搜索题目内容 -->
             </if>
         </where>
         ORDER BY create_time DESC
         <if test="offset != null and limit != null">
-            LIMIT #{offset}, #{limit}
+            LIMIT #{offset}, #{limit}                     <!-- 分页参数 -->
         </if>
     </select>
 
+    <!-- 统计按条件过滤的题目总数 -->
     <select id="countByFilters" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_question
         <where>
@@ -56,16 +65,18 @@
         </where>
     </select>
 
+    <!-- 按条件+教师课程范围查询题目（教师只能查看自己授课课程的题目） -->
     <select id="findByFiltersAndCourseIds" resultMap="BaseResultMap">
         SELECT * FROM t_question
         <where>
             <if test="courseId != null">
                 AND course_id = #{courseId}
             </if>
+            <!-- courseIds 和 courseId 互斥：优先使用单个 courseId -->
             <if test="courseIds != null and courseId == null">
                 AND course_id IN
                 <foreach collection="courseIds" item="cid" open="(" separator="," close=")">
-                    #{cid}
+                    #{cid}                                  <!-- 遍历教师授课课程ID列表 -->
                 </foreach>
             </if>
             <if test="questionType != null">
@@ -84,6 +95,7 @@
         </if>
     </select>
 
+    <!-- 统计教师课程范围内的题目总数 -->
     <select id="countByFiltersAndCourseIds" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_question
         <where>
@@ -108,18 +120,20 @@
         </where>
     </select>
 
+    <!-- 随机抽取指定数量和条件的题目（用于自动组卷/随机出题） -->
     <select id="findRandom" resultMap="BaseResultMap">
         SELECT * FROM t_question
         WHERE course_id = #{courseId}
         <if test="questionType != null">
-            AND question_type = #{questionType}
+            AND question_type = #{questionType}             <!-- 可选：限定题型 -->
         </if>
         <if test="difficulty != null">
-            AND difficulty = #{difficulty}
+            AND difficulty = #{difficulty}                  <!-- 可选：限定难度 -->
         </if>
-        ORDER BY RAND() LIMIT #{count}
+        ORDER BY RAND() LIMIT #{count}                      <!-- 随机排序后取指定条数 -->
     </select>
 
+    <!-- 根据主键查询题目详情，关联课程表和教师表获取课程名称和教师姓名 -->
     <select id="selectById" resultMap="BaseResultMap">
         SELECT q.*, c.course_name, t.real_name AS teacher_name
         FROM t_question q
@@ -128,24 +142,27 @@
         WHERE q.question_id = #{questionId}
     </select>
 
+    <!-- 新增题目，主键自动回填到 questionId -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="questionId">
         INSERT INTO t_question (course_id, question_type, content, answer, analysis, difficulty, teacher_id, create_time)
         VALUES (#{courseId}, #{questionType}, #{content}, #{answer}, #{analysis}, #{difficulty}, #{teacherId}, #{createTime})
     </insert>
 
+    <!-- 动态更新题目信息：只更新传入的非空字段 -->
     <update id="update">
         UPDATE t_question
         <set>
-            <if test="courseId != null">course_id = #{courseId},</if>
-            <if test="questionType != null">question_type = #{questionType},</if>
-            <if test="content != null">content = #{content},</if>
-            <if test="answer != null">answer = #{answer},</if>
-            <if test="analysis != null">analysis = #{analysis},</if>
-            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>              <!-- 所属课程 -->
+            <if test="questionType != null">question_type = #{questionType},</if>  <!-- 题目类型 -->
+            <if test="content != null">content = #{content},</if>                  <!-- 题目内容 -->
+            <if test="answer != null">answer = #{answer},</if>                     <!-- 正确答案 -->
+            <if test="analysis != null">analysis = #{analysis},</if>               <!-- 题目解析 -->
+            <if test="difficulty != null">difficulty = #{difficulty},</if>         <!-- 难度等级 -->
         </set>
         WHERE question_id = #{questionId}
     </update>
 
+    <!-- 根据主键删除题目（注意：需先删除 FK 引用：paper_question → practice_record → exam_answer → question_option） -->
     <delete id="deleteById">
         DELETE FROM t_question WHERE question_id = #{questionId}
     </delete>

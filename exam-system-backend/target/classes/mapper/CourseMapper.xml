@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.examsystem.mapper.CourseMapper">
 
+    <!-- ================================================================ -->
+    <!-- 课程（Course）实体结果映射                                           -->
+    <!-- 表：t_course，主键：course_id                                      -->
+    <!-- ================================================================ -->
     <resultMap id="BaseResultMap" type="com.examsystem.entity.Course">
         <id column="course_id" property="courseId"/>
         <result column="course_name" property="courseName"/>
@@ -9,25 +13,30 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!-- 查询全部课程，按创建时间倒序 -->
     <select id="selectAll" resultMap="BaseResultMap">
         SELECT * FROM t_course ORDER BY create_time DESC
     </select>
 
+    <!-- 根据主键 course_id 查询单个课程 -->
     <select id="selectById" resultMap="BaseResultMap">
         SELECT * FROM t_course WHERE course_id = #{courseId}
     </select>
 
+    <!-- 分页查询课程列表，支持按课程名称模糊搜索 -->
     <select id="findByKeyword" resultMap="BaseResultMap">
         SELECT * FROM t_course
         <where>
+            <!-- 关键字模糊搜索：如果 keyword 不为空，则按课程名称模糊匹配 -->
             <if test="keyword != null and keyword != ''">
                 AND course_name LIKE CONCAT('%', #{keyword}, '%')
             </if>
         </where>
         ORDER BY create_time DESC
-        LIMIT #{offset}, #{pageSize}
+        LIMIT #{offset}, #{pageSize}   <!-- 分页：offset 为偏移量，pageSize 为每页条数 -->
     </select>
 
+    <!-- 统计符合条件的课程总数，用于分页计算 -->
     <select id="countByKeyword" resultType="java.lang.Long">
         SELECT COUNT(*) FROM t_course
         <where>
@@ -37,20 +46,23 @@
         </where>
     </select>
 
+    <!-- 新增课程，主键自动回填到 courseId 字段 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="courseId">
         INSERT INTO t_course (course_name, description, create_time)
         VALUES (#{courseName}, #{description}, #{createTime})
     </insert>
 
+    <!-- 动态更新课程信息：只更新传入的非空字段 -->
     <update id="update">
         UPDATE t_course
         <set>
-            <if test="courseName != null">course_name = #{courseName},</if>
-            <if test="description != null">description = #{description},</if>
+            <if test="courseName != null">course_name = #{courseName},</if>     <!-- 课程名称 -->
+            <if test="description != null">description = #{description},</if>   <!-- 课程描述 -->
         </set>
         WHERE course_id = #{courseId}
     </update>
 
+    <!-- 根据主键删除课程（注意：有题目或试卷关联的课程不允许删除） -->
     <delete id="deleteById">
         DELETE FROM t_course WHERE course_id = #{courseId}
     </delete>
