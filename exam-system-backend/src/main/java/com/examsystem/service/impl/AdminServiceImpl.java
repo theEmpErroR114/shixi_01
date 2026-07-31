@@ -188,6 +188,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void deleteCourse(Long courseId) {
         Long questionCount = questionMapper.countByFilters(courseId, null, null, null);
         if (questionCount > 0) {
@@ -197,6 +198,9 @@ public class AdminServiceImpl implements AdminService {
         if (paperCount > 0) {
             throw new BusinessException("该课程下还有 " + paperCount + " 份试卷，无法删除");
         }
+        // 清理课程关联：教师-课程、学生-课程
+        teacherCourseMapper.deleteByCourseId(courseId);
+        studentCourseMapper.deleteByCourseId(courseId);
         courseMapper.deleteById(courseId);
     }
 

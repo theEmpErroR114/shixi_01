@@ -13,5 +13,7 @@ public interface TeacherCourseMapper {
 
     int deleteByTeacherId(@Param("teacherId") Long teacherId);
 
+    int deleteByCourseId(@Param("courseId") Long courseId);
+
     int insert(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId);
 }

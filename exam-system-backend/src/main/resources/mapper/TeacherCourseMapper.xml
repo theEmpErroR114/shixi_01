@@ -18,6 +18,10 @@
         DELETE FROM t_teacher_course WHERE teacher_id = #{teacherId}
     </delete>
 
+    <delete id="deleteByCourseId">
+        DELETE FROM t_teacher_course WHERE course_id = #{courseId}
+    </delete>
+
     <insert id="insert">
         INSERT INTO t_teacher_course (teacher_id, course_id) VALUES (#{teacherId}, #{courseId})
     </insert>
