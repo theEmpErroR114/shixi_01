@@ -26,7 +26,7 @@ mvn clean package -DskipTests
 java -jar exam-system-backend/target/exam-system-backend-1.0.0.jar
 
 # All-in-one: kill old, rebuild, restart
-pkill -f "exam-system-backend"; sleep 1
+lsof -ti:8080 | xargs kill -9 2>/dev/null; sleep 1
 mvn -f exam-system-backend/pom.xml clean package -DskipTests -q
 java -jar exam-system-backend/target/exam-system-backend-1.0.0.jar &
 
@@ -60,6 +60,8 @@ stop.bat
 **Tech stack:** Spring Boot 4.0.7 (Java 26), MyBatis 4.0.1, MySQL 8.x, BCrypt for passwords, Session/Cookie auth, vanilla JS + Tailwind CSS + Iconify Icon frontend.
 
 **Frontend CDN:** `cdn.tailwindcss.com` (Tailwind CSS via CDN). Iconify Icon is **self-hosted** (`iconify-icon.min.js` in `static/`) because `cdn.jsdelivr.net` is blocked in China.
+
+**Session cookie:** The session cookie name is configured as `QUIZ_SESSION` in `application.yml` (not the default `JSESSIONID`). When testing with curl, use `-c /tmp/cookies.txt -b /tmp/cookies.txt` to persist cookies between requests.
 
 **Default accounts (password: `123456`):** `admin`, `teacher_wang`, `teacher_li`, `stu_zhang`, `stu_liu`, `stu_chen`
 
@@ -278,7 +280,7 @@ selectElement.innerHTML = optionsHtml;
 
 After editing `.java` files:
 1. `mvn clean package -DskipTests` — compiles `.java` → `.class`
-2. `pkill -f "exam-system-backend"` — **KILL OLD PROCESS** (this step was frequently forgotten)
+2. `lsof -ti:8080 | xargs kill -9` — **KILL OLD PROCESS** (this step was frequently forgotten)
 3. `java -jar ...` — start with new bytecode
 
 Skipping step 2 means old bytecode keeps running and new fields/methods don't appear in API responses.
@@ -582,6 +584,7 @@ html += '<input onchange="examSelectAnswer('' + label + '')"/>';  // SyntaxError
 - Single-choice and multi-choice questions must have at least 2 options with non-empty content (validated both frontend and backend).
 - **Multi-choice questions (type=2) must have at least 2 correct options** (validated both frontend and backend).
 - **Deleting a question requires deleting FK-referenced rows first**: `t_paper_question` → `t_practice_record` → `t_exam_answer` → `t_question_option` → `t_question`. Must add `deleteByQuestionId` to all relevant mappers.
+- **Deleting a paper requires deleting FK-referenced rows first**: `t_exam_answer` (via JOIN with `t_exam_record`) → `t_exam_record` → `t_paper_question` → `t_paper`. See `PaperServiceImpl.deletePaper()` for the correct order. Must add `deleteByPaperId` to `ExamAnswerMapper`, `ExamRecordMapper`, and `PaperQuestionMapper`.
 - **True/false questions (type=3) may have no options in DB**. Practice service must auto-generate default options with content "对"/"错" (matching the teacher form dropdown values, NOT "正确"/"错误").
 - **Student practice flow is confirm-then-next**: select answer → "确认答案" → see feedback → "下一题". Never submit immediately on option click.
 - **Deleting a teacher does NOT affect questions/papers**: `teacher_id` has no FK constraint — it's a plain display-only field. Questions/papers remain accessible to other teachers of the same course via `course_id` + `t_teacher_course`.

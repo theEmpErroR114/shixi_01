@@ -38,4 +38,12 @@ public interface ExamAnswerMapper {
      * @return 受影响的行数
      */
     int deleteByQuestionId(@Param("questionId") Long questionId);
+
+    /**
+     * 根据试卷ID删除考试答案（删除试卷时需先清理引用，避免外键约束错误）
+     * 通过 t_exam_record 子查询找到该试卷下所有考试记录的答案
+     * @param paperId 试卷ID
+     * @return 受影响的行数
+     */
+    int deleteByPaperId(@Param("paperId") Long paperId);
 }

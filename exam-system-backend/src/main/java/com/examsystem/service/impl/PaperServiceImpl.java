@@ -5,6 +5,8 @@ import com.examsystem.dto.PaperCreateRequest;
 import com.examsystem.entity.Paper;
 import com.examsystem.entity.PaperQuestion;
 import com.examsystem.exception.BusinessException;
+import com.examsystem.mapper.ExamAnswerMapper;
+import com.examsystem.mapper.ExamRecordMapper;
 import com.examsystem.mapper.PaperMapper;
 import com.examsystem.mapper.PaperQuestionMapper;
 import com.examsystem.service.PaperService;
@@ -36,6 +38,12 @@ public class PaperServiceImpl implements PaperService {
 
     @Autowired
     private PaperQuestionMapper paperQuestionMapper;
+
+    @Autowired
+    private ExamAnswerMapper examAnswerMapper;
+
+    @Autowired
+    private ExamRecordMapper examRecordMapper;
 
     /**
      * 分页查询试卷（无课程权限过滤，供管理员使用）。
@@ -237,8 +245,14 @@ public class PaperServiceImpl implements PaperService {
         if (paper.getStatus() == 1) {
             throw new BusinessException("已发布的试卷不能删除");
         }
-        // 先删关联，再删试卷
+        // 级联删除顺序：先删最外层的子表，逐层向内删除，最后删试卷本身
+        // 1. 删除该试卷下所有考试记录的答题明细（t_exam_answer）
+        examAnswerMapper.deleteByPaperId(paperId);
+        // 2. 删除该试卷下所有考试记录（t_exam_record）
+        examRecordMapper.deleteByPaperId(paperId);
+        // 3. 删除试卷-题目关联（t_paper_question）
         paperQuestionMapper.deleteByPaperId(paperId);
+        // 4. 删除试卷（t_paper）
         paperMapper.deleteById(paperId);
     }
 }

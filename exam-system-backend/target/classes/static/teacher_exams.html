@@ -782,10 +782,11 @@
      */
     function recallPaper(id) {
         if (!confirm('确定要回收该试卷吗？回收后学生将无法继续参加该测验。')) return;
-        apiPut('/teacher/papers/' + id + '/recall').then(function() {
+        apiPut('/teacher/papers/' + id + '/recall').then(function(res) {
+            if (res.code !== 200) { alert('回收失败：' + (res.message || '未知错误')); return; }
             alert('试卷已回收。');
             loadPapers();
-        }).catch(function() { alert('回收失败'); });
+        }).catch(function() { alert('回收失败，请检查网络连接'); });
     }
 
     /**
@@ -794,7 +795,11 @@
      */
     function deletePaper(id) {
         if (!confirm('确定要删除该试卷吗？')) return;
-        apiDel('/teacher/papers/' + id).then(function() { loadPapers(); }).catch(function() { alert('删除失败'); });
+        apiDel('/teacher/papers/' + id).then(function(res) {
+            if (res.code !== 200) { alert('删除失败：' + (res.message || '未知错误')); return; }
+            alert('试卷已删除。');
+            loadPapers();
+        }).catch(function() { alert('删除失败，请检查网络连接'); });
     }
 
     /**

@@ -100,4 +100,9 @@
         ORDER BY er.total_score DESC
     </select>
 
+    <!-- 根据试卷ID删除考试记录（删除试卷时级联删除 FK 引用） -->
+    <delete id="deleteByPaperId">
+        DELETE FROM t_exam_record WHERE paper_id = #{paperId}
+    </delete>
+
 </mapper>

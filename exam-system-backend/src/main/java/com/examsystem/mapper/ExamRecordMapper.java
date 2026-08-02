@@ -85,4 +85,11 @@ public interface ExamRecordMapper {
      * @return 包含 studentId、totalScore、submitTime 等字段的 Map 列表
      */
     List<java.util.Map<String, Object>> selectScoresByPaperId(@Param("paperId") Long paperId);
+
+    /**
+     * 根据试卷ID删除考试记录（删除试卷时需先清理引用，避免外键约束错误）
+     * @param paperId 试卷ID
+     * @return 受影响的行数
+     */
+    int deleteByPaperId(@Param("paperId") Long paperId);
 }
